@@ -1,0 +1,146 @@
+#' @title Extract FlowJo v11 Workspace
+#' @name archive
+#' @keywords internal
+NULL
+
+#' Process FlowJo v11 ZIP Archive
+#'
+#' Extracts and parses the contents of a .flowjo file:
+#' - manifest.txt: File listing
+#' - analysis-*.json: Workspace data (gates, populations, samples)
+#'
+#' @param zip_path Path to the .flowjo file
+#' @return List containing manifest and parsed JSON data
+#' @keywords internal
+process_zip_archive <- function(zip_path) {
+  # Validate input
+  if (!file.exists(zip_path)) {
+    stop("Workspace file does not exist: ", zip_path)
+  }
+  # Create unique temporary directory for extraction
+  work_dir <- file.path(tempdir(), paste0("processing_", Sys.getpid(), "_", round(runif(1, 10000, 99999))))
+  dir.create(work_dir, recursive = TRUE)
+  
+  # Ensure cleanup happens even if function errors
+  on.exit({
+    if(dir.exists(work_dir)) {
+      unlink(work_dir, recursive = TRUE)
+      if (.pkgenv$verbose) cat("Cleaned up temporary directory:", work_dir, "\n")
+    }
+  })
+  
+  if (.pkgenv$verbose) cat("Created temporary directory:", work_dir, "\n")
+  
+  # Extract all files from the ZIP archive
+  unzip(zip_path, exdir = work_dir)
+  zip_info <- list.files(work_dir, recursive = TRUE, full.names = TRUE)
+  if (.pkgenv$verbose) {
+    cat("Archive contains", length(zip_info), "files:\n")
+  print(zip_info)
+  }
+  # Find target files (manifest and JSON)
+  manifest_files <- grep("manifest\\.txt$", zip_info, value = TRUE)
+  json_files <- grep("\\.json$", zip_info, value = TRUE)
+  
+  if (.pkgenv$verbose) {
+    cat("\nFound", length(manifest_files), "manifest file(s)\n")
+  cat("Found", length(json_files), "JSON file(s)\n")
+  }
+  # Initialize results structure
+  results = list(
+    manifests = list(),  
+    json = list()
+  )
+  
+  # Read manifest files (plain text)
+  for(manifest_file in manifest_files) {
+    if(file.exists(manifest_file)) {
+      results$manifests[[basename(manifest_file)]] <- readLines(manifest_file)
+    }
+  }
+  
+  # Read and parse JSON files
+  for(json_file in json_files) {
+    if(file.exists(json_file)) {
+      results$json[[basename(json_file)]] <- tryCatch({
+        jsonlite::fromJSON(json_file, simplifyVector = FALSE, simplifyMatrix = FALSE)  # Parse JSON
+      }, error = function(e) {
+        # If parsing fails, return error and raw content for debugging
+        list(error = e$message, raw_content = readLines(json_file))
+      })
+    }
+  }
+  
+  return(results)
+}
+
+#' Read FlowJo v11 Workspace
+#'
+#' Main wrapper function to read and parse FlowJo v11 workspace files
+#'
+#' @param workspace_path Path to the FlowJo workspace file (.flowjo)
+#' @return Parsed workspace object containing manifest and JSON data
+#' @export
+read_flowjo11_workspace <- function(workspace_path) {
+  # Validate input
+  if (!file.exists(workspace_path)) {
+    stop("Workspace file does not exist: ", workspace_path)
+  }
+  
+  # Check file extension
+  if (!grepl("\\.(fjw|flowjo)$", workspace_path)) {
+    warning("Workspace file does not have expected .flowjo or .flowjo extension")
+  }
+  
+  # Process the ZIP archive
+  if (.pkgenv$verbose) message("Reading FlowJo v11 workspace:", workspace_path, "\n")
+  results <- process_zip_archive(workspace_path)
+  
+  # Get the main analysis JSON (find the first analysis JSON file)
+  main_json_name <- grep("^analysis-.*\\.json$", names(results$json), value = TRUE)
+  if (length(main_json_name) == 0) {
+    stop("No analysis JSON file found in workspace")
+  }
+  
+  main_json <- results$json[[main_json_name[1]]]
+  
+  # Create structured workspace object with properly organized components
+  workspace <- list(
+    path = normalizePath(workspace_path),
+    manifest = results$manifests,
+    json = results$json,
+    # Extract the key components that the rest of the codebase expects
+    groups = main_json$groups,
+    dataSources = main_json$dataSources,
+    populationDefinitions = main_json$populationDefinitions,
+    populations = main_json$populations,
+    # Include all top-level JSON fields for completeness
+    schemaVersion = main_json$schemaVersion,
+    analysisUUID = main_json$analysisUUID,
+    uri = main_json$uri,
+    reports = main_json$reports,
+    compoundParameterSets = main_json$compoundParameterSets,
+    compoundPopulations = main_json$compoundPopulations,
+    paramsetDefinitions = main_json$paramsetDefinitions,
+    platforms = main_json$platforms,
+    cytometers = main_json$cytometers,
+    analysisRoot = main_json$analysisRoot,
+    timestamp = Sys.time()
+  )
+  
+  # Add class attribute for S3 methods
+  class(workspace) <- "flowjo11_workspace"
+  if (.pkgenv$verbose) {
+    cat("Successfully parsed FlowJo v11 workspace\n")
+    cat("  - Manifest files:", length(workspace$manifest), "\n")
+    cat("  - JSON files:", length(workspace$json), "\n")
+    cat("  - Groups:", length(workspace$groups), "\n")
+    cat("  - DataSources:", length(workspace$dataSources), "\n")
+    cat("  - PopulationDefinitions:", length(workspace$populationDefinitions), "\n")
+    cat("  - Populations:", length(workspace$populations), "\n")
+    cat("  - Reports:", length(workspace$reports), "\n")
+    cat("  - Platforms:", length(workspace$platforms), "\n")
+    cat("  - Cytometers:", length(workspace$cytometers), "\n")
+  }
+  return(workspace)
+}

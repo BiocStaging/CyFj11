@@ -1,0 +1,13 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.git$
+^doc$
+.env
+.claude
+.roo
+data
+docs
+flowjo_export_tests
+plans
+lib
+coverage.html
