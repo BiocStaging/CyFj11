@@ -3,7 +3,7 @@
 #' @keywords internal
 NULL
 
-context("Helper Functions")
+
 
 test_that("null coalescing operator works correctly", {
   # Test basic functionality

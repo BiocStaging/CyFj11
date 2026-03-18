@@ -3,7 +3,7 @@
 #' @keywords internal
 NULL
 
-context("Package Functions")
+
 
 test_that("Package loads correctly", {
   expect_true(requireNamespace("CyFj11", quietly = TRUE))

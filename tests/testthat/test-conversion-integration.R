@@ -3,7 +3,7 @@
 #' @keywords internal
 NULL
 
-context("Conversion Integration Tests")
+
 
 test_that("Can analyze workspace structure for conversion", {
   # Load the example workspace

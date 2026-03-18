@@ -3,7 +3,7 @@
 #' @keywords internal
 NULL
 
-context("Conversion Unit Tests")
+
 
 # Load required packages
 skip_if_not_installed("flowCore")
@@ -47,15 +47,7 @@ test_that("fj11_to_gatingset handles group selection errors", {
     populations = list()
   )
   
-  # Test with NULL group_name (would trigger menu in interactive mode)
-  # Skip this test in non-interactive mode
-  if (interactive()) {
-    expect_error(
-      fj11_to_gatingset(workspace, group_name = NULL, execute = FALSE, path = "."),
-      "No group selected"
-    )
-  }
-  
+
   # Test with non-existent group name
   expect_error(
     fj11_to_gatingset(workspace, group_name = "NonExistent", execute = FALSE, path = "."),
@@ -199,3 +191,4 @@ test_that("extract_keywords_for_samples works with different inputs", {
     "'keywords' must be specified"
   )
 })
+

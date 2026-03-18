@@ -3,7 +3,7 @@
 #' @keywords internal
 NULL
 
-context("Helper Functions")
+
 
 test_that("load_example_workspace loads the example data correctly", {
   # This test verifies that our helper function works

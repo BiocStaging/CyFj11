@@ -3,7 +3,7 @@
 #' @keywords internal
 NULL
 
-context("Conversion Helper Functions")
+
 
 # Load required packages
 skip_if_not_installed("flowCore")

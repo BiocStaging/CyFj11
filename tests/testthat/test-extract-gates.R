@@ -3,7 +3,7 @@
 #' @keywords internal
 NULL
 
-context("Gate Extraction Tests")
+
 
 test_that("Can extract gates from population definitions", {
   # Load the example workspace

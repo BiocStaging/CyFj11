@@ -3,7 +3,6 @@
 #' @keywords internal
 NULL
 
-context("Build Gating Tree Function")
 
 # Load required packages
 skip_if_not_installed("flowCore")

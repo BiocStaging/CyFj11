@@ -368,96 +368,98 @@ convert_gate_to_flowjo10_format <- function(gate, pop_name, gh = NULL) {
 
 #' Get Transform Specification for Export
 #'
-#' Extracts transformation specification from gating history for export to FlowJo format.
-#' Handles multiple transformation types including biexponential, linear, log, logicle, and arcsinh.
+#' Extracts transformation specification from gating hierarchy for export
+#' to FlowJo format. Handles biexponential, linear, log, logicle, and arcsinh.
 #'
-#' @param gh Gating history object
-#' @param dim Dimension (1 for x-axis, 2 for y-axis)
-#' @return List representing FlowJo transformation specification
+#' @param gh GatingHierarchy object
+#' @param dim Character string naming the channel (e.g. "FITC-A")
+#' @return Named list representing FlowJo transformation specification, or NULL
 #' @keywords internal
-get_transform_spec <- function(gh, dim="SSC-A"){
-  # Extract transformations from gating history
+get_transform_spec <- function(gh, dim = "SSC-A") {
   trans_list <- gh_get_transformations(gh)
-  # Check that we have transformations
+  
   if (is.null(trans_list) || length(trans_list) == 0) {
-    warning("No transformations found in gating history for dimension ", dim)
-    
+    if (.pkgenv$verbose) warning("No transformations found in gating hierarchy for dimension ", dim)
     return(NULL)
   }
   
-  # Get the transformation for the specified dimension
   trans <- trans_list[[dim]]
-  if(is.null(trans)){
-    # if no transformation it is linear
+  
+  if (is.null(trans)) {
+    # No transformation recorded → treat as linear passthrough
     return(list(
       transformType = "Linear",
       minRange = -Inf,
       maxRange = Inf
     ))
   }
+  
   params <- attributes(trans)
   
-  # Validate that we have transformation parameters
   if (is.null(params) || is.null(params$type)) {
-    warning("Invalid transformation parameters for dimension ", dim)
     return(NULL)
   }
   
-  # Handle different transformation types
-  switch(params$type,
-         "biexp" = list(
-           transformType = "Biex",
-           T = params$parameters$maxValue,
-           A = params$parameters$neg,
-           M = params$parameters$pos,
-           W = params$parameters$widthBasis,
-           vectorLength = params$parameters$channelRange,
-           autoWidthBasis = FALSE
-         ),
-         "linear" = list(
-           transformType = "Linear",
-           minRange = params$parameters$minRange,
-           maxRange = params$parameters$maxRange
-         ),
-         "log" = list(
-           transformType = "Log",
-           base = params$parameters$base %||% 10,
-           offset = params$parameters$offset %||% 1,
-           decade = params$parameters$decade %||% 1
-         ),
-         "logtGml2" = list(
-           transformType = "Log",
-           base = params$parameters$base %||% 10,
-           offset = params$parameters$offset %||% 1,
-           decade = params$parameters$decade %||% 1
-         ),
-         "logicle" = list(
-           transformType = "Logicle",
-           T = params$parameters$t %||% params$parameters$T %||% 262144,
-           M = params$parameters$m %||% params$parameters$M %||% 4.5,
-           W = params$parameters$w %||% params$parameters$W %||% 0.5,
-           A = params$parameters$a %||% params$parameters$A %||% 0
-         ),
-         "fasinh" = list(
-           transformType = "Arcsinh",
-           a = params$parameters$a %||% 0,
-           b = params$parameters$b %||% 1/150,
-           c = params$parameters$c %||% 0
-         ),
-         "arcsinh" = list(
-           transformType = "Arcsinh",
-           a = params$parameters$a %||% 0,
-           b = params$parameters$b %||% 1/150,
-           c = params$parameters$c %||% 0
-         ),
-         {
-           # TODO: Add other transformations as needed
-           warning("Unsupported transformation type: ", params$type, " for dimension ", dim)
-           NULL
-         }
-  )
+  type <- params$type
+  p    <- params$parameters  # may be NULL for some types
+  
+  # --- biexponential ---
+  if (type == "biexp") {
+    return(list(
+      transformType   = "Biex",
+      T               = p$maxValue,
+      A               = p$neg,
+      M               = p$pos,
+      W               = p$widthBasis,
+      vectorLength    = p$channelRange,
+      autoWidthBasis  = FALSE
+    ))
+  }
+  
+  # --- linear ---
+  if (type == "linear") {
+    return(list(
+      transformType = "Linear",
+      minRange      = p$minRange,
+      maxRange      = p$maxRange
+    ))
+  }
+  
+  # --- log (includes logtGml2) ---
+  if (type %in% c("log", "logtGml2")) {
+    return(list(
+      transformType = "Log",
+      base          = p$base   %||% 10,
+      offset        = p$offset %||% 1,
+      decade        = p$decade %||% 1
+    ))
+  }
+  
+  # --- logicle ---
+  if (type == "logicle") {
+    return(list(
+      transformType = "Logicle",
+      T = p$t %||% p$T %||% 262144,
+      M = p$m %||% p$M %||% 4.5,
+      W = p$w %||% p$W %||% 0.5,
+      A = p$a %||% p$A %||% 0
+    ))
+  }
+  
+  # --- arcsinh / fasinh ---
+  if (type %in% c("fasinh", "arcsinh")) {
+    return(list(
+      transformType = "Arcsinh",
+      a = p$a %||% 0,
+      b = p$b %||% (1 / 150),
+      c = p$c %||% 0
+    ))
+  }
+  
+  # --- unsupported ---
+  warning("Unsupported transformation type: ", type, " for dimension ", dim)
+  NULL
 }
-
 
 #' Format Gate Value for XML Output
 #'
@@ -524,234 +526,156 @@ get_graph_axes <- function(gh, pop_path) {
 }
 
 #' Convert Rectangle Gate to FlowJo v10 Format
-#'
-#' @param gate rectangleGate object
-#' @param pop_name Population name
-#' @return List representing rectangle gate in FlowJo v10 format
 #' @keywords internal
 convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
-  # Get parameters
+  
+  # ---- extract parameters --------------------------------------------------
   params <- NULL
   if (!is.null(gate@parameters)) {
     params <- names(gate@parameters)
   }
   
-  # Get boundaries
   min_vals <- gate@min
   max_vals <- gate@max
-
   
-  # Validate
+  # ---- validate ------------------------------------------------------------
   if (is.null(params) || is.null(min_vals) || is.null(max_vals)) {
     return(NULL)
   }
-  
   if (length(params) != length(min_vals) || length(params) != length(max_vals)) {
     return(NULL)
   }
   
-  # Apply coordinate scaling if gating history is provided
+  # ---- apply inverse transformations (if gating hierarchy supplied) ---------
+  # ---- apply inverse transformations ---------------------------------------
   if (!is.null(gh) && requireNamespace("flowWorkspace", quietly = TRUE)) {
-    # Get transformation information for parameters using the proper FlowJo v11 approach
-    # This ensures consistent coordinate scaling between v10 and v11 exports
+    
+    trans_list <- gh_get_transformations(gh, inverse = TRUE)
+    
     for (i in seq_along(params)) {
       param_name <- params[i]
-      # Get transform spec for this parameter using the same approach as FlowJo v11
-      transform_spec <- get_transform_spec(gh, param_name)
       
-      # Apply inverse transformation to scale coordinates properly
-      if (!is.null(transform_spec)) {
-        # For different transform types, apply appropriate inverse scaling
-        if (transform_spec$transformType == "Linear") {
-          # For linear transforms, scale based on min/max range
-          # range <- transform_spec$maxRange - transform_spec$minRange
-          # if (range != 0) {
-          #   min_vals[i] <- min_vals[i] * range + transform_spec$minRange
-          #   max_vals[i] <- max_vals[i] * range + transform_spec$minRange
-          # }
-        } else if (transform_spec$transformType == "Biex") {
-          # For biexponential transforms, use the T parameter as scaling factor
-          # scale_factor <- transform_spec$T
-          # tt = create_biexponential_transform (spec = transform_spec)
-          # min_vals[i] <-tt$inverse(min_vals[i])
-          # max_vals[i] <- tt$inverse(max_vals[i])
-          trans_list <- gh_get_transformations(gh,inverse = T)
-          min_vals[i] <- trans_list[[param_name]](min_vals[i])
-          max_vals[i] <- trans_list[[param_name]](max_vals[i])
-        } else if (transform_spec$transformType == "Log" ||
-                   transform_spec$transformType == "logtGml2" ||
-                   transform_spec$transformType == "flowJo_log") {
-          # tt = create_log_transform(spec = transform_spec)
-          # # For log transforms, apply appropriate scaling
-          # min_vals[i] <- tt$inverse(min_vals[i])
-          # max_vals[i] <- tt$inverse(max_vals[i])
-          trans_list <- gh_get_transformations(gh,inverse = T)
-          min_vals[i] <- trans_list[[param_name]](min_vals[i])
-          max_vals[i] <- trans_list[[param_name]](max_vals[i])
-        } else if (transform_spec$transformType == "Logicle") {
-          trans_list <- gh_get_transformations(gh,inverse = T)
-          min_vals[i] <- trans_list[[param_name]](min_vals[i])
-          max_vals[i] <- trans_list[[param_name]](max_vals[i])
-        } else if (transform_spec$transformType == "Arcsinh" || transform_spec$transformType == "fasinh") {
-          trans_list <- gh_get_transformations(gh,inverse = T)
-          min_vals[i] <- trans_list[[param_name]](min_vals[i])
-          max_vals[i] <- trans_list[[param_name]](max_vals[i])
-        }
-      }
+      inv_fn <- trans_list[[param_name]]
+      
+      # If no entry → linear → coordinates already in raw space → skip
+      if (!is.function(inv_fn)) next
+      
+      min_vals[i] <- inv_fn(min_vals[i])
+      max_vals[i] <- inv_fn(max_vals[i])
     }
   }
   
-  # Handle 1D or 2D gate
+  # ---- build output --------------------------------------------------------
   if (length(params) == 1) {
-    # 1D gate (range gate)
     return(list(
       type = "rectangle",
       dimensions = list(
-        list(
-          parameter = params[1],
-          min = min_vals[1],
-          max = max_vals[1]
-        )
+        list(parameter = params[1], min = min_vals[1], max = max_vals[1])
       )
     ))
   } else if (length(params) >= 2) {
-    # 2D gate (rectangle gate)
     return(list(
       type = "rectangle",
       dimensions = list(
-        list(
-          parameter = params[1],
-          min = min_vals[1],
-          max = max_vals[1]
-        ),
-        list(
-          parameter = params[2],
-          min = min_vals[2],
-          max = max_vals[2]
-        )
+        list(parameter = params[1], min = min_vals[1], max = max_vals[1]),
+        list(parameter = params[2], min = min_vals[2], max = max_vals[2])
       )
     ))
   }
   
-  return(NULL)
+  NULL
 }
 
+
 #' Convert Polygon Gate to FlowJo v10 Format
-#'
-#' @param gate polygonGate object
-#' @param pop_name Population name
-#' @return List representing polygon gate in FlowJo v10 format
 #' @keywords internal
 convert_polygon_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
-  # Get parameters
+  
+  # ---- extract parameters --------------------------------------------------
   params <- NULL
   if (!is.null(gate@parameters)) {
     params <- names(gate@parameters)
   }
-  # Get vertices
+  
   vertices <- NULL
   if (!is.null(gate@boundaries)) {
     vertices <- gate@boundaries
   }
   
-  # Validate
-  if (is.null(params) || length(params) < 2 || is.null(vertices) || nrow(vertices) < 3) {
+  # ---- validate ------------------------------------------------------------
+  if (is.null(params) || length(params) < 2 ||
+      is.null(vertices)  || nrow(vertices)  < 3) {
     return(NULL)
   }
-  # Extract coordinates
+  
   x_coords <- vertices[, 1]
   y_coords <- vertices[, 2]
   
-  # Apply coordinate scaling if gating history is provided
+  # ---- apply inverse transformations (if gating hierarchy supplied) ---------
   if (!is.null(gh) && requireNamespace("flowWorkspace", quietly = TRUE)) {
-    # Scale x coordinates using the same approach as FlowJo v11
-    x_param_name <- params[1]
-    # Get transform spec for x parameter using the same approach as FlowJo v11
-    x_transform_spec <- get_transform_spec(gh, x_param_name)
-    # Apply inverse transformation to scale coordinates properly
-    if (!is.null(x_transform_spec)) {
-      # For different transform types, apply appropriate inverse scaling
-      if (x_transform_spec$transformType == "Linear") {
-        # For linear transforms, dont do anything
-        # range <- x_transform_spec$maxRange - x_transform_spec$minRange
-        # if (range != 0) {
-        #   x_coords <- x_coords * range + x_transform_spec$minRange
-        # }
-      } else if (x_transform_spec$transformType == "Biex") {
-        # For biexponential transforms, use the T parameter as scaling factor
-        tt = create_biexponential_transform (spec = x_transform_spec)
-        x_coords <- tt$inverse(x_coords)
-      } else if (x_transform_spec$transformType == "Log") {
-        tt = create_log_transform(spec = x_transform_spec)
-        # For log transforms, apply appropriate scaling
-        x_coords <- tt$inverse(x_coords)
-      } else if (x_transform_spec$transformType == "Logicle") {
-        # For logicle transforms, use T parameter as scaling factor
-        scale_factor <- x_transform_spec$T
-        x_coords <- x_coords * scale_factor
-      } else if (x_transform_spec$transformType == "Arcsinh" || x_transform_spec$transformType == "fasinh") {
-        # For arcsinh/fasinh transforms, apply appropriate scaling
-        x_coords <- x_coords * 10000  # Typical arcsinh scale factor
-      }
+    
+    # Fetch once.  Log-type closures inside this list are broken (see below),
+    # but we avoid calling them — they are only referenced for other types.
+    trans_list <- gh_get_transformations(gh, inverse = TRUE)
+    
+    # Valid args for create_log_transform / flowjo_log_trans
+    valid_log_args <- c("decade", "offset", "scale", "n", "equal.space")
+    
+    .apply_inverse <- function(coords, param_name) {
+      spec <- get_transform_spec(gh, param_name)
+      
+      if (is.null(spec)) return(coords)
+      
+      switch(
+        spec$transformType,
+        
+        # Linear — no back-transformation needed.
+        "Linear" = coords,
+        
+        # Log types: broken gh_get_transformations closure (t → base::t()).
+        # Reconstruct via create_log_transform / flowjo_log_trans instead.
+        "Log"        = ,
+        "logtGml2"   = ,
+        "flowJo_log" = {
+          log_spec <- spec[names(spec) %in% valid_log_args]
+          tt <- create_log_transform(spec = log_spec)
+          tt$inverse(coords)
+        },
+        
+        # All other non-linear types: gh_get_transformations is correct.
+        "Biex"    = ,
+        "Logicle" = ,
+        "Arcsinh" = ,
+        "fasinh"  = {
+          inv_fn <- trans_list[[param_name]]
+          if (is.function(inv_fn)) inv_fn(coords) else coords
+        },
+        
+        # Unknown / unsupported type — leave coordinates unchanged.
+        coords
+      )
     }
     
-    # Scale y coordinates using the same approach as FlowJo v11
-    y_param_name <- params[2]
-    # Get transform spec for y parameter using the same approach as FlowJo v11
-    y_transform_spec <- get_transform_spec(gh, y_param_name)
-    # Apply inverse transformation to scale coordinates properly
-    if (!is.null(y_transform_spec)) {
-      # For different transform types, apply appropriate inverse scaling
-      if (y_transform_spec$transformType == "Linear") {
-        # For linear transforms, don't do anything
-        # range <- y_transform_spec$maxRange - y_transform_spec$minRange
-        # if (range != 0) {
-        #   y_coords <- y_coords * range + y_transform_spec$minRange
-        # }
-      } else if (y_transform_spec$transformType == "Biex") {
-        # For biexponential transforms, use the T parameter as scaling factor
-        tt = create_biexponential_transform (spec = y_transform_spec)
-        y_coords <- tt$inverse(y_coords)
-      } else if (y_transform_spec$transformType == "Log") {
-        # For log transforms, apply appropriate scaling
-        tt = create_log_transform(spec = y_transform_spec)
-        # For log transforms, apply appropriate scaling
-        y_coords <- tt$inverse(y_coords)
-      } else if (y_transform_spec$transformType == "Logicle") {
-        # For logicle transforms, use T parameter as scaling factor
-        scale_factor <- y_transform_spec$T
-        y_coords <- y_coords * scale_factor
-      } else if (y_transform_spec$transformType == "Arcsinh" || y_transform_spec$transformType == "fasinh") {
-        # For arcsinh/fasinh transforms, apply appropriate scaling
-        y_coords <- y_coords * 10000  # Typical arcsinh scale factor
-      }
-    }
+    x_coords <- .apply_inverse(x_coords, params[1])
+    y_coords <- .apply_inverse(y_coords, params[2])
   }
   
-  # Create vertex list
-  vertex_list <- list()
-  for (i in seq_along(x_coords)) {
-    vertex_list[[i]] <- list(
-      x = x_coords[i],
-      y = y_coords[i]
-    )
-  }
+  # ---- build vertex list ---------------------------------------------------
+  vertex_list <- lapply(seq_along(x_coords), function(i) {
+    list(x = x_coords[i], y = y_coords[i])
+  })
   
-  return(list(
+  # ---- return ---------------------------------------------------------------
+  list(
     type = "polygon",
     dimensions = list(
-      list(
-        parameter = params[1],
-        values = x_coords
-      ),
-      list(
-        parameter = params[2],
-        values = y_coords
-      )
+      list(parameter = params[1], values = x_coords),
+      list(parameter = params[2], values = y_coords)
     ),
     vertices = vertex_list
-  ))
+  )
 }
+
 
 #' Convert Ellipsoid Gate to FlowJo v10 Format
 #'
@@ -766,11 +690,11 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
   }, error = function(e) {
     NULL
   })
-  
+  # browser()
   if (is.null(params) || length(params) < 2) {
     return(NULL)
   }
-  
+  # browser()
   # Get ellipse parameters
   mean_vals <- tryCatch({
     gate@mean
@@ -845,38 +769,47 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
   # FlowJo v10 ellipse gates use normalized display coordinates
   # Need to convert from data space to display space using transform range
   if (!is.null(gh)) {
+    transF <- gh_get_transformations(gh, inverse = TRUE)
     # Get the display ranges that WILL BE WRITTEN to the XML
     x_range <- get_display_range(gh, x_param)
     y_range <- get_display_range(gh, y_param)
     
-    
     # Helper function using these ranges
-    to_display_coords <- function(value, range_vals) {
+    to_display_coords <- function(value, range_vals, param) {
       min_val <- range_vals[1]
       max_val <- range_vals[2]
       range_span <- max_val - min_val
       
       if (range_span == 0) return(50)
       
-      normalized <- ((value - min_val) / range_span) * 100
+      # Apply inverse transformation only if one is defined for this parameter
+      transformed_value <- if (!is.null(transF[[param]])) {
+        transF[[param]](value)
+      } else {
+        value
+      }
+      
+      normalized <- ((transformed_value - min_val) / range_span) * 256
       return(normalized)
     }
-    # Convert all coordinates
-    center_x <- to_display_coords(center_x, x_range) * 2.56
-    focus1_x <- to_display_coords(focus1_x, x_range) * 2.56
-    focus2_x <- to_display_coords(focus2_x, x_range) * 2.56
-    edge1_x <- to_display_coords(edge1_x, x_range) * 2.56
-    edge2_x <- to_display_coords(edge2_x, x_range) * 2.56
-    edge3_x <- to_display_coords(edge3_x, x_range) * 2.56
-    edge4_x <- to_display_coords(edge4_x, x_range) * 2.56
     
-    center_y <- to_display_coords(center_y, y_range) * 2.56
-    focus1_y <- to_display_coords(focus1_y, y_range) * 2.56
-    focus2_y <- to_display_coords(focus2_y, y_range) * 2.56
-    edge1_y <- to_display_coords(edge1_y, y_range) * 2.56
-    edge2_y <- to_display_coords(edge2_y, y_range) * 2.56
-    edge3_y <- to_display_coords(edge3_y, y_range) * 2.56
-    edge4_y <- to_display_coords(edge4_y, y_range) * 2.56
+    # Convert all x coordinates
+    center_x <- to_display_coords(center_x, x_range, x_param)
+    focus1_x  <- to_display_coords(focus1_x,  x_range, x_param)
+    focus2_x  <- to_display_coords(focus2_x,  x_range, x_param)
+    edge1_x   <- to_display_coords(edge1_x,   x_range, x_param)
+    edge2_x   <- to_display_coords(edge2_x,   x_range, x_param)
+    edge3_x   <- to_display_coords(edge3_x,   x_range, x_param)
+    edge4_x   <- to_display_coords(edge4_x,   x_range, x_param)
+    
+    # Convert all y coordinates
+    center_y <- to_display_coords(center_y, y_range, y_param)
+    focus1_y  <- to_display_coords(focus1_y,  y_range, y_param)
+    focus2_y  <- to_display_coords(focus2_y,  y_range, y_param)
+    edge1_y   <- to_display_coords(edge1_y,   y_range, y_param)
+    edge2_y   <- to_display_coords(edge2_y,   y_range, y_param)
+    edge3_y   <- to_display_coords(edge3_y,   y_range, y_param)
+    edge4_y   <- to_display_coords(edge4_y,   y_range, y_param)
   }
   
   # Recalculate distance in display space
@@ -909,80 +842,111 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
 #' @return List representing boolean gate in FlowJo v10 format
 #' @keywords internal
 convert_boolean_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
-  # Extract expression
   expr <- tryCatch({
     attr(gate, "expr")
   }, error = function(e) {
     warning("Failed to extract expression from boolean gate: ", pop_name)
     return(NULL)
   })
-  clean_backticks <- function(x) gsub("`", "", x)
-
-  if (is.null(expr)) {
+  
+  if (is.null(expr)) return(NULL)
+  
+  expr_str <- if (is.character(expr)) expr else deparse(expr, width.cutoff = 500L)[1]
+  
+  expr_clean <- sub("^expression\\((.*)\\)$", "\\1", expr_str)
+  expr_clean <- gsub("`", "", expr_clean)
+  expr_clean <- trimws(expr_clean)
+  
+  resolve_full_path <- function(name) {
+    if (!is.null(gh)) {
+      tryCatch(
+        sub("^/", "", flowWorkspace::gh_pop_get_full_path(gh, name)),
+        error = function(e) { warning("Could not resolve full path for '", name, "'"); name }
+      )
+    } else { name }
+  }
+  
+  resolve_parent_path <- function() {
+    if (!is.null(gh)) {
+      tryCatch({
+        parent <- flowWorkspace::gh_pop_get_parent(gh, pop_name)
+        if (identical(parent, "root")) "root"
+        else sub("^/", "", flowWorkspace::gh_pop_get_full_path(gh, parent))
+      }, error = function(e) {
+        warning("Could not get parent for '", pop_name, "'; falling back to 'root'")
+        "root"
+      })
+    } else { "root" }
+  }
+  
+  parse_component <- function(comp) {
+    comp    <- trimws(comp)
+    negated <- startsWith(comp, "!")
+    raw     <- if (negated) trimws(sub("^!", "", comp)) else comp
+    list(name = resolve_full_path(raw), negated = negated)
+  }
+  
+  if (grepl("&", expr_clean)) {
+    parts  <- trimws(strsplit(expr_clean, "\\s*&+\\s*")[[1]])
+    parts  <- parts[nzchar(parts)]
+    parsed <- lapply(parts, parse_component)
+    
+    dep_names <- vapply(parsed, `[[`, character(1), "name")
+    dep_neg   <- vapply(parsed, `[[`, logical(1),   "negated")
+    
+    # ── KEY FIX: "parent & !dep" is a FlowJo NotNode, not AndNode ──────────────
+    non_neg_idx <- which(!dep_neg)
+    neg_idx     <- which(dep_neg)
+    if (length(non_neg_idx) == 1 && length(neg_idx) >= 1 && !is.null(gh)) {
+      if (identical(dep_names[non_neg_idx], resolve_parent_path())) {
+        return(list(
+          type       = "boolean",
+          op_type    = "not",
+          expression = expr_str,
+          dependents = dep_names[neg_idx],   # only the negated pop(s)
+          negated    = rep(TRUE, length(neg_idx))
+        ))
+      }
+    }
+    
+    return(list(
+      type       = "boolean",
+      op_type    = "and",
+      expression = expr_str,
+      dependents = dep_names,
+      negated    = dep_neg
+    ))
+    
+  } else if (grepl("\\|", expr_clean)) {
+    parts  <- trimws(strsplit(expr_clean, "\\s*\\|+\\s*")[[1]])
+    parts  <- parts[nzchar(parts)]
+    parsed <- lapply(parts, parse_component)
+    
+    return(list(
+      type       = "boolean",
+      op_type    = "or",
+      expression = expr_str,
+      dependents = vapply(parsed, `[[`, character(1), "name"),
+      negated    = vapply(parsed, `[[`, logical(1),   "negated")
+    ))
+    
+  } else if (startsWith(expr_clean, "!")) {
+    # ── KEY FIX: pure NOT — just the negated dep, no parent in dependents ───────
+    dep_path <- resolve_full_path(trimws(sub("^!", "", expr_clean)))
+    return(list(
+      type       = "boolean",
+      op_type    = "not",
+      expression = expr_str,
+      dependents = dep_path,   # single string, not c(parent, dep)
+      negated    = TRUE
+    ))
+    
+  } else {
+    warning("Could not determine boolean operation type for: ", pop_name)
     return(NULL)
   }
-  
-
-  # Parse expression to determine operation type and dependents
-  op_type <- "unknown"
-  dependents <- character(0)
-  expr_str <- ""
-  
-  # Convert expression to string for analysis
-  if (is.character(expr)) {
-    expr_str <- expr
-  } else {
-    expr_str <- deparse(expr, width.cutoff = 500L)[1]
-  }
-  
-  # Clean up: remove backticks used for non-standard names
-  expr_clean <- gsub("`", "", expr_str)
-  # Determine operation type
-  if  (grepl("^!", expr_clean) ||
-       (is.expression(expr) && length(expr) > 0 &&
-        grepl("^!", as.character(expr[[1]])[1]))) {
-    
-    # NOT operation
-    op_type <- "not"
-    # Extract the name after !
-    dep <- as.character(expr[[1]])[2]
-    dependents <- clean_backticks(trimws(dep))
-  } else if (grepl("&", expr_clean) ||
-             (is.call(expr) && as.character(expr[[1]]) %in% c("&", "&&"))) {
-    # AND operation
-    op_type <- "and"
-    if (is.expression(expr)) {
-      # Extract arguments from call
-      deps <- as.character(expr) %>% clean_backticks() %>% strsplit("\\s*&+\\s*")
-    } else {
-      # Split string by &
-      deps <- strsplit(expr_clean, "\\s*&+\\s*")[[1]]
-    }
-    # Clean up each dependent
-    dependents <- deps[[1]]
-    
-  } else if (grepl("\\|", expr_clean) || 
-             (is.expression(expr) && as.character(expr[[1]]) %in% c("|", "||"))) {
-    # OR operation
-    op_type <- "or"
-    if (is.expression(expr)) {
-      deps <- as.character(expr) %>% clean_backticks() %>% strsplit("\\s*\\|+\\s*")
-    } else {
-      deps <- strsplit(expr_clean, "\\s*\\|+\\s*")[[1]]
-    }
-    dependents <- deps[[1]]
-  }
-  
-  # Remove empty strings
-  dependents <- dependents[dependents != ""]
-  
-  return(list(
-    type = "boolean",
-    op_type = op_type,
-    expression = expr_str,
-    dependents = dependents
-  ))
 }
+
 
 
 #' Generate Logical Node XML (AndNode, OrNode, NotNode)
@@ -1012,18 +976,18 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
   if (node_type == "Population") {
     return(xml_lines)  # Fallback if unknown type
   }
-  
+  # browser()
   # Format display name according to FlowJo conventions
   display_name <- pop_name
-  if (length(def$dependents) > 0) {
-    if (def$op_type == "and") {
-      display_name <- paste0(paste0(def$dependents, collapse = "+ &amp; "), "+")
-    } else if (def$op_type == "or") {
-      display_name <- paste0(paste0(def$dependents, collapse = "+ or "), "+")
-    } else if (def$op_type == "not") {
-      display_name <- paste0(def$dependents[1], "-")
-    }
-  }
+  # if (length(def$dependents) > 0) {
+  #   if (def$op_type == "and") {
+  #     display_name <- paste0(paste0(def$dependents, collapse = "+ &amp; "), "+")
+  #   } else if (def$op_type == "or") {
+  #     display_name <- paste0(paste0(def$dependents, collapse = "+ or "), "+")
+  #   } else if (def$op_type == "not") {
+  #     display_name <- paste0(def$dependents[1], "-")
+  #   }
+  # }
   
   # Get event count
   count <- 0
@@ -1099,6 +1063,8 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
   # Add Dependents section
   xml_lines <- c(xml_lines, sprintf('%s  <Dependents>', indent))
   for (dep in def$dependents) {
+    # message(xml_encode(dep))
+    # browser()
     xml_lines <- c(xml_lines, sprintf('%s    <Dependent name="%s" />', indent, xml_encode(dep)))
   }
   xml_lines <- c(xml_lines, sprintf('%s  </Dependents>', indent))
@@ -1117,6 +1083,7 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
 #' @param populations List of population data
 #' @param groups List of group data
 #' @param workspace_name Name of the workspace
+#' @importFrom flowWorkspace gh_pop_get_data
 #' @return Character string containing XML content
 #' @keywords internal
 generate_flowjo10_xml <- function(gating_set, samples, gates, populations, groups, workspace_name, force_XSC_linear=TRUE) {
@@ -1138,31 +1105,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                  '  <WindowPosition x="100" y="100" width="800" height="600" displayed="1" panelState="0"/>'
   )
   
-  # Add text traits
-  # xml_lines <- c(xml_lines,
-  #                '  <TextTraits>',
-  #                '    <TextTrait font="Arial" size="12" name="Default" style="plain" color="#000000" background="#FFFFFF" just="left"/>',
-  #                '  </TextTraits>'
-  # )
-  
-  # Add columns
-  # xml_lines <- c(xml_lines,
-  #                '  <Columns>',
-  #                '    <TColumn>',
-  #                '      <Property name="Name"/>',
-  #                '    </TColumn>',
-  #                '    <TColumn>',
-  #                '      <Property name="Count"/>',
-  #                '    </TColumn>',
-  #                '  </Columns>'
-  # )
-  
-  # Add matrices (empty)
-  # xml_lines <- c(xml_lines, '  <Matrices/>')
-  
-  # Add cytometers
-  # xml_lines <- c(xml_lines, '  <Cytometers/>')
-  
+
   # Add groups
   xml_lines <- c(xml_lines, '<Groups>')
   # Add group nodes
@@ -1217,7 +1160,6 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
   
   # Add sample list
   xml_lines <- c(xml_lines, '  <SampleList>')
-  
   # Add samples (each containing DataSet, Transformations, Keywords, and SampleNode)
   for (sample_id in seq_along(samples)) {
     sample <- samples[[sample_id]]
@@ -1242,73 +1184,75 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
     if(force_XSC_linear){
       lin_trans = linearTransform(transformationId = "defaultLin", a = 1, b = 0)
       for (marker in c("SSC-A", "SSC-H", "SSC-W", "FSC-A", "FSC-H", "FSC-W")){
-        transforms[[marker]] =lin_trans@.Data
+        transforms[[marker]] = lin_trans@.Data
         attr(transforms[[marker]], "type") = "Linear"
       }
       
     }
     xml_lines <- c(xml_lines, '      <Transformations>')
-    
-    # expect_true(grepl('<transforms:linear transforms:minRange="0" transforms:maxRange="262144" gain="1.0">', xml_content))
-    # expect_true(grepl('<data-type:parameter data-type:name="FSC-A"/>', xml_content))
-    # 
-    # # Hyperlog transformation
-    # expect_true(grepl('<transforms:hyperlog transforms:length="256" transforms:maxRange="262144" transforms:T="10000" transforms:A="2000" transforms:M="4" transforms:W="0.5">', xml_content))
-    # expect_true(grepl('<data-type:parameter data-type:name="FL4-H"/>', xml_content))
-    # 
-    # # Logicle transformation
-    # expect_true(grepl('<transforms:logicle transforms:length="256" transforms:T="10000" transforms:A="2000" transforms:W="0.5" transforms:M="4">', xml_content))
-    # expect_true(grepl('<data-type:parameter data-type:name="FL5-H"/>', xml_content))
-    # 
-    # # Miltenyi transformation
-    # expect_true(grepl('<transforms:miltenyi transforms:maxRange="262144">', xml_content))
-    # expect_true(grepl('<data-type:parameter data-type:name="FL6-H"/>', xml_content))
-    
+    # browser()
     for (tr_idx in seq(transforms)) {
       atr_tr = attributes(transforms[[tr_idx]])
       channel = names(transforms)[tr_idx]
       # Get actual data range for this channel
       data_range <- tryCatch({
-        # Try to get from FCS keywords first
-        kw <- flowCore::keyword(sample_gh)
-        param_idx <- which(flowCore::colnames(sample_gh@data) == channel)
+        # Get the flowFrame to ensure consistent data access
+        fr <- gh_pop_get_data(sample_gh, "root")
+        kw <- flowCore::keyword(fr)
         
-        if (length(param_idx) > 0) {
-          range_key <- paste0("$P", param_idx, "R")
-          if (!is.null(kw[[range_key]])) {
-            max_val <- as.numeric(kw[[range_key]])
-            min_val <- 0  # Usually 0 for flow data
+        # Find which $PnN matches the channel name
+        # keyword() returns a named list, so we compare values to channel
+        param_matches <- which(sapply(kw, function(x) identical(as.character(x), channel)))
+        
+        if (length(param_matches) > 0) {
+          # Get the parameter name (e.g., "$P6N") and extract number
+          param_name <- names(param_matches)[1]  # Take first match if multiple
+          param_num <- gsub("\\$|P|N", "", param_name)
+          r_keyword <- paste0("$P", param_num, "R")
+          
+          if (!is.null(kw[[r_keyword]])) {
+            max_val <- as.numeric(kw[[r_keyword]])
+            min_val <- 0
             
             # Check for negative values in scatter channels
-            if (grepl("FSC|SSC", channel)) {
-              data_vals <- flowCore::exprs(sample_gh@data)[, channel]
+            if (grepl("FSC|SSC", channel, ignore.case = TRUE)) {
+              data_vals <- flowCore::exprs(fr)[, channel]
               actual_min <- min(data_vals, na.rm = TRUE)
               if (actual_min < 0) {
                 min_val <- actual_min
               }
             }
             
-            return(c(min_val, max_val))
+            # NO return() here - just the last expression
+            c(min_val, max_val)
+          } else {
+            # Fallback: $PnR not found in keywords
+            data_vals <- flowCore::exprs(fr)[, channel]
+            c(min(data_vals, na.rm = TRUE), max(data_vals, na.rm = TRUE))
           }
+        } else {
+          # Fallback: channel name not found in $PnN keywords
+          data_vals <- flowCore::exprs(fr)[, channel]
+          c(min(data_vals, na.rm = TRUE), max(data_vals, na.rm = TRUE))
         }
         
-        # Fallback: use actual data range
-        data_vals <- flowCore::exprs(sample_gh@data)[, channel]
-        c(min(data_vals, na.rm = TRUE), max(data_vals, na.rm = TRUE))
-        
       }, error = function(e) {
-        c(0, 262144)  # Final fallback
+        # If anything fails, return default range
+        c(0, 262144)
       })
-      
+      if(is.null(atr_tr$type)){
+        atr_tr$type = "Linear"
+      }
       switch(atr_tr$type,
              "biexp" = {
+               # browser()
                type = "biex"
-               param_str = sprintf("transforms:length=\"%d\" transforms:maxRange=\"%d\" transforms:neg=\"%d\" transforms:width=\"%d\" transforms:pos=\"%d\"",
+               param_str = sprintf("transforms:length=\"%d\" transforms:maxRange=\"%d\" transforms:neg=\"%d\" transforms:width=\"%d\" transforms:pos=\"%.8g\"",
                                    atr_tr$parameters$channelRange %>% as.integer(), 
                                    atr_tr$parameters$maxValue %>% as.integer(), 
                                    atr_tr$parameters$neg %>% as.integer(), 
                                    atr_tr$parameters$widthBasis %>% as.integer(), 
-                                   atr_tr$parameters$pos %>% as.integer())
+                                   atr_tr$parameters$pos)
                d_type_str = sprintf("<data-type:parameter data-type:name=\"%s\"/>",
                                     channel)
                
@@ -1660,6 +1604,7 @@ generate_sample_subpopulations_xml <- function(gating_hierarchy, gates, populati
             
             xml_lines <- c(xml_lines, sprintf('%s    </gating:EllipsoidGate>', indent))
           } else if (gate_def$type == "boolean") {
+            browser()
             xml_lines <- c(xml_lines,
                            sprintf('%s    <gating:BooleanGate gating:id="%s" eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="1" userDefined="1">', indent, xml_encode(gate$id))
             )
@@ -1722,7 +1667,7 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
   
   # Check if we've already visited this parent_path (cycle detection)
   if (parent_path %in% visited_paths) {
-    cat(file = stderr(), "WARNING: Cycle detected in population hierarchy at parent_path='", parent_path, "'\n")
+    # cat(file = stderr(), "WARNING: Cycle detected in population hierarchy at parent_path='", parent_path, "'\n")
     return(character(0))
   }
   
@@ -1740,8 +1685,8 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
     }
   }
   
-  cat(file = stderr(), parent_path, ":", 
-      sapply(child_populations, function(x) x$name) %>% unlist() %>% paste(collapse = " "), "\n")
+  # cat(file = stderr(), parent_path, ":", 
+  #     sapply(child_populations, function(x) x$name) %>% unlist() %>% paste(collapse = " "), "\n")
   
   # Process each child population
   for (pop_id in names(child_populations)) {
@@ -1966,40 +1911,58 @@ xml_encode <- function(text) {
 #' @keywords internal
 get_display_range <- function(gh, param_name) {
   tryCatch({
-    # Try to get from FCS keywords first
-    kw <- flowCore::keyword(gh)
-    param_idx <- which(flowCore::colnames(gh@data) == param_name)
+    # Extract flowFrame from GatingHierarchy if needed
+    if (inherits(gh, "GatingHierarchy")) {
+      fr <- flowWorkspace::gh_pop_get_data(gh, "root")
+    } else {
+      fr <- gh
+    }
     
-    if (length(param_idx) > 0) {
-      range_key <- paste0("$P", param_idx, "R")
+    kw <- flowCore::keyword(fr)
+    
+    # Find parameter number by matching $PnN to param_name
+    n_pattern <- paste0("^\\$P[0-9]+N$")
+    n_keys <- grep(n_pattern, names(kw), value = TRUE)
+    n_values <- sapply(n_keys, function(k) as.character(kw[[k]]))
+    param_match <- which(n_values == param_name)
+    
+    if (length(param_match) > 0) {
+      # Extract number from $P6N -> 6
+      param_num <- gsub("\\$|P|N", "", names(param_match)[1])
+      range_key <- paste0("$P", param_num, "R")
+      
       if (!is.null(kw[[range_key]])) {
         max_val <- as.numeric(kw[[range_key]])
         min_val <- 0
         
         # Check for negative values in scatter channels
         if (grepl("FSC|SSC", param_name, ignore.case = TRUE)) {
-          data_vals <- flowCore::exprs(gh@data)[, param_name]
+          data_vals <- flowCore::exprs(fr)[, param_name]
           actual_min <- min(data_vals, na.rm = TRUE)
           if (actual_min < 0) {
-            min_val <- floor(actual_min / 10000) * 10000  # Round down to nearest 10k
+            min_val <- floor(actual_min / 10000) * 10000
           }
         }
         
-        return(c(min_val, max_val))
+        c(min_val, max_val)  # No explicit return needed
+      } else {
+        # Keyword missing, fall through to data range
+        data_vals <- flowCore::exprs(fr)[, param_name]
+        min_val <- min(data_vals, na.rm = TRUE)
+        max_val <- max(data_vals, na.rm = TRUE)
+        
+        range_span <- max_val - min_val
+        c(min_val - 0.1 * range_span, max_val + 0.1 * range_span)
       }
+    } else {
+      # Parameter not found in keywords, use actual data
+      data_vals <- flowCore::exprs(fr)[, param_name]
+      min_val <- min(data_vals, na.rm = TRUE)
+      max_val <- max(data_vals, na.rm = TRUE)
+      
+      range_span <- max_val - min_val
+      c(min_val - 0.1 * range_span, max_val + 0.1 * range_span)
     }
-    
-    # Fallback: use actual data range with some padding
-    data_vals <- flowCore::exprs(gh@data)[, param_name]
-    min_val <- min(data_vals, na.rm = TRUE)
-    max_val <- max(data_vals, na.rm = TRUE)
-    
-    # Add 10% padding
-    range_span <- max_val - min_val
-    min_val <- min_val - 0.1 * range_span
-    max_val <- max_val + 0.1 * range_span
-    
-    return(c(min_val, max_val))
     
   }, error = function(e) {
     c(0, 262144)

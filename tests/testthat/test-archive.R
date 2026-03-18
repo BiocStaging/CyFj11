@@ -3,8 +3,6 @@
 #' @keywords internal
 NULL
 
-context("Archive Processing")
-
 # Load required packages
 skip_if_not_installed("jsonlite")
 library(jsonlite)
@@ -74,3 +72,4 @@ test_that("process_zip_archive handles real FlowJo v11 file correctly", {
   expect_gt(length(results$manifests), 0)
   expect_gt(length(results$json), 0)
 })
+

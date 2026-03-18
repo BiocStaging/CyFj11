@@ -11,3 +11,6 @@ flowjo_export_tests
 plans
 lib
 coverage.html
+file.*.wsp
+FJ10.wsp
+.Rproj.user

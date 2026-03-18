@@ -3,7 +3,7 @@
 #' @keywords internal
 NULL
 
-context("Pretty Print FlowJo")
+
 
 test_that("pretty_print_flowjo handles missing file", {
   # Test with non-existent file

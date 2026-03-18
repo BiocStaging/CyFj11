@@ -3,7 +3,6 @@
 #' @keywords internal
 NULL
 
-context("Full Conversion Tests")
 
 # Load required packages
 skip_if_not_installed("flowCore")

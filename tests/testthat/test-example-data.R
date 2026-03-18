@@ -3,7 +3,7 @@
 #' @keywords internal
 NULL
 
-context("Example Data Usage")
+
 
 test_that("Example FlowJo v11 file can be loaded and examined", {
   # Load the example data file

@@ -63,6 +63,9 @@ search_fcs_files <- function(root_dir, pattern = "\\.fcs$") {
     ))
   }
   
+  # Deduplicate identical full paths (e.g. from overlapping root_dirs)
+  all_files <- unique(all_files)
+  
   # Get file info
   file_info <- file.info(all_files)
   
@@ -75,18 +78,13 @@ search_fcs_files <- function(root_dir, pattern = "\\.fcs$") {
     stringsAsFactors = FALSE
   )
   
-  # Handle duplicates (keep newest, then largest)
-  if (anyDuplicated(results$filename)) {
-    results <- results[order(results$mtime, results$size_bytes, decreasing = TRUE), ]
-    dupes <- duplicated(results$filename)
-    if (any(dupes) && .pkgenv$verbose) {
-      cat("  Found", sum(dupes), "duplicate filenames - keeping newest/largest\n")
-    }
-    results <- results[!dupes, ]
+  n_dupes <- sum(duplicated(results$filename))
+  if (n_dupes > 0 && .pkgenv$verbose) {
+    cat("  Note:", n_dupes, "duplicate filename(s) found in different directories\n")
   }
   
   if (.pkgenv$verbose) {
-    cat("Found", nrow(results), "unique FCS files\n")
+    cat("Found", nrow(results), "FCS files\n")
   }
   
   return(results)

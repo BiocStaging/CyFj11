@@ -16,6 +16,10 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(CyFj11)
+library(flowWorkspace)
+library(flowCore)
+library(CytoML)
+library(ggcyto)
 ```
 
 ## Introduction
@@ -53,7 +57,7 @@ Let's walk through this process with a simple example.
 
 First, we'll read a FlowJo v11 workspace file:
 
-```{r read-workspace, eval=FALSE}
+```{r read-workspace, eval=TRUE}
 # Set the path to your FlowJo workspace file
 workspace_path <- system.file("extdata", "test.data.flowjo", package = "CyFj11")
 
@@ -70,7 +74,7 @@ The `read_flowjo11_workspace()` function parses the ZIP-based FlowJo v11 format 
 
 Next, we convert the parsed workspace to a GatingSet object, which is the standard format for flow cytometry data in R:
 
-```{r convert-gs, eval=FALSE}
+```{r convert-gs, eval=TRUE}
 workspace_fcs <- system.file("extdata", "", package = "CyFj11")
 # You'll need to specify the path to your FCS files
 gs <- fj11_to_gatingset(
@@ -79,13 +83,15 @@ gs <- fj11_to_gatingset(
   path = workspace_fcs
 )
 
-
+pretty_print_flowjo(workspace_path)
 # Check the number of samples
 length(gs)
 
 # View sample names
-sampleNames(gs[[1]])
-gs = merge_list_to_gs(gs)
+flowCore::sampleNames(gs[[1]])
+# but this looses the transformation
+# gs = merge_list_to_gs(gs)
+gs = gs[[1]]
 ```
 
 Note:
@@ -117,7 +123,12 @@ head(stats)
 
 plot(gs)
 autoplot(gs, "cells", bins = 80)
-autoplot(gs, "cd8Pos", bins = 80)
+autoplot(gs, "cd8Pos", bins = 80, axis_inverse_trans = T)
+
+gate = gh_pop_get_gate(gs, "cd8Pos")
+gh = gs[[1]][[1]]
+gh_get_transformations(gh,channel = "APC-A")
+
 
 ```
 
@@ -125,7 +136,7 @@ autoplot(gs, "cd8Pos", bins = 80)
 
 After performing analysis in R, you can export your results back to FlowJo v10 format:
 
-```{r export, eval=FALSE}
+```{r export, eval=TRUE}
 # Export to FlowJo v10 format
 export_path <- tempfile(fileext = ".wsp")
 export_flowjo10_workspace(gs[[1]], export_path)
@@ -148,3 +159,21 @@ For function-specific documentation, use the help system:
 ?read_flowjo11_workspace
 ?fj11_to_gatingset
 ?export_flowjo10_workspace
+```
+
+```{r cytoML read xml}
+library(CytoML)
+ws <- CytoML::open_flowjo_xml(export_path)
+gs_back <- CytoML::flowjo_to_gatingset(ws, name = "All Samples",
+                                            path = workspace_fcs)
+
+# Get population statistics
+stats <- gs_pop_get_stats(gs_back)
+head(stats)
+
+plot(gs_back)
+ggcyto::autoplot(gs_back, "cells", bins = 80)
+autoplot(gs_back, "cd8Pos", bins = 80)
+
+
+```

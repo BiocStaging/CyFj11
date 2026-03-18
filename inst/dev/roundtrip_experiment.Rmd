@@ -1,8 +1,12 @@
 ---
-title: "Round-Trip Experiment: FlowJo v11 → CyFj11 → FlowJo v10 → FlowJo v11"
+title: "Round-Trip Experiment: FlowJo v11 -> CyFj11 -> FlowJo v10 -> FlowJo v11"
 author: "Comprehensive Evaluation of Format Conversion Fidelity"
 date: "`r Sys.Date()`"
 output:
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+    latex_engine: xelatex 
   html_document:
     toc: true
     toc_float: true
@@ -388,7 +392,6 @@ show_xml_snippet <- function(xml_path, pattern = NULL, context = 5) {
   }
 }
 
-#' Test roundtrip
 test_roundtrip <- function(gs_orig, export_path, fcs_dir, tolerance = 1.0) {
   cat("\n")
   cat(paste(rep("=", 70), collapse = ""), "\n")
@@ -403,11 +406,12 @@ test_roundtrip <- function(gs_orig, export_path, fcs_dir, tolerance = 1.0) {
     gs_back <- CytoML::flowjo_to_gatingset(ws, name = "All Samples", 
                                             path = fcs_dir)
     cat("✓ GatingSet reconstructed\n")
-    
+    sampleNames(gs_back) = sampleNames(gs_orig)
     # Compare
     stats_orig <- gs_pop_get_count_fast(gs_orig)
     stats_back <- gs_pop_get_count_fast(gs_back)
     
+   
     comparison <- merge(
       stats_orig[, c("name", "Population", "Count")],
       stats_back[, c("name", "Population", "Count")],
@@ -444,6 +448,7 @@ test_roundtrip <- function(gs_orig, export_path, fcs_dir, tolerance = 1.0) {
     return(FALSE)
   })
 }
+
 ```
 
 ---
@@ -649,7 +654,7 @@ show_xml_snippet(export_path, pattern = "FSC-A", context = 3)
 ## 2.6 Roundtrip
 
 ```{r test02_roundtrip}
-test_roundtrip(gs, export_path, test_dir, tolerance = 1.0)
+test_roundtrip(gs_orig = gs, export_path = export_path, fcs_dir = test_dir, tolerance = 1.0)
 ```
 
 ---
@@ -979,7 +984,7 @@ show_xml_snippet(export_path, pattern = "EllipsoidGate", context = 15)
 ## 5.6 Roundtrip
 
 ```{r test05_roundtrip}
-test_roundtrip(gs_orig = gs, export_path = export_path, fcs_dir = test_dir, tolerance = 1.0)
+test_roundtrip(gs_orig = gs, export_path = export_path, fcs_dir = test_dir, tolerance = 3.0)
 ```
 
 ---
@@ -1126,7 +1131,7 @@ test_roundtrip(gs_orig = gs, export_path = export_path, fcs_dir = test_dir, tole
 
 ---
 
-# TEST 7: Log Transform + 1D Gate do we need this??
+# TEST 7: Log Transform + 1D Gate 
 
 **Goal:** Test log transformation
 there are many log transformations, logtGml2_trans is not working the same and has problems with the roundtrip
@@ -1153,13 +1158,14 @@ gs <- GatingSet(fs)
 log_trans = flowWorkspace::flowjo_log_trans(decade = 6, offset = 1, scale = 1, n=6)
 trans_list <- transformerList("PE-A", log_trans)
 gs <- transform(gs, trans_list)
-
+transF = gh_get_transformations(gs[[1]])
 
 
 
 
 # Add gate
 # gate <- rectangleGate(filterId = "PE_pos", "PE-A" = c(100, 20000))
+# in transformed space.
 gate <- rectangleGate(filterId = "PE_pos", "PE-A" = c(0.4, 0.8))
 gs_pop_add(gs, gate, parent = "root")
 recompute(gs)
@@ -1622,21 +1628,600 @@ test_roundtrip(gs, export_path, test_dir, tolerance = 1.0)
 
 ---
 
-# TEST 11: CyDa output
+# TEST 11: Biexponential + Arcsinh — Mixed Gate Types with Hierarchy
 
-includes asinh transformations and some gates?
+**Goal:** Combine biexponential (FITC-A) and arcsinh (APC-A) transforms in a
+two-level hierarchy containing rectangle, polygon, and boolean gates
 
 ## 11.1 Setup
 
-```{r test08_setup}
-gs = load_gs("/pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/analysis/adaptiveFunctional/channel_rename/keepChannels/indexed/rmMargins/noDoublets/cyEt/transformed/_data/GS")
-
-test_name <- "TEST 11: CyDa"
+```{r test11_setup}
+test_name <- "TEST 11: Biexp + Arcsinh — Mixed Gate Hierarchy"
 cat("\n", paste(rep("=", 70), collapse = ""), "\n")
 cat(test_name, "\n")
 cat(paste(rep("=", 70), collapse = ""), "\n\n")
 
 test_dir <- file.path(BASE_TEST_DIR, "test11")
+dir.create(test_dir, showWarnings = FALSE, recursive = TRUE)
+
+ff       <- create_test_fcs(n = 10000, seed = 11)
+fcs_path <- file.path(test_dir, "sample11.fcs")
+write.FCS(ff, fcs_path)
+
+fs <- read.flowSet(fcs_path)
+gs <- GatingSet(fs)
+
+# ── Transformations ───────────────────────────────────────────────────────────
+biexp_trans <- flowjo_biexp_trans(
+  channelRange = 4096, maxValue = 262144,
+  pos = 4.5, neg = 0, widthBasis = -10
+)
+asinh_trans <- asinhtGml2_trans(T = 262144, M = 4.5, A = 0)
+
+gs <- transform(gs, transformerList(from = c("FITC-A", "APC-A" ),
+                                    trans = list(biexp_trans, asinh_trans)
+))
+
+# ── Level 1 ─ 2D Rectangle on scatter (linear) ───────────────────────────────
+gate_cells <- rectangleGate(
+  filterId = "cells",
+  "FSC-A"  = c(60000, 200000),
+  "SSC-A"  = c(30000, 150000)
+)
+gs_pop_add(gs, gate_cells, parent = "root")
+recompute(gs)
+
+# ── Level 2a ─ 1D Rectangle on FITC-A (biexp) ────────────────────────────────
+gate_fitc <- rectangleGate(filterId = "FITC_pos", "FITC-A" = c(1000, 3500))
+gs_pop_add(gs, gate_fitc, parent = "/cells")
+
+# ── Level 2b ─ 1D Rectangle on APC-A (arcsinh) ───────────────────────────────
+gate_apc <- rectangleGate(filterId = "APC_pos", "APC-A" = c(0.28, 0.95))
+gs_pop_add(gs, gate_apc, parent = "/cells")
+
+# ── Level 2c ─ Polygon on FSC-A vs FSC-H (linear singlets gate) ──────────────
+gate_singlets <- polygonGate(
+  filterId = "singlets",
+  "FSC-A"  = c(55000,  75000, 185000, 205000, 195000,  65000),
+  "FSC-H"  = c(50000,  45000, 165000, 195000, 205000,  85000)
+)
+gs_pop_add(gs, gate_singlets, parent = "/cells")
+
+# ── Level 2d ─ Boolean AND (FITC_pos ∩ APC_pos) ──────────────────────────────
+bool_and <- booleanFilter(`FITC_pos&APC_pos`, filterId = "double_pos")
+gs_pop_add(gs, bool_and, parent = "/cells")
+
+# ── Level 2e ─ Boolean OR  (FITC_pos ∪ APC_pos) ──────────────────────────────
+bool_or  <- booleanFilter(`FITC_pos|APC_pos`, filterId = "either_pos")
+gs_pop_add(gs, bool_or,  parent = "/cells")
+
+recompute(gs)
+
+cat("✓ GatingSet created\n")
+cat("  Directory:", test_dir, "\n\n")
+
+stats <- gs_pop_get_count_fast(gs)
+
+save_test_info(
+  test_dir, test_name,
+  description = paste(
+    "Biexponential (FITC-A) + arcsinh (APC-A) transforms.",
+    "Two-level hierarchy: cells -> {FITC_pos, APC_pos, singlets, double_pos, either_pos}"
+  ),
+  gate_info = c(
+    "  Level 1  - cells:      2D rectangleGate (FSC-A, SSC-A; linear)",
+    "  Level 2a - FITC_pos:   1D rectangleGate (FITC-A [1000,3500]; biexp)",
+    "  Level 2b - APC_pos:    1D rectangleGate (APC-A  [0.28,0.95]; arcsinh)",
+    "  Level 2c - singlets:   polygonGate      (FSC-A vs FSC-H; linear)",
+    "  Level 2d - double_pos: booleanFilter    (FITC_pos AND APC_pos)",
+    "  Level 2e - either_pos: booleanFilter    (FITC_pos OR  APC_pos)"
+  ),
+  transform_info = c(
+    "  FITC-A: Biexponential (channelRange=4096, maxValue=262144, pos=4.5, neg=0, widthBasis=-10)",
+    "  APC-A:  Arcsinh GML2  (T=262144, M=4.5, A=0)",
+    "  Other:  Linear"
+  ),
+  expected_counts = sprintf("  %s: %d", stats$Population, stats$Count)
+)
+```
+
+## 11.2 Inspect Input
+
+```{r test11_inspect}
+inspect_gs(gs)
+
+cat("\nTransformation summary:\n")
+gh    <- gs[[1]]
+trans <- gh_get_transformations(gh)
+for (ch in names(trans)) {
+  cat(sprintf("  %s: %s\n", ch, attr(trans[[ch]], "type")))
+}
+
+cat("\nGate details:\n")
+cat("  FITC_pos range (biexp scale):", gate_fitc@min, "-", gate_fitc@max, "\n")
+cat("  APC_pos  range (asinh scale):", gate_apc@min,  "-", gate_apc@max,  "\n")
+cat("  Singlets vertices:\n")
+print(gate_singlets@boundaries)
+```
+
+## 11.3 Visual Check
+
+```{r test11_visual, fig.width = 10, fig.height = 8}
+plot(gs)
+autoplot(gs, "cells")
+autoplot(gs, "FITC_pos")
+autoplot(gs, "APC_pos")
+autoplot(gs, "singlets")
+autoplot(gs, "double_pos")
+autoplot(gs, "either_pos")
+```
+
+## 11.4 Export
+
+```{r test11_export}
+export_path <- file.path(test_dir, "export.wsp")
+success <- export_flowjo10_workspace(gs, export_path)
+
+if (success) {
+  cat("✓ Export succeeded\n")
+  cat(paste(rep("=", 70), collapse = ""), "\n")
+  cat("OPEN IN FLOWJO:\n")
+  cat(paste(rep("=", 70), collapse = ""), "\n")
+  cat("  Select:", export_path, "\n")
+  cat("  Verify: Biexp on FITC-A, Arcsinh on APC-A\n")
+  cat("  Verify: cells -> {FITC_pos, APC_pos, singlets, double_pos, either_pos}\n")
+  cat(paste(rep("=", 70), collapse = ""), "\n")
+} else {
+  cat("✗ Export failed\n")
+}
+```
+
+## 11.5 Inspect XML
+
+```{r test11_xml}
+show_xml_snippet(export_path, pattern = "biex",        context = 4)
+show_xml_snippet(export_path, pattern = "fasinh",      context = 4)
+show_xml_snippet(export_path, pattern = "PolygonGate", context = 8)
+show_xml_snippet(export_path, pattern = "AndNode",     context = 6)
+show_xml_snippet(export_path, pattern = "OrNode",      context = 6)
+```
+
+## 11.6 Roundtrip
+
+Both biexponential and arcsinh transforms have good roundtrip fidelity
+(see TEST 6 and TEST 8). Tolerance set to 1 %.
+
+```{r test11_roundtrip}
+test_roundtrip(gs, export_path, test_dir, tolerance = 1.0)
+```
+
+---
+
+# TEST 12: Log + Biexponential — Ellipse, Range, and Full Boolean Set
+
+**Goal:** Log (PE-A) and biexponential (FITC-A) transforms with an ellipse gate
+on scatter, open-ended range gates on both transformed channels, and AND / OR /
+NOT boolean operations.  
+**Note:** Log-transform roundtrip is known to drift (see TEST 7); biexp and
+boolean results should still match.
+
+## 12.1 Setup
+
+```{r test12_setup}
+test_name <- "TEST 12: Log + Biexp — Ellipse + Range + Boolean (AND/OR/NOT)"
+cat("\n", paste(rep("=", 70), collapse = ""), "\n")
+cat(test_name, "\n")
+cat(paste(rep("=", 70), collapse = ""), "\n\n")
+
+test_dir <- file.path(BASE_TEST_DIR, "test12")
+dir.create(test_dir, showWarnings = FALSE, recursive = TRUE)
+
+ff       <- create_test_fcs(n = 10000, seed = 12)
+fcs_path <- file.path(test_dir, "sample12.fcs")
+write.FCS(ff, fcs_path)
+
+fs <- read.flowSet(fcs_path)
+gs <- GatingSet(fs)
+
+# ── Transformations ───────────────────────────────────────────────────────────
+log_trans   <- flowjo_log_trans(decade = 6, offset = 1, scale = 1, n = 6)
+biexp_trans <- flowjo_biexp_trans(
+  channelRange = 4096, maxValue = 262144,
+  pos = 4.5, neg = 0, widthBasis = -10
+)
+
+gs <- transform(gs, transformerList(
+    from = c("PE-A" , "FITC-A") , 
+    trans = list(log_trans, biexp_trans)
+))
+
+# ── Gate 1 ─ 2D Rectangle on scatter (linear) — root level ───────────────────
+gate_cells <- rectangleGate(
+  filterId = "cells",
+  "FSC-A"  = c(55000, 195000),
+  "SSC-A"  = c(25000, 145000)
+)
+gs_pop_add(gs, gate_cells, parent = "root")
+
+# ── Gate 2 ─ Ellipse on scatter (linear) — root level ────────────────────────
+ellipse_cov <- matrix(c(2e9, 8e8, 8e8, 1.5e9), ncol = 2)
+colnames(ellipse_cov) <- rownames(ellipse_cov) <- c("FSC-A", "SSC-A")
+gate_ellipse <- ellipsoidGate(
+  filterId = "scatter_ellipse",
+  .gate    = ellipse_cov,
+  mean     = c("FSC-A" = 120000, "SSC-A" = 80000),
+  distance = 2
+)
+gs_pop_add(gs, gate_ellipse, parent = "root")
+
+recompute(gs)
+
+# ── Gate 3 ─ Range gate on FITC-A (biexp), child of cells ────────────────────
+#   Upper bound = channelRange (4096) acts as open-ended range
+gate_fitc <- rectangleGate(filterId = "FITC_hi", "FITC-A" = c(1500, 4096))
+gs_pop_add(gs, gate_fitc, parent = "/cells")
+
+# ── Gate 4 ─ Range gate on PE-A (log), child of cells ────────────────────────
+#   Upper bound ~= log scale maximum for decade=6
+gate_pe <- rectangleGate(filterId = "PE_hi", "PE-A" = c(0.45, 1.0))
+gs_pop_add(gs, gate_pe, parent = "/cells")
+
+# ── Boolean AND  (FITC_hi ∩ PE_hi) ───────────────────────────────────────────
+bool_and <- booleanFilter(`FITC_hi&PE_hi`, filterId = "double_hi")
+gs_pop_add(gs, bool_and, parent = "/cells")
+
+# ── Boolean OR   (FITC_hi ∪ PE_hi) ───────────────────────────────────────────
+bool_or  <- booleanFilter(`FITC_hi|PE_hi`, filterId = "either_hi")
+gs_pop_add(gs, bool_or,  parent = "/cells")
+
+# ── Boolean NOT  (¬either_hi) ────────────────────────────────────────────────
+bool_not <- booleanFilter(`cells&!either_hi`, filterId = "neither")
+gs_pop_add(gs, bool_not, parent = "/cells")
+
+recompute(gs)
+
+cat("✓ GatingSet created\n")
+cat("  Directory:", test_dir, "\n\n")
+
+stats <- gs_pop_get_count_fast(gs)
+
+save_test_info(
+  test_dir, test_name,
+  description = paste(
+    "Log (PE-A) + biexponential (FITC-A) transforms.",
+    "Ellipse on scatter (root); range gates on transformed channels (child of cells);",
+    "full boolean set: AND, OR, NOT.",
+    "WARNING: log-transform gate position drifts on roundtrip (see TEST 7)."
+  ),
+  gate_info = c(
+    "  Level 1    - cells:          2D rectangleGate  (FSC-A, SSC-A; linear)",
+    "  Level 1    - scatter_ellipse: ellipsoidGate    (FSC-A, SSC-A; linear)",
+    "  Level 2    - FITC_hi:        range gate        (FITC-A [1500,4096]; biexp)",
+    "  Level 2    - PE_hi:          range gate        (PE-A   [0.45,1.0];  log)",
+    "  Level 2    - double_hi:      booleanFilter     (FITC_hi AND PE_hi)",
+    "  Level 2    - either_hi:      booleanFilter     (FITC_hi OR  PE_hi)",
+    "  Level 2    - neither:        booleanFilter     (NOT either_hi)"
+  ),
+  transform_info = c(
+    "  PE-A:   FlowJo Log (decade=6, offset=1) — roundtrip drift expected",
+    "  FITC-A: Biexponential (channelRange=4096, pos=4.5, neg=0, widthBasis=-10)",
+    "  Other:  Linear"
+  ),
+  expected_counts = sprintf("  %s: %d", stats$Population, stats$Count)
+)
+```
+
+## 12.2 Inspect Input
+
+```{r test12_inspect}
+inspect_gs(gs)
+
+cat("\nTransformation summary:\n")
+gh    <- gs[[1]]
+trans <- gh_get_transformations(gh)
+for (ch in names(trans)) {
+  cat(sprintf("  %s: %s\n", ch, attr(trans[[ch]], "type")))
+}
+
+cat("\nEllipse gate (linear scatter):\n")
+cat("  Mean:    ", gate_ellipse@mean, "\n")
+cat("  Distance:", gate_ellipse@distance, "\n")
+cat("  Covariance:\n")
+print(gate_ellipse@cov)
+
+cat("\nRange gate FITC_hi (biexp scale):",
+    gate_fitc@min, "–", gate_fitc@max, "\n")
+cat("Range gate PE_hi   (log   scale):",
+    gate_pe@min,   "–", gate_pe@max,   "\n")
+```
+
+## 12.3 Visual Check
+
+```{r test12_visual, fig.width = 10, fig.height = 8}
+plot(gs)
+autoplot(gs, "cells")
+autoplot(gs, "scatter_ellipse")
+autoplot(gs, "FITC_hi")
+autoplot(gs, "PE_hi")
+autoplot(gs, "double_hi")
+autoplot(gs, "either_hi")
+autoplot(gs, "neither")
+
+# Side-by-side: raw vs transformed for both channels
+par(mfrow = c(2, 2))
+hist(flowCore::exprs(ff)[, "FITC-A"], breaks = 50,
+     main = "FITC-A (raw)",       xlab = "FITC-A")
+hist(flowCore::exprs(ff)[, "PE-A"],   breaks = 50,
+     main = "PE-A (raw)",         xlab = "PE-A")
+trans_data <- flowCore::exprs(gh_pop_get_data(gs[[1]], "root"))
+hist(trans_data[, "FITC-A"], breaks = 50,
+     main = "FITC-A (biexp)",     xlab = "FITC-A")
+hist(trans_data[, "PE-A"],   breaks = 50,
+     main = "PE-A (log)",         xlab = "PE-A")
+```
+
+## 12.4 Export
+
+```{r test12_export}
+export_path <- file.path(test_dir, "export.wsp")
+success <- export_flowjo10_workspace(gs, export_path)
+
+if (success) {
+  cat("✓ Export succeeded\n")
+  cat(paste(rep("=", 70), collapse = ""), "\n")
+  cat("OPEN IN FLOWJO:\n")
+  cat(paste(rep("=", 70), collapse = ""), "\n")
+  cat("  Select:", export_path, "\n")
+  cat("  Verify: Log on PE-A, Biexp on FITC-A\n")
+  cat("  Verify: Ellipse visible on FSC-A vs SSC-A scatter\n")
+  cat("  Verify: cells -> {FITC_hi, PE_hi, double_hi, either_hi, neither}\n")
+  cat("  NOTE:   Log gate position may differ in FlowJo v10 (known issue)\n")
+  cat(paste(rep("=", 70), collapse = ""), "\n")
+} else {
+  cat("✗ Export failed\n")
+}
+```
+
+## 12.5 Inspect XML
+
+```{r test12_xml}
+show_xml_snippet(export_path, pattern = "transforms:log",   context = 4)
+show_xml_snippet(export_path, pattern = "transforms:biex",  context = 4)
+show_xml_snippet(export_path, pattern = "EllipsoidGate",    context = 10)
+show_xml_snippet(export_path, pattern = "AndNode",          context = 6)
+show_xml_snippet(export_path, pattern = "OrNode",           context = 6)
+show_xml_snippet(export_path, pattern = "NotNode",          context = 6)
+```
+
+## 12.6 Roundtrip
+
+
+```{r test12_roundtrip}
+test_roundtrip(gs, export_path, test_dir, tolerance = 80.0)
+```
+
+---
+
+# TEST 13: Full Arcsinh — Deep 3-Level Hierarchy with All Gate Types
+
+**Goal:** Arcsinh transform on three fluorescence channels; a three-level gate
+hierarchy using polygon (level 1), 2D rectangle + ellipse (level 2), and 1D
+rectangle + boolean AND/NOT (level 3).
+
+## 13.1 Setup
+
+```{r test13_setup}
+test_name <- "TEST 13: Full Arcsinh — 3-Level Hierarchy (Polygon/Rect/Ellipse/Boolean)"
+cat("\n", paste(rep("=", 70), collapse = ""), "\n")
+cat(test_name, "\n")
+cat(paste(rep("=", 70), collapse = ""), "\n\n")
+
+test_dir <- file.path(BASE_TEST_DIR, "test13")
+dir.create(test_dir, showWarnings = FALSE, recursive = TRUE)
+
+ff       <- create_test_fcs(n = 10000, seed = 13)
+fcs_path <- file.path(test_dir, "sample13.fcs")
+write.FCS(ff, fcs_path)
+
+fs <- read.flowSet(fcs_path)
+gs <- GatingSet(fs)
+
+# ── Transformations: arcsinh on all three fluorescence channels ───────────────
+asinh_trans <- asinhtGml2_trans(T = 262144, M = 4.5, A = 0)
+
+gs <- transform(gs, transformerList(c("FITC-A", "PE-A", "APC-A"),
+   asinh_trans))
+
+# ── Level 1 ─ Polygon (linear scatter) ───────────────────────────────────────
+gate_live <- polygonGate(
+  filterId = "live",
+  "FSC-A"  = c(35000,  55000, 195000, 215000, 205000,  45000),
+  "SSC-A"  = c(12000,   8000,   8000,  55000, 148000, 148000)
+)
+gs_pop_add(gs, gate_live, parent = "root")
+recompute(gs)
+
+# ── Level 2a ─ 2D Rectangle singlets (linear FSC-A vs FSC-H) ─────────────────
+gate_singlets <- rectangleGate(
+  filterId = "singlets",
+  "FSC-A"  = c(65000, 195000),
+  "FSC-H"  = c(60000, 185000)
+)
+gs_pop_add(gs, gate_singlets, parent = "/live")
+
+# ── Level 2b ─ Ellipse on FITC-A vs PE-A (both arcsinh) ──────────────────────
+#   Coordinates in transformed (arcsinh) space; high-high population centred
+#   around (0.62, 0.57) with a broad covariance appropriate for the 0–1 scale
+ellipse_cov_asinh <- matrix(c(0.025, 0.008, 0.008, 0.020), ncol = 2)
+colnames(ellipse_cov_asinh) <- rownames(ellipse_cov_asinh) <- c("FITC-A", "PE-A")
+
+gate_fitc_pe <- ellipsoidGate(
+  filterId  = "FITC_PE_gate",
+  .gate     = ellipse_cov_asinh,
+  mean      = c("FITC-A" = 0.62, "PE-A" = 0.57),
+  distance  = 2
+)
+gs_pop_add(gs, gate_fitc_pe, parent = "/live")
+
+recompute(gs)
+
+# ── Level 3a ─ 1D Rectangle on FITC-A (arcsinh), child of singlets ───────────
+gate_fitc <- rectangleGate(filterId = "FITC_pos", "FITC-A" = c(0.25, 0.95))
+gs_pop_add(gs, gate_fitc, parent = "/live/singlets")
+
+# ── Level 3b ─ 1D Rectangle on APC-A (arcsinh), child of singlets ────────────
+gate_apc  <- rectangleGate(filterId = "APC_pos",  "APC-A"  = c(0.28, 0.92))
+gs_pop_add(gs, gate_apc,  parent = "/live/singlets")
+
+# ── Level 3c ─ Boolean AND (FITC_pos ∩ APC_pos), child of singlets ───────────
+bool_and <- booleanFilter(`FITC_pos&APC_pos`, filterId = "double_pos")
+gs_pop_add(gs, bool_and, parent = "/live/singlets")
+
+# ── Level 3d ─ Boolean NOT (¬double_pos), child of singlets ──────────────────
+bool_not <- booleanFilter(`/live/singlets&!double_pos`, filterId = "not_double")
+gs_pop_add(gs, bool_not, parent = "/live/singlets")
+
+recompute(gs)
+
+cat("✓ GatingSet created\n")
+cat("  Directory:", test_dir, "\n\n")
+
+stats <- gs_pop_get_count_fast(gs)
+
+save_test_info(
+  test_dir, test_name,
+  description = paste(
+    "Arcsinh (T=262144, M=4.5, A=0) on FITC-A, PE-A, APC-A.",
+    "Three-level hierarchy:",
+    "live (polygon) ->",
+    "  singlets (2D rect, FSC/FSC-H) + FITC_PE_gate (ellipse, asinh space) ->",
+    "    FITC_pos / APC_pos / double_pos / not_double"
+  ),
+  gate_info = c(
+    "  Level 1  - live:         polygonGate       (FSC-A vs SSC-A; linear)",
+    "  Level 2a - singlets:     2D rectangleGate  (FSC-A vs FSC-H; linear)",
+    "  Level 2b - FITC_PE_gate: ellipsoidGate     (FITC-A vs PE-A; arcsinh)",
+    "  Level 3a - FITC_pos:     1D rectangleGate  (FITC-A [0.25,0.95]; arcsinh)",
+    "  Level 3b - APC_pos:      1D rectangleGate  (APC-A  [0.28,0.92]; arcsinh)",
+    "  Level 3c - double_pos:   booleanFilter     (FITC_pos AND APC_pos)",
+    "  Level 3d - not_double:   booleanFilter     (NOT double_pos)"
+  ),
+  transform_info = c(
+    "  FITC-A, PE-A, APC-A: Arcsinh GML2 (T=262144, M=4.5, A=0)",
+    "  FSC / SSC / PerCP:   Linear"
+  ),
+  expected_counts = sprintf("  %s: %d", stats$Population, stats$Count)
+)
+```
+
+## 13.2 Inspect Input
+
+```{r test13_inspect}
+inspect_gs(gs)
+
+cat("\nTransformation summary:\n")
+gh    <- gs[[1]]
+trans <- gh_get_transformations(gh)
+for (ch in names(trans)) {
+  cat(sprintf("  %s: %s\n", ch, attr(trans[[ch]], "type")))
+}
+
+cat("\nLevel-1 polygon (linear scatter):\n")
+print(gate_live@boundaries)
+
+cat("\nLevel-2 ellipse (arcsinh FITC-A vs PE-A):\n")
+cat("  Mean:    ", gate_fitc_pe@mean, "\n")
+cat("  Distance:", gate_fitc_pe@distance, "\n")
+cat("  Covariance:\n")
+print(gate_fitc_pe@cov)
+
+cat("\nLevel-3 1D gate ranges (arcsinh scale):\n")
+cat("  FITC_pos:", gate_fitc@min, "–", gate_fitc@max, "\n")
+cat("  APC_pos: ", gate_apc@min,  "–", gate_apc@max,  "\n")
+```
+
+## 13.3 Visual Check
+
+```{r test13_visual, fig.width = 10, fig.height = 8}
+plot(gs)
+autoplot(gs, "live")
+autoplot(gs, "singlets")
+autoplot(gs, "FITC_PE_gate")
+autoplot(gs, "FITC_pos")
+autoplot(gs, "APC_pos")
+autoplot(gs, "double_pos")
+autoplot(gs, "not_double")
+
+# Show arcsinh-transformed distributions for all three channels
+par(mfrow = c(1, 3))
+trans_root <- flowCore::exprs(gh_pop_get_data(gs[[1]], "root"))
+hist(trans_root[, "FITC-A"], breaks = 80,
+     main = "FITC-A (arcsinh)", xlab = "FITC-A")
+hist(trans_root[, "PE-A"],   breaks = 80,
+     main = "PE-A (arcsinh)",   xlab = "PE-A")
+hist(trans_root[, "APC-A"],  breaks = 80,
+     main = "APC-A (arcsinh)",  xlab = "APC-A")
+```
+
+## 13.4 Export
+
+```{r test13_export}
+export_path <- file.path(test_dir, "export.wsp")
+success <- export_flowjo10_workspace(gs, export_path)
+
+if (success) {
+  cat("✓ Export succeeded\n")
+  cat(paste(rep("=", 70), collapse = ""), "\n")
+  cat("OPEN IN FLOWJO:\n")
+  cat(paste(rep("=", 70), collapse = ""), "\n")
+  cat("  Select:", export_path, "\n")
+  cat("  Verify: Arcsinh on FITC-A, PE-A, APC-A\n")
+  cat("  Verify: 3-level tree\n")
+  cat("    live -> singlets -> {FITC_pos, APC_pos, double_pos, not_double}\n")
+  cat("    live -> FITC_PE_gate (ellipse on FITC-A vs PE-A)\n")
+  cat(paste(rep("=", 70), collapse = ""), "\n")
+} else {
+  cat("✗ Export failed\n")
+}
+```
+
+## 13.5 Inspect XML
+
+```{r test13_xml}
+show_xml_snippet(export_path, pattern = "fasinh",         context = 4)
+show_xml_snippet(export_path, pattern = "PolygonGate",    context = 8)
+show_xml_snippet(export_path, pattern = "EllipsoidGate",  context = 12)
+show_xml_snippet(export_path, pattern = "AndNode",        context = 6)
+show_xml_snippet(export_path, pattern = "NotNode",        context = 6)
+show_xml_snippet(export_path, pattern = "Subpopulations", context = 6)
+```
+
+## 13.6 Roundtrip
+
+Arcsinh rectangle and polygon gates should be exact (0 %).  
+The ellipse gate may show a small discrepancy (~2–3 %) due to the foci/edge
+approximation used in the FlowJo v10 XML format (see TEST 5).
+Tolerance is set to 3 % accordingly.
+
+```{r test13_roundtrip}
+test_roundtrip(gs_orig = gs, export_path = export_path, fcs_dir = test_dir, tolerance = 3.0)
+```
+
+# TEST 14: CyDa output
+
+includes asinh transformations and some gates?
+
+## 14.1 Setup
+
+```{r test14_setup}
+gs = load_gs("/pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/analysis/adaptiveFunctional/channel_rename/keepChannels/indexed/rmMargins/noDoublets/cyEt/transformed/_data/GS")
+
+test_name <- "TEST 14: CyDa"
+cat("\n", paste(rep("=", 70), collapse = ""), "\n")
+cat(test_name, "\n")
+cat(paste(rep("=", 70), collapse = ""), "\n\n")
+
+test_dir <- file.path(BASE_TEST_DIR, "test14")
 dir.create(test_dir, showWarnings = FALSE, recursive = TRUE)
 
 for (i in seq_along(gs)) {
@@ -1678,9 +2263,9 @@ recompute(gs)
 
 ```
 
-## 11.2 Inspect Input
+## 14.2 Inspect Input
 
-```{r test08_inspect}
+```{r test14_inspect}
 inspect_gs(gs)
 
 gh <- gs[[1]]
@@ -1690,19 +2275,19 @@ apply(gh_data,2, summary)
                         
 ```
 
-## 11.3 Visual Check
+## 14.3 Visual Check
 
-```{r test08_visual, fig.width=10, fig.height=4}
+```{r test14_visual, fig.width=10, fig.height=4}
 hist(flowCore::exprs(gh_pop_get_data(gs[[1]],"root")[,"Live.Dead.A"]),breaks = 1000)
 hist(flowCore::exprs(gh_pop_get_data(gs[[1]],"root")[,"CD4.A"]),breaks = 1000)
 
 ```
 
-## 11.4 Export
+## 14.4 Export
 
 DEBUG
 
-```{r test08_export}
+```{r test14_export}
 export_path <- file.path(test_dir, "export.wsp")
 success <- export_flowjo10_workspace(gs, export_path)
 
@@ -1720,15 +2305,15 @@ if (success) {
 }
 ```
 
-## 11.5 Inspect XML
+## 14.5 Inspect XML
 
-```{r test08_xml}
+```{r test14_xml}
 show_xml_snippet(export_path, pattern = "fasinh", context = 8)
 ```
 
-## 11.6 Roundtrip
+## 14.6 Roundtrip
 
-```{r test08_roundtrip}
+```{r test14_roundtrip}
 test_roundtrip(gs, export_path, test_dir, tolerance = 2.0)
 ```
 

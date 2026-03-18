@@ -3,7 +3,7 @@
 #' @keywords internal
 NULL
 
-context("Example Workflow")
+
 
 # Load required packages
 skip_if_not_installed("flowCore")
