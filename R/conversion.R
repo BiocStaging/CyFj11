@@ -104,6 +104,9 @@ NULL
 #'                         path = "/path/to/fcs")
 #' }
 #'
+#' @param strip_comp_prefix Logical. Strip "Comp-" prefix from gate parameter names
+#'   when adding populations? Default TRUE. Set to FALSE if compensation has already
+#'   been applied and gate names should match the compensated parameter names.
 #' @export
 #' @importFrom flowWorkspace GatingSet cytoset load_cytoset_from_fcs gs_pop_add gs_get_pop_paths recompute
 #' @importFrom dplyr filter enquo
@@ -132,8 +135,8 @@ fj11_to_gatingset <- function(fj11_workspace,
                               max_search_depth = 5,
                               stop_on_multiple = TRUE,
                               mc.cores = 1,
+                              strip_comp_prefix = TRUE,
                               ...) {
-  
   backend <- match.arg(backend)
   # Extract workspace components
   # The workspace already has the components extracted at the top level
@@ -141,6 +144,7 @@ fj11_to_gatingset <- function(fj11_workspace,
   dataSources <- fj11_workspace$dataSources
   populationDefinitions <- fj11_workspace$populationDefinitions
   populations <- fj11_workspace$populations
+  platforms <- fj11_workspace$platforms
   
   # Step 1: Select group ----
   group_info <- get_group_info(groups)
@@ -288,7 +292,8 @@ fj11_to_gatingset <- function(fj11_workspace,
   comp_list <- extract_compensation(
     dataSources = dataSources,
     sample_uuids = sample_uuids,
-    custom_compensation = compensation
+    custom_compensation = compensation,
+    platforms = platforms
   )
   
   # browser()
@@ -306,7 +311,8 @@ fj11_to_gatingset <- function(fj11_workspace,
     keywords = keywords,
     additional.keys = additional.keys,
     additional.sampleID = additional.sampleID,
-    keyword.ignore.case = keyword.ignore.case
+    keyword.ignore.case = keyword.ignore.case,
+    strip_comp_prefix = strip_comp_prefix
   )
   
   # Debug: Check if GatingSet was created successfully
@@ -362,4 +368,318 @@ fj11_to_gatingset <- function(fj11_workspace,
     }
   }
   return(gs)
+}
+
+
+#' Export GatingSet to FlowJo v11 Workspace
+#'
+#' Converts a GatingSet object to FlowJo v11 workspace format (.flowjo file)
+#'
+#' @param gs GatingSet object to export
+#' @param output_file Path to output .flowjo file
+#' @param workspace_name Name for the workspace (default: derived from filename)
+#' @param group_name Name for the sample group (default: "All Samples")
+#' @return Invisible NULL. Creates the output file as a side effect.
+#' @export
+#' @importFrom jsonlite toJSON write_json
+#' @importFrom flowWorkspace gs_get_compensations sampleNames
+gatingset_to_fj11 <- function(gs,
+                              output_file,
+                              workspace_name = NULL,
+                              group_name = "All Samples") {
+  
+  if (!inherits(gs, "GatingSet")) {
+    stop("gs must be a GatingSet object")
+  }
+  
+  # Set workspace name
+  if (is.null(workspace_name)) {
+    workspace_name <- tools::file_path_sans_ext(basename(output_file))
+  }
+  
+  # Create workspace structure
+  message("Creating FlowJo v11 workspace structure...")
+  workspace <- create_fj11_workspace_structure(workspace_name)
+  
+  # Extract and format compensation
+  message("Extracting compensation matrices...")
+  comp_data <- export_compensation_platforms(gs)
+  workspace$platforms$spilloverMatrix <- comp_data$platforms
+  
+  # Export samples/dataSources
+  message("Exporting samples...")
+  samples_data <- export_datasources_fj11(gs, comp_data$comp_uuids)
+  workspace$dataSources <- samples_data$dataSources
+  
+  # Create sample group
+  message("Creating sample groups...")
+  group_data <- create_sample_group_fj11(samples_data$sample_uuids, group_name)
+  workspace$groups <- group_data
+  
+  # Export populations
+  message("Exporting population hierarchy...")
+  pop_data <- export_populations_fj11(gs, samples_data$sample_uuids)
+  workspace$populationDefinitions <- pop_data$populationDefinitions
+  workspace$populations <- pop_data$populations
+  
+  # Write to file
+  message("Writing to file: ", output_file)
+  jsonlite::write_json(
+    workspace,
+    output_file,
+    pretty = TRUE,
+    auto_unbox = TRUE,
+    null = "null"
+  )
+  
+  message("Export complete!")
+  invisible(NULL)
+}
+
+
+#' Create FlowJo v11 Workspace Structure
+#' @keywords internal
+create_fj11_workspace_structure <- function(workspace_name) {
+  analysis_uuid <- generate_flowjo11_uuid()
+  
+  list(
+    schemaVersion = 3,
+    analysisUUID = analysis_uuid,
+    uri = paste0("file:///", workspace_name, ".flowjo"),
+    version = "11.0",
+    workspace = list(
+      name = workspace_name,
+      modificationTime = format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
+    ),
+    analysisRoot = list(
+      uuid = analysis_uuid,
+      properties = list(),
+      definition = list(),
+      parents = list(),
+      children = list(
+        groups = list(),
+        populationDefinitions = list(),
+        populations = list(),
+        platforms = list(),
+        dataSources = list()
+      ),
+      results = list(),
+      definitionVersion = 2,
+      resultsVersion = 2,
+      stableSince = 0,
+      recalcVersion = 0
+    ),
+    groups = list(),
+    populationDefinitions = list(),
+    populations = list(),
+    dataSources = list(),
+    platforms = list(
+      spilloverMatrix = list()
+    )
+  )
+}
+
+
+#' Export Compensation Platforms from GatingSet
+#' @keywords internal
+export_compensation_platforms <- function(gs) {
+  # Get compensation matrices
+  comp_list <- flowWorkspace::gs_get_compensations(gs)
+  
+  platforms <- list()
+  comp_uuids <- list()
+  
+  # Handle NULL compensation list
+  if (is.null(comp_list) || length(comp_list) == 0) {
+    message("No compensation found in GatingSet")
+    return(list(platforms = list(), comp_uuids = list()))
+  }
+  
+  # Check if all samples have the same compensation
+  comp_matrices <- lapply(comp_list, function(x) {
+    if (is.null(x)) return(NULL)
+    if (methods::is(x, "compensation")) return(x@spillover)
+    return(x)
+  })
+  
+  # Remove NULL matrices
+  valid_indices <- !sapply(comp_matrices, is.null)
+  comp_matrices <- comp_matrices[valid_indices]
+  comp_list <- comp_list[valid_indices]
+  
+  if (length(comp_matrices) == 0) {
+    message("No valid compensation matrices found")
+    return(list(platforms = list(), comp_uuids = list()))
+  }
+  
+  # Check if all compensation matrices are identical
+  is_shared <- FALSE
+  if (length(comp_matrices) > 0) {
+    first_matrix_str <- paste(comp_matrices[[1]], collapse = ",")
+    is_shared <- all(sapply(comp_matrices, function(m) {
+      if (is.null(m)) return(FALSE)
+      paste(m, collapse = ",") == first_matrix_str
+    }))
+  }
+  
+  if (is_shared) {
+    # Single shared compensation
+    comp_uuid <- generate_flowjo11_uuid()
+    platforms[[comp_uuid]] <- format_compensation_for_flowjo11(
+      comp_list[[1]],
+      comp_uuid = comp_uuid,
+      comp_name = "Acquisition-defined"
+    )
+    
+    # Map all samples to this compensation
+    for (sample_name in names(comp_list)) {
+      comp_uuids[[sample_name]] <- comp_uuid
+    }
+  } else {
+    # Per-sample compensation
+    for (sample_name in names(comp_list)) {
+      comp_uuid <- generate_flowjo11_uuid()
+      platforms[[comp_uuid]] <- format_compensation_for_flowjo11(
+        comp_list[[sample_name]],
+        comp_uuid = comp_uuid,
+        comp_name = paste0("Compensation-", sample_name)
+      )
+      comp_uuids[[sample_name]] <- comp_uuid
+    }
+  }
+  
+  list(
+    platforms = platforms,
+    comp_uuids = comp_uuids
+  )
+}
+
+
+#' Export Data Sources for FlowJo v11
+#' @keywords internal
+export_datasources_fj11 <- function(gs, comp_uuids) {
+  sample_names <- flowWorkspace::sampleNames(gs)
+  dataSources <- list()
+  sample_uuids <- list()
+  
+  for (sample_name in sample_names) {
+    sample_uuid <- generate_flowjo11_uuid()
+    sample_uuids[[sample_name]] <- sample_uuid
+    
+    # Get FCS file path
+    fcs_path <- tryCatch({
+      gs[[sample_name]]@data@file
+    }, error = function(e) {
+      paste0(sample_name, ".fcs")
+    })
+    
+    # Get compensation UUID for this sample
+    comp_uuid <- comp_uuids[[sample_name]]
+    
+    dataSources[[sample_uuid]] <- list(
+      uuid = sample_uuid,
+      properties = list(),
+      definition = list(
+        uri = fcs_path,
+        customKeywords = list(
+          "File Name" = basename(fcs_path)
+        )
+      ),
+      parents = list(
+        platforms = list(comp_uuid)
+      ),
+      children = list(),
+      results = list(),
+      definitionVersion = 1,
+      resultsVersion = 1
+    )
+  }
+  
+  list(
+    dataSources = dataSources,
+    sample_uuids = sample_uuids
+  )
+}
+
+
+#' Create Sample Group for FlowJo v11
+#' @keywords internal
+create_sample_group_fj11 <- function(sample_uuids, group_name) {
+  group_uuid <- generate_flowjo11_uuid()
+  
+  groups <- list()
+  groups[[group_uuid]] <- list(
+    uuid = group_uuid,
+    properties = list(),
+    definition = list(
+      name = group_name
+    ),
+    parents = list(),
+    children = list(),
+    results = list(
+      dataSources = unname(sample_uuids)
+    ),
+    definitionVersion = 1,
+    resultsVersion = 1
+  )
+  
+  groups
+}
+
+
+#' Export Population Hierarchy for FlowJo v11
+#' @keywords internal
+export_populations_fj11 <- function(gs, sample_uuids) {
+  # This is a simplified implementation
+  # A full implementation would need to extract the complete gating hierarchy
+  
+  populationDefinitions <- list()
+  populations <- list()
+  
+  # Get root population for each sample
+  sample_names <- flowWorkspace::sampleNames(gs)
+  
+  for (i in seq_along(sample_names)) {
+    sample_name <- sample_names[i]
+    sample_uuid <- sample_uuids[[sample_name]]
+    
+    # Create root population definition
+    root_popdef_uuid <- generate_flowjo11_uuid()
+    populationDefinitions[[root_popdef_uuid]] <- list(
+      uuid = root_popdef_uuid,
+      properties = list(),
+      definition = list(
+        name = "root",
+        type = "root"
+      ),
+      parents = list(),
+      children = list(),
+      results = list(),
+      definitionVersion = 1,
+      resultsVersion = 1
+    )
+    
+    # Create root population instance
+    root_pop_uuid <- generate_flowjo11_uuid()
+    populations[[root_pop_uuid]] <- list(
+      uuid = root_pop_uuid,
+      properties = list(),
+      definition = list(),
+      parents = list(
+        "_dataSource" = list(sample_uuid),
+        populationDefinitions = list(root_popdef_uuid)
+      ),
+      children = list(
+        populations = list()
+      ),
+      results = list(),
+      definitionVersion = 1,
+      resultsVersion = 1
+    )
+  }
+  
+  list(
+    populationDefinitions = populationDefinitions,
+    populations = populations
+  )
 }

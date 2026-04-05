@@ -763,6 +763,9 @@ get_uuids <- function(tree, uuids=c()){
 #' @keywords internal
 #' @importFrom flowWorkspace GatingSet
 #' @importFrom magrittr %>%
+#' @param strip_comp_prefix Logical. Strip "Comp-" prefix from gate parameter names
+#'   when adding populations? Default TRUE. Set to FALSE if compensation has already
+#'   been applied and gate names should match the compensated parameter names.
 create_gatingset_from_cytoset <- function(cytoset,
                                           gating_trees,
                                           gates,
@@ -773,10 +776,11 @@ create_gatingset_from_cytoset <- function(cytoset,
                                           keywords,
                                           additional.keys,
                                           additional.sampleID,
-                                          keyword.ignore.case) {
+                                          keyword.ignore.case,
+                                          strip_comp_prefix = TRUE) {
   
   actual_sample_count <- length(cytoset)
-  
+  # browser()
   # Create individual GatingHierarchy objects with transformations
   gsList = list()
   
@@ -790,7 +794,13 @@ create_gatingset_from_cytoset <- function(cytoset,
     
     # Apply compensation (if available)
     if (!is.null(compensations[[sample_uuid]])) {
-      cf <- compensate(cf, compensations[[sample_uuid]])
+      # Map compensation channel names to cytoframe parameter names
+      # This handles cases where flowCore sanitizes names (e.g., "/" -> "_")
+      comp_mapped <- map_compensation_names(
+        compensations[[sample_uuid]],
+        colnames(cf)
+      )
+      cf <- compensate(cf, comp_mapped)
     }
     
     cs = cytoset()
@@ -802,13 +812,22 @@ create_gatingset_from_cytoset <- function(cytoset,
     sample_transformations <- transformations[[sample_uuid]] %||% transformations[[1]]
     
     if (!is.null(sample_transformations) && length(sample_transformations) > 0) {
+      # Map transformation channel names to flowFrame parameter names
+      # This handles cases where transformation names don't match (e.g., "Comp-APC-Ax700-A" vs "APC-Ax700-A")
+      trans_mapped <- map_transformation_names(
+        sample_transformations,
+        colnames(cf)
+      )
+      
       # Filter out NULL or linear transforms
       tryCatch({
-        transList = flowWorkspace::transformerList(from=names(sample_transformations), trans=sample_transformations)
-        gs_single <- flowWorkspace::transform(gs_single, transList)
+        if (length(trans_mapped) > 0) {
+          transList = flowWorkspace::transformerList(from=names(trans_mapped), trans=trans_mapped)
+          gs_single <- flowWorkspace::transform(gs_single, transList)
+        }
         
       }, error = function(e) {
-        warning(sprintf("Failed to apply transformations for sample %d: %s", 
+        warning(sprintf("Failed to apply transformations for sample %d: %s",
                         i, e$message))
       })
       
@@ -874,10 +893,12 @@ create_gatingset_from_cytoset <- function(cytoset,
       actual_sample_uuids <- sample_uuids[idx] %>% unlist()
       actual_gating_trees <- gating_trees[idx]
       
-      add_populations_to_gatingset(gs = gsList[[idx]], 
-                                   gating_trees = actual_gating_trees, 
-                                   gates = gates, 
-                                   sample_uuids = actual_sample_uuids)
+      add_populations_to_gatingset(gs = gsList[[idx]],
+                                   gating_trees = actual_gating_trees,
+                                   gates = gates,
+                                   sample_uuids = actual_sample_uuids,
+                                   strip_comp_prefix = strip_comp_prefix,
+                                   verbose = .pkgenv$verbose)
       
     }
   }

@@ -85,13 +85,6 @@ extract_samples_from_gatingset_v10 <- function(gating_set) {
   for (i in seq_along(sample_names)) {
     sample_name <- sample_names[i]
     gh <- gating_set[[sample_name]]
-    
-    # Extract file path if available
-    file_path <- tryCatch({
-      gh@data@file
-    }, error = function(e) {
-      NA
-    })
 
     # Generate sample ID (numeric for FlowJo v10)
     sample_id <- as.numeric(i)
@@ -130,7 +123,7 @@ extract_samples_from_gatingset_v10 <- function(gating_set) {
       uri = ifelse(is.na(file_path), paste0("file://", sample_name), file_path),
       keywords = keywords,
       count = tryCatch({
-        nrow(flowCore::exprs(gh@data))
+        nrow(flowCore::exprs(flowWorkspace::gh_pop_get_data(gh)))
       }, error = function(e) {
         0
       })

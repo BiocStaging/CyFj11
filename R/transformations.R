@@ -246,12 +246,12 @@ create_biexponential_transform <- function(spec) {
   # Check for invalid arguments
   invalid_args <- setdiff(spec_args, valid_args)
   
-  if (length(invalid_args) > 0) {
-    warning(
-      "The following arguments are not valid for biexponential transform and will be ignored: ",
-      paste(invalid_args, collapse = ", ")
-    )
-  }
+  # if (length(invalid_args) > 0) {
+  #   warning(
+  #     "The following arguments are not valid for biexponential transform and will be ignored: ",
+  #     paste(invalid_args, collapse = ", ")
+  #   )
+  # }
   
   # Extract parameters with aliases and defaults
   maxValue <- spec[["t"]] %||% spec[["T"]] %||% spec[["maxValue"]] %||% 262144
@@ -425,5 +425,57 @@ create_linear_transform <- function(spec) {
   )
   attributes(trans_obj)
   trans_obj
+}
+
+
+#' Map Transformation Channel Names to flowFrame Parameter Names
+#'
+#' Transformation names from FlowJo may not match flowFrame parameter names:
+#' - They may have "Comp-" prefix (e.g., "Comp-APC-Ax700-A" vs "APC-Ax700-A")
+#' - They may use different sanitization (e.g., "/" vs "_")
+#' This function creates a mapping between transformation names and flowFrame parameters.
+#'
+#' @param trans_list Named list of transformations (names = channel names)
+#' @param param_names Original parameter names from flowFrame/cytoframe
+#' @return Named list of transformations with names matching flowFrame parameters
+#' @keywords internal
+map_transformation_names <- function(trans_list, param_names) {
+  
+  if (is.null(trans_list) || length(trans_list) == 0) {
+    return(list())
+  }
+  
+  if (is.null(param_names) || length(param_names) == 0) {
+    return(trans_list)
+  }
+  
+  # Get transformation channel names
+  trans_names <- names(trans_list)
+  
+  # Use unified parameter name mapping
+  # Transformations may have "Comp-" prefix and "/" sanitization
+  name_mapping <- map_param_names(
+    source_names = trans_names,
+    target_names = param_names,
+    strip_comp_prefix = TRUE,   # Transformations may have "Comp-" prefix
+    case_insensitive = FALSE
+  )
+  
+  # Create mapped transformation list
+  mapped_trans <- list()
+  
+  for (trans_name in trans_names) {
+    mapped_name <- name_mapping[[trans_name]]
+    
+    if (!is.null(mapped_name)) {
+      # Use the original parameter name from flowFrame
+      mapped_trans[[mapped_name]] <- trans_list[[trans_name]]
+    } else {
+      # No match found - skip this transformation with warning
+      warning("Could not map transformation channel '", trans_name, "' to any parameter")
+    }
+  }
+  
+  return(mapped_trans)
 }
 
