@@ -113,7 +113,7 @@ Note that you'll need to provide the path to your FCS files. The `fj11_to_gating
 
 Once we have a GatingSet, we can examine its structure:
 
-```{r examine-gs, eval=FALSE}
+```{r examine-gs, eval=T}
 # View the population hierarchy
 gs_get_pop_paths(gs)
 
@@ -161,7 +161,7 @@ For function-specific documentation, use the help system:
 ?export_flowjo10_workspace
 ```
 
-```{r cytoML read xml}
+```{r cytoML read xml, eval=FALSE}
 library(CytoML)
 ws <- CytoML::open_flowjo_xml(export_path)
 gs_back <- CytoML::flowjo_to_gatingset(ws, name = "All Samples",

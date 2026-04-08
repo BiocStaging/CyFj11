@@ -540,21 +540,36 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
   }
   
   # ---- apply inverse transformations (if gating hierarchy supplied) ---------
-  # ---- apply inverse transformations ---------------------------------------
   if (!is.null(gh) && requireNamespace("flowWorkspace", quietly = TRUE)) {
-    
-    trans_list <- gh_get_transformations(gh, inverse = TRUE)
-    
+
+    # Fetch once for non-log types (log closures from gh_get_transformations
+    # are broken — they capture `t` as base::t() instead of the numeric param).
+    trans_list     <- gh_get_transformations(gh, inverse = TRUE)
+    valid_log_args <- c("decade", "offset", "scale", "n", "equal.space")
+
+    .apply_inverse_val <- function(val, param_name) {
+      spec <- get_transform_spec(gh, param_name)
+      if (is.null(spec)) return(val)
+      switch(
+        spec$transformType,
+        "Linear" = val,
+        "Log"        = ,
+        "logtGml2"   = ,
+        "flowJo_log" = {
+          log_spec <- spec[names(spec) %in% valid_log_args]
+          tt <- create_log_transform(spec = log_spec)
+          tt$inverse(val)
+        },
+        {
+          inv_fn <- trans_list[[param_name]]
+          if (is.function(inv_fn)) inv_fn(val) else val
+        }
+      )
+    }
+
     for (i in seq_along(params)) {
-      param_name <- params[i]
-      
-      inv_fn <- trans_list[[param_name]]
-      
-      # If no entry → linear → coordinates already in raw space → skip
-      if (!is.function(inv_fn)) next
-      
-      min_vals[i] <- inv_fn(min_vals[i])
-      max_vals[i] <- inv_fn(max_vals[i])
+      min_vals[i] <- .apply_inverse_val(min_vals[i], params[i])
+      max_vals[i] <- .apply_inverse_val(max_vals[i], params[i])
     }
   }
   

@@ -1931,7 +1931,7 @@ test_that("convert_gate handles booleanFilter", {
   # Boolean AND
   bool_gate <- booleanFilter(`FSC_gate&SSC_gate`, filterId = "both")
   
-  result <- CyFj11:::convert_gate_to_flowjo10_format(bool_gate, "bool_pop", gh)
+  result <- CyFj11:::convert_gate_to_flowjo10_format(bool_gate, "bool_pop", NULL)
   expect_type(result, "list")
 })
 

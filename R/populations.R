@@ -1,7 +1,7 @@
 #' @title Population Functions for FlowJo v11
 #' @name populations
 #' @keywords internal
-#' @importFrom flowWorkspace gs_pop_add gs_get_pop_paths gs_pop_get_gate recompute
+#' @importFrom flowWorkspace gs_pop_add gs_get_pop_paths gs_pop_get_gate recompute markernames
 NULL
 
 #' Add Populations to GatingSet
@@ -19,22 +19,46 @@ NULL
 #' @importFrom flowWorkspace gs_pop_add
 add_populations_to_gatingset <- function(gs, gating_trees, gates, sample_uuids,
                                          strip_comp_prefix = TRUE, verbose = FALSE) {
-  
-  # Process each sample
+
   for (i in seq_along(sample_uuids)) {
     sample_uuid <- sample_uuids[i]
-    tree <- gating_trees[[i]]
-    gh <- gs[[i]]
-    
-    # Recursively add populations
-    add_population_node(
-      gh = gh,
-      node = tree,
-      gates = gates,
-      sample_uuid = sample_uuid,
-      strip_comp_prefix = strip_comp_prefix,
-      verbose = verbose
-    )
+    tree        <- gating_trees[[i]]
+    gh          <- gs[[i]]
+
+    deferred <- new.env(parent = emptyenv())
+    deferred$gates <- list()
+
+    add_population_node(gh, tree, gates, sample_uuid,
+                        strip_comp_prefix = strip_comp_prefix,
+                        verbose = verbose, deferred = deferred)
+
+    # Retry loop: keep trying until no more progress (handles chained logic gates)
+    repeat {
+      if (length(deferred$gates) == 0) break
+      n_before     <- length(deferred$gates)
+      new_deferred <- new.env(parent = emptyenv())
+      new_deferred$gates <- list()
+
+      for (lg in deferred$gates) {
+        add_population_node(gh, lg$node, gates, sample_uuid,
+                            parent = lg$parent,
+                            strip_comp_prefix = strip_comp_prefix,
+                            verbose = verbose, deferred = new_deferred)
+      }
+
+      deferred <- new_deferred
+      if (length(deferred$gates) == n_before) break   # no progress — give up
+    }
+
+    # Warn only about permanently unresolvable logical gates
+    for (lg in deferred$gates) {
+      node_name <- if (is.list(lg$node$name)) unlist(lg$node$name) else lg$node$name
+      component_names <- lg$node$logical_gate_info$combined_populations
+      all_paths <- tryCatch(flowWorkspace::gs_get_pop_paths(gh), error = function(e) character(0))
+      missing <- setdiff(component_names, sub(".*/", "", all_paths))
+      warning("Could not resolve all component paths for logical gate: ", node_name, "\n",
+              "  Missing components: ", paste(missing, collapse = ", "))
+    }
   }
 }
 
@@ -195,8 +219,8 @@ update_gate_param_names <- function(gate_obj, mapped_params) {
       if (n %in% names(valid_mapping)) valid_mapping[[n]] else n
     })
     names(gate_obj@mean) <- new_names
-    colnames(gate_obj@covariance) <- new_names
-    rownames(gate_obj@covariance) <- new_names
+    colnames(gate_obj@cov) <- new_names
+    rownames(gate_obj@cov) <- new_names
   }
   
   # Update the parameters slot
@@ -311,7 +335,8 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
 #' @param strip_comp_prefix Logical. Strip "Comp-" prefix from gate parameter names?
 #' @param verbose Logical. Print verbose messages?
 add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
-                                strip_comp_prefix = TRUE, verbose = FALSE) {
+                                strip_comp_prefix = TRUE, verbose = FALSE,
+                                deferred = NULL) {
   if (.pkgenv$verbose) message(node$name, "\n")
   # if(stringr::str_starts(node$name, "TNF")) {
   # browser()
@@ -338,7 +363,8 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
           sample_uuid = sample_uuid,
           parent = "root",
           strip_comp_prefix = strip_comp_prefix,
-          verbose = verbose
+          verbose = verbose,
+          deferred = deferred
         )
       }
     }
@@ -400,8 +426,10 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
       matching_paths <- grep(paste0("/", comp_name, "$"), all_paths, value = TRUE)
       
       if (length(matching_paths) == 0) {
-        warning("Could not find population '", comp_name, "' for logical gate '", node_name, "'\n",
-                "  Available populations: ", paste(all_paths, collapse = ", "))
+        if (is.null(deferred)) {
+          warning("Could not find population '", comp_name, "' for logical gate '", node_name, "'\n",
+                  "  Available populations: ", paste(all_paths, collapse = ", "))
+        }
         return(NULL)
       }
       
@@ -415,10 +443,15 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
     component_refs <- component_refs[!sapply(component_refs, is.null)]
     
     if (length(component_refs) < length(component_names)) {
-      missing_components <- setdiff(component_names, names(component_refs))
-      warning("Could not resolve all component paths for logical gate: ", node_name, "\n",
-              "  Missing components: ", paste(missing_components, collapse = ", "), "\n",
-              "  Resolved: ", paste(names(component_refs), collapse = ", "))
+      if (!is.null(deferred)) {
+        deferred$gates <- c(deferred$gates,
+                            list(list(node = node, parent = parent)))
+      } else {
+        missing_components <- setdiff(component_names, names(component_refs))
+        warning("Could not resolve all component paths for logical gate: ", node_name, "\n",
+                "  Missing components: ", paste(missing_components, collapse = ", "), "\n",
+                "  Resolved: ", paste(names(component_refs), collapse = ", "))
+      }
       return()
     }
     
@@ -478,7 +511,8 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
           sample_uuid = sample_uuid,
           parent = child_parent,
           strip_comp_prefix = strip_comp_prefix,
-          verbose = verbose
+          verbose = verbose,
+          deferred = deferred
         )
       }
     }
@@ -567,7 +601,8 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
             sample_uuid = sample_uuid,
             parent = parent,
             strip_comp_prefix = strip_comp_prefix,
-            verbose = verbose
+            verbose = verbose,
+            deferred = deferred
           )
         }
       }

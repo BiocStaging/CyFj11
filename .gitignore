@@ -14,3 +14,9 @@ lib
 flowjo_export_tests
 data/*
 docs
+/Meta/
+/^8 Color PBMC/
+slurm_output/
+.rooignore
+plans/
+inst/dev

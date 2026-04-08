@@ -509,7 +509,7 @@ create_comp_transforms <- function(detectors, comp_params, comp_uuid) {
   # Add linear transforms for scatter parameters
   scatter_params <- c("FSC-A", "FSC-H", "FSC-W", "SSC-A", "SSC-H", "SSC-W")
   for (scatter in intersect(scatter_params, unique(c(detectors, comp_params)))) {
-    transforms <- append(transforms, list(create_linear_transform(scatter, comp_uuid)))
+    transforms <- append(transforms, list(create_comp_linear_transform(scatter, comp_uuid)))
   }
   
   # Also add linear transforms for any FSC/SSC parameters not in the list
@@ -518,7 +518,7 @@ create_comp_transforms <- function(detectors, comp_params, comp_uuid) {
       # Check if we already have this transform
       existing <- sapply(transforms, function(t) t$parameterSpec$name)
       if (!param %in% existing) {
-        transforms <- append(transforms, list(create_linear_transform(param, comp_uuid)))
+        transforms <- append(transforms, list(create_comp_linear_transform(param, comp_uuid)))
       }
     }
   }
@@ -547,9 +547,9 @@ create_biex_transform <- function(param_name, target_id) {
 }
 
 
-#' Create Linear Transform
+#' Create Linear Transform for Compensation
 #' @keywords internal
-create_linear_transform <- function(param_name, target_id) {
+create_comp_linear_transform <- function(param_name, target_id) {
   list(
     parameterSpec = list(name = param_name),
     transform = list(
