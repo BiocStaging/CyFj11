@@ -76,8 +76,8 @@ Next, we convert the parsed workspace to a GatingSet object, which is the standa
 
 ```{r convert-gs, eval=TRUE}
 workspace_fcs <- system.file("extdata", "", package = "CyFj11")
-# You'll need to specify the path to your FCS files
-gs <- fj11_to_gatingset(
+# fj11_to_gatingset() returns a named list of GatingSet objects, one per sample
+gsList <- fj11_to_gatingset(
   fj11_workspace = ws,
   group_name = 1,
   path = workspace_fcs
@@ -85,27 +85,27 @@ gs <- fj11_to_gatingset(
 
 pretty_print_flowjo(workspace_path)
 # Check the number of samples
-length(gs)
+length(gsList)
 
-# View sample names
-flowCore::sampleNames(gs[[1]])
-# but this looses the transformation
-# gs = merge_list_to_gs(gs)
-gs = gs[[1]]
+# View sample names for the first sample
+flowCore::sampleNames(gsList[[1]])
+
+# Work with a single sample directly
+gs <- gsList[[1]]
+
+# Or merge all samples into one GatingSet (may overwrite per-sample transform settings)
+# gs_merged <- flowWorkspace::merge_list_to_gs(gsList)
 ```
 
-Note:
+**Note:** If you don't know the group name you can leave it empty and you will be prompted to choose:
 
-If you don't know the group name you can leave it empty and then you will be asked :
-
-Choose which group of samples to import: 
-
+```
 1: Acquired Data
 2: Compensation Data
 3: Experiment Data
+```
 
-Note:
-fj11_to_gatingset is returning a list of gatingset objects. The can be combined to a gatingset with multiple sample by using merge_list_to_gs, but this might overwrite transformation parameters or other sample specific settings from FlowJo11
+**Note:** `fj11_to_gatingset()` returns a **list** of `GatingSet` objects, one per sample. This preserves per-sample gate variations (tailored gates) from FlowJo v11. To work with all samples in a single `GatingSet`, use `flowWorkspace::merge_list_to_gs(gsList)`, but be aware this may discard sample-specific transformation settings.
 
 Note that you'll need to provide the path to your FCS files. The `fj11_to_gatingset()` function will attempt to locate the FCS files referenced in the workspace.
 

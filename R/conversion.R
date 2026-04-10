@@ -65,43 +65,48 @@ NULL
 #'   \item{dataSources: }{FCS file references}
 #' }
 #'
-#' @return A \code{GatingSet} object containing the gating hierarchy, gates, and optionally
-#'   the gated data and population statistics.
+#' @return A named list of \code{GatingSet} objects, one per sample. Each element
+#'   contains the full gating hierarchy, gates, compensation, and transformations for
+#'   that sample. To obtain a single merged \code{GatingSet} for downstream analysis,
+#'   call \code{flowWorkspace::merge_list_to_gs(gsList)} on the returned list.
 #'
 #' @examples
 #' \dontrun{
 #' # Parse FlowJo v11 workspace
 #' ws <- read_flowjo11_workspace("workspace.flowjo")
 #'
-#' # Convert to GatingSet (simplest form)
-#' gs <- fj11_to_gatingset(ws, group_name = 1, path = "/path/to/fcs/files")
+#' # Convert to a list of per-sample GatingSets
+#' gsList <- fj11_to_gatingset(ws, group_name = 1, path = "/path/to/fcs/files")
+#'
+#' # Merge into a single GatingSet for downstream analysis
+#' gs <- flowWorkspace::merge_list_to_gs(gsList)
 #'
 #' # Subset samples
-#' gs <- fj11_to_gatingset(ws, group_name = 1,
-#'                         subset = c("sample1.fcs", "sample2.fcs"),
-#'                         path = "/path/to/fcs")
+#' gsList <- fj11_to_gatingset(ws, group_name = 1,
+#'                             subset = c("sample1.fcs", "sample2.fcs"),
+#'                             path = "/path/to/fcs")
 #'
 #' # Extract keywords as pData
-#' gs <- fj11_to_gatingset(ws, group_name = 1,
-#'                         keywords = c("$DATE", "$BTIM", "PATIENT ID"),
-#'                         path = "/path/to/fcs")
+#' gsList <- fj11_to_gatingset(ws, group_name = 1,
+#'                             keywords = c("$DATE", "$BTIM", "PATIENT ID"),
+#'                             path = "/path/to/fcs")
 #'
 #' # Parse without executing (faster for structure inspection)
-#' gs <- fj11_to_gatingset(ws, group_name = 1,
-#'                         execute = FALSE,
-#'                         path = "/path/to/fcs")
+#' gsList <- fj11_to_gatingset(ws, group_name = 1,
+#'                             execute = FALSE,
+#'                             path = "/path/to/fcs")
 #'
 #' # Filter samples by pData
-#' gs <- fj11_to_gatingset(ws, group_name = 1,
-#'                         subset = PATIENT == "P001",
-#'                         keywords = "PATIENT",
-#'                         path = "/path/to/fcs")
+#' gsList <- fj11_to_gatingset(ws, group_name = 1,
+#'                             subset = PATIENT == "P001",
+#'                             keywords = "PATIENT",
+#'                             path = "/path/to/fcs")
 #'
 #' # Custom compensation
 #' comp_matrix <- matrix(...)
-#' gs <- fj11_to_gatingset(ws, group_name = 1,
-#'                         compensation = comp_matrix,
-#'                         path = "/path/to/fcs")
+#' gsList <- fj11_to_gatingset(ws, group_name = 1,
+#'                             compensation = comp_matrix,
+#'                             path = "/path/to/fcs")
 #' }
 #'
 #' @param strip_comp_prefix Logical. Strip "Comp-" prefix from gate parameter names
@@ -297,10 +302,9 @@ fj11_to_gatingset <- function(fj11_workspace,
   )
   
   # browser()
-  # Step 9: Create GatingSet ----
-  if (.pkgenv$verbose) cat("\nCreating GatingSet...\n")
-  # this is now a GatingsetList!!
-  gs <- create_gatingset_from_cytoset(
+  # Step 9: Create per-sample GatingSet list ----
+  if (.pkgenv$verbose) cat("\nCreating GatingSet list...\n")
+  gsList <- create_gatingset_from_cytoset(
     cytoset = cytoset,
     gating_trees = gating_trees,
     gates = if (include_gates) gates_list else NULL,
@@ -314,60 +318,42 @@ fj11_to_gatingset <- function(fj11_workspace,
     keyword.ignore.case = keyword.ignore.case,
     strip_comp_prefix = strip_comp_prefix
   )
-  
-  # Debug: Check if GatingSet was created successfully
-  if (.pkgenv$verbose) {
-    cat("DEBUG: After creating GatingSet\n")
-    cat("DEBUG: gs is null:", is.null(gs), "\n")
-    
-    if (!is.null(gs)) {
-      cat("DEBUG: gs length:", length(gs), "\n")
-      if (length(gs) > 0) {
-        cat("DEBUG: gs[[1]] is null:", is.null(gs[[1]]), "\n")
-      }
-    }
-  }
+
   # browser()
   # Step 10: Execute gating ----
   if (execute && include_gates) {
     if (.pkgenv$verbose) cat("\nExecuting gates...\n")
-    
-    lapply(gs,flowWorkspace::recompute)
-    
+
+    lapply(gsList, flowWorkspace::recompute)
+
     if (.pkgenv$verbose) cat("Gating complete\n")
   } else {
     if (.pkgenv$verbose) cat("Gating not executed (set execute=TRUE to compute cell counts)\n")
   }
-  
+
   # # Step 11: Compute boolean gates ----
   if (.pkgenv$verbose) {
     cat("\n")
     cat("========================================\n")
-    cat("  GatingSet Created Successfully\n")
+    cat("  GatingSet List Created Successfully\n")
     cat("========================================\n")
-    cat("Samples:     ", length(gs), "\n")
-    
+    cat("Samples:     ", length(gsList), "\n")
+
     # Safely get population count
-    if (!is.null(gs) && length(gs) > 0 && !is.null(gs[[1]])) {
-      cat("Populations: ", length(flowWorkspace::gs_get_pop_paths(gs[[1]])), "\n")
+    if (!is.null(gsList) && length(gsList) > 0 && !is.null(gsList[[1]])) {
+      cat("Populations: ", length(flowWorkspace::gs_get_pop_paths(gsList[[1]])), "\n")
     } else {
-      cat("Populations: 0 (GatingSet is empty)\n")
+      cat("Populations: 0 (GatingSet list is empty)\n")
     }
-    
+
     cat("Execute:     ", execute, "\n")
     cat("======================================\n\n")
-    
+
     # Debug information before returning
     cat("DEBUG: About to return GatingSet\n")
     cat("DEBUG: gs is null:", is.null(gs), "\n")
-    if (!is.null(gs)) {
-      cat("DEBUG: gs length:", length(gs), "\n")
-      if (length(gs) > 0) {
-        cat("DEBUG: gs[[1]] is null:", is.null(gs[[1]]), "\n")
-      }
-    }
   }
-  return(gs)
+  return(gsList)
 }
 
 
