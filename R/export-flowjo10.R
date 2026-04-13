@@ -50,7 +50,8 @@ export_flowjo10_workspace <- function(gating_set, output_path, workspace_name = 
     gates = gates_data,
     populations = populations_data,
     groups = groups_data,
-    workspace_name = workspace_name
+    workspace_name = workspace_name,
+    output_path = output_path
   )
   
   # Write to file
@@ -1094,31 +1095,97 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
 #' @importFrom flowWorkspace gh_pop_get_data
 #' @return Character string containing XML content
 #' @keywords internal
-generate_flowjo10_xml <- function(gating_set, samples, gates, populations, groups, workspace_name, force_XSC_linear=TRUE) {
-  # Create XML header
-  xml_lines <- c(
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<Workspace',
-    '  version="20.0"',
-    '  flowJoVersion="10.0"',
-    sprintf('  nonAutoSaveFileName="%s"', workspace_name),
-    '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
-    '  xmlns:gating="http://www.isac-net.org/std/Gating-ML/v2.0/gating"',
-    '  xmlns:transforms="http://www.isac-net.org/std/Gating-ML/v2.0/transformations"',
-    '  xmlns:data-type="http://www.isac-net.org/std/Gating-ML/v2.0/data-types">'
-  )
-  
-  # Add window position
-  xml_lines <- c(xml_lines, 
-                 '  <WindowPosition x="100" y="100" width="800" height="600" displayed="1" panelState="0"/>'
-  )
-  
+generate_flowjo10_xml <- function(gating_set, samples, gates, populations, groups, workspace_name, output_path, force_XSC_linear=TRUE, minimal_fj11=FALSE) {
+
+  if (minimal_fj11) {
+    # Minimal FJ11 format - very simple structure
+    xml_lines <- c(
+      '<?xml version="1.0" encoding="UTF-8"?><Workspace flowJoVersion="10.10.0">',
+      '<Matrices />'
+    )
+  } else {
+    # Full FJ10 format with all attributes
+    current_time <- format(Sys.time(), "%a %b %d %H:%M:%S %Z %Y")
+    client_ts <- as.character(as.integer(as.numeric(Sys.time()) * 1000))
+
+    xml_lines <- c(
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      ' <Workspace',
+      '   version="20.0"',
+      sprintf('   modDate="%s"', current_time),
+      sprintf('   clientTimestamp="%s"', client_ts),
+      '   flowJoVersion="10.10.1"',
+      '   drawRowBorders="1"',
+      '   drawColumnBorders="1"',
+      '   curGroup="All Samples"',
+      '   groupPaneHeight="80"',
+      '   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+      '   xmlns:gating="http://www.isac-net.org/std/Gating-ML/v2.0/gating"',
+      '   xmlns:transforms="http://www.isac-net.org/std/Gating-ML/v2.0/transformations"',
+      '   xmlns:data-type="http://www.isac-net.org/std/Gating-ML/v2.0/datatypes"',
+      '   xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v2.0/gating http://www.isac-net.org/std/Gating-ML/v2.0/gating/Gating-ML.v2.0.xsd http://www.isac-net.org/std/Gating-ML/v2.0/transformations http://www.isac-net.org/std/Gating-ML/v2.0/gating/Transformations.v2.0.xsd http://www.isac-net.org/std/Gating-ML/v2.0/datatypes http://www.isac-net.org/std/Gating-ML/v2.0/gating/DataTypes.v2.0.xsd "',
+      sprintf('   nonAutoSaveFileName="file:%s"', xml_encode(output_path)),
+      ' >'
+    )
+    # Add window position
+    xml_lines <- c(xml_lines,
+                   '   <WindowPosition x="100" y="100" width="800" height="600" displayed="1" panelState="" />'
+    )
+
+    # Add workspace-level TextTraits
+    xml_lines <- c(xml_lines,
+                   '   <TextTraits font="SansSerif" size="11" name="" style="plain" color="#000000" background="#00ffffff" just="left" />'
+    )
+
+    # Add Columns section
+    xml_lines <- c(xml_lines,
+                   '   <Columns>',
+                   '     <TColumn width="371" >',
+                   '       <Property key="fj.appnode.prop.name" />',
+                   '     </TColumn>',
+                   '     <TColumn width="211" >',
+                   '       <Property key="fj.appnode.prop.statistic" />',
+                   '     </TColumn>',
+                   '     <TColumn width="210" >',
+                   '       <Property key="fj.appnode.prop.ncells" />',
+                   '     </TColumn>',
+                   '   </Columns>'
+    )
+
+    # Add empty Matrices
+    xml_lines <- c(xml_lines, '   <Matrices/>')
+
+    # Add Cytometers section
+    xml_lines <- c(xml_lines,
+                   '   <Cytometers>',
+                   '     <Cytometer name="GENERIC" cyt="" useFCS3="1" extraNegs="0" widthBasis="-10" linMin="0" logMin="1" linMax="10000" logMax="10000" linearRescale="1" logRescale="1" linFromKW="1" logFromKW="1" useGain="0" useTransform="0" transformType="LOG" manufacturer="" serialnumber="" homepage="workspaces-and-samples/flowjo-and-your-cytometer/ws-instrumentation/" icon="generic.png" >',
+                   '       <LinParams>',
+                   '         <Param>time</Param>',
+                   '       </LinParams>',
+                   '       <LogParams/>',
+                   '       <FilterParams/>',
+                   '       <TransformStore/>',
+                   '     </Cytometer>',
+                   '   </Cytometers>'
+    )
+  }
 
   # Add groups
-  xml_lines <- c(xml_lines, '<Groups>')
+  xml_lines <- c(xml_lines, '   <Groups>')
   # Add group nodes
-  xml_lines <- c(xml_lines, ' <GroupNode name="All Samples" annotation="" owningGroup="All Samples" expanded="1" sortPriority="10" count="-1">')
-  xml_lines <- c(xml_lines, '   <Subpopulations>')
+  xml_lines <- c(xml_lines, '     <GroupNode name="All Samples" annotation="" owningGroup="All Samples" expanded="1" sortPriority="10" count="-1" >')
+  xml_lines <- c(xml_lines, '       <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" type="Pseudocolor" fast="1" >')
+  xml_lines <- c(xml_lines, '         <Axis dimension="x" name="" label="" auto="auto" />')
+  xml_lines <- c(xml_lines, '         <Axis dimension="y" name="" label="" auto="auto" />')
+  xml_lines <- c(xml_lines, '         <GraphSettings level="5%" smoothingHighResolution="1" contourHighResolution="1" histogramSmoothingCount="0" graphResolution="256" showOutliers="0" drawLargeDots="0" dotsToDraw="8000" tint="le.chartfill.tinted.40" lineWeight="le.lineweight.normal" lineStyle="le.linestyle.solid" />')
+  xml_lines <- c(xml_lines, '         <GraphEnvironment showGrid="0" showAxes="tnlTNL" showGates="1" showFreqOnPlots="1" showGateNameOnPlots="1" showMedians="0" showUncomped="0" addEventParam="0" lastYAxisName="" >')
+  xml_lines <- c(xml_lines, '           <TextTraits font="SansSerif" size="11" name="Labels" style="plain" color="#000000" background="#00ffffff" just="left" />')
+  xml_lines <- c(xml_lines, '           <TextTraits font="SansSerif" size="11" name="LayoutGates" style="plain" color="#000000" background="#00ffffff" just="left" />')
+  xml_lines <- c(xml_lines, '           <TextTraits font="SansSerif" size="9" name="Numbers" style="plain" color="#000000" background="#00ffffff" just="left" />')
+  xml_lines <- c(xml_lines, '           <TextTraits font="SansSerif" size="9" name="Legend" style="plain" color="#000000" background="#00ffffff" just="left" />')
+  xml_lines <- c(xml_lines, '         </GraphEnvironment>')
+  xml_lines <- c(xml_lines, '       </Graph>')
+  xml_lines <- c(xml_lines, '       <Subpopulations>')
   subpop_xml <- generate_group_subpopulations_xml(populations = populations[names(populations)[startsWith(names(populations), "pop_1_")]],
                                                   gates = gates, 
                                                   parent_path = "root", 
@@ -1141,37 +1208,45 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
     }
     
     xml_lines <- c(xml_lines,
-                   '      </SampleRefs>',
-                   '      <Keywords/>',
-                   '    </Group>'
+                   '         </SampleRefs>',
+                   '         <Keywords/>',
+                   '       </Group>'
     )
   }
-  xml_lines <- c(xml_lines, ' </GroupNode>')
-  
+  xml_lines <- c(xml_lines, '     </GroupNode>')
+
   # Add Compensation group node
   xml_lines <- c(xml_lines,
-                 '  <GroupNode name="Compensation" annotation="" owningGroup="Compensation" expanded="1" sortPriority="10" count="-1">',
-                 '    <Group name="Compensation" live="1" role="ws.group.dlog.compensation" key="" synchronized="0" foreground="#bc1900" fontStyle="bold">',
-                 '      <Criteria>',
-                 '        <Criterion connector="And" keyword="$FIL" function="Contains" value="unstained" />',
-                 '        <Criterion connector="Or" keyword="$FIL" function="Contains" value="comp" />',
-                 '      </Criteria>',
-                 '      <SampleRefs>',
-                 '        <SampleRef sampleID="31" />',
-                 '      </SampleRefs>',
-                 '      <Keywords/>',
-                 '    </Group>',
-                 '  </GroupNode>'
+                 '     <GroupNode name="Compensation" annotation="" owningGroup="Compensation" expanded="1" sortPriority="10" count="-1" >',
+                 '       <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" type="Pseudocolor" fast="1" >',
+                 '         <Axis dimension="x" name="" label="" auto="auto" />',
+                 '         <Axis dimension="y" name="" label="" auto="auto" />',
+                 '         <GraphSettings level="5%" smoothingHighResolution="1" contourHighResolution="1" histogramSmoothingCount="0" graphResolution="256" showOutliers="0" drawLargeDots="0" dotsToDraw="8000" tint="le.chartfill.tinted.40" lineWeight="le.lineweight.normal" lineStyle="le.linestyle.solid" />',
+                 '         <GraphEnvironment showGrid="0" showAxes="tnlTNL" showGates="1" showFreqOnPlots="1" showGateNameOnPlots="1" showMedians="0" showUncomped="0" addEventParam="0" lastYAxisName="" >',
+                 '           <TextTraits font="SansSerif" size="11" name="Labels" style="plain" color="#000000" background="#00ffffff" just="left" />',
+                 '           <TextTraits font="SansSerif" size="11" name="LayoutGates" style="plain" color="#000000" background="#00ffffff" just="left" />',
+                 '           <TextTraits font="SansSerif" size="9" name="Numbers" style="plain" color="#000000" background="#00ffffff" just="left" />',
+                 '           <TextTraits font="SansSerif" size="9" name="Legend" style="plain" color="#000000" background="#00ffffff" just="left" />',
+                 '         </GraphEnvironment>',
+                 '       </Graph>',
+                 '       <Group name="Compensation" live="1" role="ws.group.dlog.compensation" key="" synchronized="0" foreground="#bc1900" fontStyle="bold" >',
+                 '         <Criteria>',
+                 '           <Criterion connector="And" keyword="$FIL" function="Contains" value="unstained" />',
+                 '           <Criterion connector="Or" keyword="$FIL" function="Contains" value="comp" />',
+                 '         </Criteria>',
+                 '         <Keywords/>',
+                 '       </Group>',
+                 '     </GroupNode>'
   )
-  
-  xml_lines <- c(xml_lines, '  </Groups>')
+
+  xml_lines <- c(xml_lines, '   </Groups>')
   
   # Add sample list
-  xml_lines <- c(xml_lines, '  <SampleList>')
+  xml_lines <- c(xml_lines, '   <SampleList>')
   # Add samples (each containing DataSet, Transformations, Keywords, and SampleNode)
   for (sample_id in seq_along(samples)) {
     sample <- samples[[sample_id]]
-    
+
     # Get gating hierarchy for this sample if available
     sample_gh <- NULL
     if (requireNamespace("flowWorkspace", quietly = TRUE)) {
@@ -1181,10 +1256,10 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
         # Continue without sample_gh if not available
       })
     }
-    
+
     xml_lines <- c(xml_lines,
-                   sprintf('    <Sample>'),
-                   sprintf('      <DataSet uri="%s" sampleID="%d"/>',
+                   sprintf('     <Sample>'),
+                   sprintf('       <DataSet uri="file:%s" sampleID="%d" />',
                            xml_encode(sample$uri), sample_id)
     )
     # Transformations
@@ -1338,63 +1413,125 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
       NULL
     })
     # Only add y-axis if second dimension exists
+    # Use $FIL keyword for sample name if available, otherwise use sample$name
+    sample_display_name <- sample$keywords[["$FIL"]] %||% sample$name
     xml_lines <- c(xml_lines,
-                   sprintf('      <SampleNode name="%s" annotation="" owningGroup="" expanded="0" sortPriority="0" count="%d" sampleID="%d">',
-                           xml_encode(sample$name), root_count, sample_id),
-                   '        <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="BUV395-A" type="Pseudocolor" fast="1">',
-                   sprintf('          <Axis dimension="x" name="%s" label="" auto="auto" />', if(is.null(gate_dims) || length(gate_dims) < 1) "FSC-A" else gate_dims[[1]])
+                   sprintf('       <SampleNode name="%s" annotation="" owningGroup="" expanded="1" sortPriority="10" count="%d" sampleID="%d" >',
+                           xml_encode(sample_display_name), root_count, sample_id),
+                   '         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="BUV395-A" type="Pseudocolor" fast="1" >',
+                   sprintf('           <Axis dimension="x" name="%s" label="" auto="auto" />', if(is.null(gate_dims) || length(gate_dims) < 1) "FSC-A" else gate_dims[[1]])
     )
     # Only add y-axis if second dimension exists
     if(length(gate_dims) >= 2) {
       xml_lines <- c(xml_lines,
-                     sprintf('          <Axis dimension="y" name="%s" label="" auto="auto" />', if(is.null(gate_dims) || length(gate_dims) < 2) "SSC-A" else gate_dims[[2]])
+                     sprintf('           <Axis dimension="y" name="%s" label="" auto="auto" />', if(is.null(gate_dims) || length(gate_dims) < 2) "SSC-A" else gate_dims[[2]])
       )
     }
     xml_lines <- c(xml_lines,
-                   '          <GraphSettings level="5%" smoothingHighResolution="1" contourHighResolution="1" histogramSmoothingCount="0" graphResolution="256" showOutliers="0" drawLargeDots="0" dotsToDraw="8000" tint="le.chartfill.tinted.40" lineWeight="le.lineweight.normal" lineStyle="le.linestyle.solid" />',
-                   '          <GraphEnvironment showGrid="0" showAxes="tnlTNL" showGates="1" showFreqOnPlots="1" showGateNameOnPlots="1" showMedians="0" showUncomped="0" addEventParam="0" lastYAxisName="">',
-                   '            <TextTraits font="SansSerif" size="11" name="Labels" style="plain" color="#000000" background="#00ffffff" just="left" />',
-                   '            <TextTraits font="SansSerif" size="11" name="LayoutGates" style="plain" color="#000000" background="#00ffffff" just="left" />',
-                   '            <TextTraits font="SansSerif" size="9" name="Numbers" style="plain" color="#000000" background="#00ffffff" just="left" />',
-                   '            <TextTraits font="SansSerif" size="9" name="Legend" style="plain" color="#000000" background="#00ffffff" just="left" />',
-                   '            <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />',
-                   '          </GraphEnvironment>',
-                   '        </Graph>'
+                   '           <GraphSettings level="5%" smoothingHighResolution="1" contourHighResolution="1" histogramSmoothingCount="0" graphResolution="256" showOutliers="0" drawLargeDots="0" dotsToDraw="8000" tint="le.chartfill.tinted.40" lineWeight="le.lineweight.normal" lineStyle="le.linestyle.solid" />',
+                   '           <GraphEnvironment showGrid="0" showAxes="tnlTNL" showGates="1" showFreqOnPlots="1" showGateNameOnPlots="1" showMedians="0" showUncomped="0" addEventParam="0" lastYAxisName="" >',
+                   '             <TextTraits font="SansSerif" size="11" name="Labels" style="plain" color="#000000" background="#00ffffff" just="left" />',
+                   '             <TextTraits font="SansSerif" size="11" name="LayoutGates" style="plain" color="#000000" background="#00ffffff" just="left" />',
+                   '             <TextTraits font="SansSerif" size="9" name="Numbers" style="plain" color="#000000" background="#00ffffff" just="left" />',
+                   '             <TextTraits font="SansSerif" size="9" name="Legend" style="plain" color="#000000" background="#00ffffff" just="left" />',
+                   '             <WindowPosition x="247" y="-1415" width="390" height="679" displayed="0" panelState="---" />',
+                   '           </GraphEnvironment>',
+                   '         </Graph>'
     )
-    
+
     # Add sample-specific subpopulations using flowWorkspace functions
     if (requireNamespace("flowWorkspace", quietly = TRUE) && !is.null(sample_gh)) {
-      xml_lines <- c(xml_lines, '        <Subpopulations>')
-      
+      xml_lines <- c(xml_lines, '         <Subpopulations>')
+
       # Generate subpopulations starting from root
       subpop_xml <- generate_sample_subpopulations_xml(
         sample_gh,
         gates,
         populations = populations[names(populations)[startsWith(names(populations), paste0("pop_", sample_id, "_"))]],
         "root",
-        "          "
+        "           "
       )
       xml_lines <- c(xml_lines, subpop_xml)
-      
-      xml_lines <- c(xml_lines, '        </Subpopulations>')
+
+      xml_lines <- c(xml_lines, '         </Subpopulations>')
     }
-    
-    xml_lines <- c(xml_lines, '      </SampleNode>', '    </Sample>')
+
+    xml_lines <- c(xml_lines, '       </SampleNode>', '     </Sample>')
   }
-  
-  xml_lines <- c(xml_lines, '  </SampleList>')
-  
-  
-  
-  # Add experiment and exports
+
+  xml_lines <- c(xml_lines, '   </SampleList>')
+
+  # Add TableEditor section
   xml_lines <- c(xml_lines,
-                 '  <Experiment/>',
-                 '  <Exports/>'
+                 '   <TableEditor title="FlowJo Tables" current="Table" >',
+                 '     <Table name="Table" outputFile="" color="#00ffffff" isBatch="0" quickclose="0" destination="toDisplay" outputFormat="fj.document.type.table" >',
+                 '       <PrintLayout flipPattern0="0" rows="1" columns="1" padding="36" header="" footer="" headerActive="0" footerActive="0" scalingMode="fj.print.scale.none" scaling="1" orientation="1" width="595.2744" height="841.8888" imageableX="72" imageableY="72" imageableWidth="451.2744" imageableHeight="697.8888" />',
+                 '       <PageSection sectionName="header" >&lt;table width=&quot;100%&quot;&gt;&lt;tr&gt;&lt;td align=&quot;left&quot; valign=&quot;top&quot;&gt;&amp;NBSP&amp;NBSP&amp;NBSP&amp;NBSP&lt;IMG SRC=&quot;file:/Applications/FlowJo.app/Contents/Resources/Java/images/fj_icon.png&quot;&gt;&lt;/IMG&gt;&lt;br/&gt;FlowJo, LLC&lt;/td&gt;&lt;td align=&quot;right&quot; valign=&quot;top&quot;&gt;Page &lt;PageNumber/&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</PageSection>',
+                 '       <PageSection sectionName="footer" >&lt;table width=&quot;100%&quot;&gt;&lt;tr&gt;&lt;td align=&quot;left&quot;  valign=&quot;bottom&quot;&gt;&lt;LongDate/&gt;&lt;/td&gt;&lt;td align=&quot;right&quot; valign=&quot;bottom&quot;&gt;&lt;Version/&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</PageSection>',
+                 '       <Iteration iterationType="SAMPLE" iterationValue="1" iterationKeyword="" discriminator="" panelSize="1" groupName="workspaceSelection" />',
+                 '     </Table>',
+                 '   </TableEditor>'
   )
-  
+
+  # Add LayoutEditor section
+  xml_lines <- c(xml_lines,
+                 '   <LayoutEditor title="FlowJo Layouts" current="Layout" showGrid="0" showPageBreaks="0" showGuides="0" showDebugOutput="0" >',
+                 '     <Layout name="Layout" outputFile="" color="#00ffffff" isBatch="0" showGrid="0" showRulers="1" showDebugOutput="0" showGuides="0" showPageBreaks="1" scale="1" >',
+                 '       <PrintLayout flipPattern0="0" rows="1" columns="1" padding="36" header="" footer="" headerActive="0" footerActive="0" scalingMode="fj.print.scale.none" scaling="1" orientation="1" width="595.2744" height="841.8888" imageableX="72" imageableY="72" imageableWidth="451.2744" imageableHeight="697.8888" />',
+                 '       <PageSection sectionName="header" >&lt;table width=&quot;100%&quot;&gt;&lt;tr&gt;&lt;td align=&quot;left&quot; valign=&quot;top&quot;&gt;&amp;NBSP&amp;NBSP&amp;NBSP&amp;NBSP&lt;IMG SRC=&quot;file:/Applications/FlowJo.app/Contents/Resources/Java/images/fj_icon.png&quot;&gt;&lt;/IMG&gt;&lt;br/&gt;FlowJo, LLC&lt;/td&gt;&lt;td align=&quot;right&quot; valign=&quot;top&quot;&gt;Page &lt;PageNumber/&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</PageSection>',
+                 '       <PageSection sectionName="footer" >&lt;table width=&quot;100%&quot;&gt;&lt;tr&gt;&lt;td align=&quot;left&quot;  valign=&quot;bottom&quot;&gt;&lt;LongDate/&gt;&lt;/td&gt;&lt;td align=&quot;right&quot; valign=&quot;bottom&quot;&gt;&lt;Version/&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</PageSection>',
+                 '       <Iteration iterationType="OFF" iterationValue="1" iterationKeyword="" discriminator="" panelSize="1" groupName="workspaceSelection" />',
+                 '       <BatchSettings useCurrentGroup="1" length="3" name="" order="ACROSS" direction="COLUMNS" append="0" destination="toLayout" separatePages="0" launchApp="1" header="0" footer="0" commandLineBatch="0" />',
+                 '       <FigList/>',
+                 '     </Layout>',
+                 '     <WindowPosition x="0" y="3" width="900" height="600" />',
+                 '   </LayoutEditor>'
+  )
+
+  # Add Scripts section
+  xml_lines <- c(xml_lines,
+                 '   <Scripts>',
+                 '     <Script lang="text/javascript" name="New Script 		 " />',
+                 '   </Scripts>'
+  )
+
+  # Add Experiment section
+  xml_lines <- c(xml_lines,
+                 '   <Experiment>',
+                 '     <PlateModel name="Plate" color="#00ffffff" rows="8" columns="12" plateID="00000" expID="000-00000" format="Plate" showNEntries="1" peHeatmap="1" peShowEnums="1" peThickBorders="1" >',
+                 '       <PrintLayout flipPattern0="0" rows="1" columns="1" padding="36" header="" footer="" headerActive="0" footerActive="0" scalingMode="fj.print.scale.none" scaling="1" orientation="1" width="595.2744" height="841.8888" imageableX="72" imageableY="72" imageableWidth="451.2744" imageableHeight="697.8888" />',
+                 '     </PlateModel>',
+                 '     <PlateEditorState>',
+                 '       <KeywordList>',
+                 '         <Keyword attribute="Assay" value="GFP Reporter" />',
+                 '         <Keyword attribute="Time point" value="24hr" />',
+                 '         <Keyword attribute="Treatment &quot;Drug A&quot;" value="10ug/L" />',
+                 '       </KeywordList>',
+                 '       <StagingArea>',
+                 '         <StagingWell/>',
+                 '         <StagingWell/>',
+                 '         <StagingWell/>',
+                 '         <StagingWell/>',
+                 '       </StagingArea>',
+                 '     </PlateEditorState>',
+                 '   </Experiment>'
+  )
+
+  # Add Exports section
+  xml_lines <- c(xml_lines, '   <Exports/>')
+
+  # Add SOPS section
+  xml_lines <- c(xml_lines, '   <SOPS/>')
+
+  # Add NA section
+  xml_lines <- c(xml_lines, '   <NA/>')
+
+  # Add weights section
+  xml_lines <- c(xml_lines, '   <weights/>')
+
   # Close workspace
-  xml_lines <- c(xml_lines, '</Workspace>')
-  
+  xml_lines <- c(xml_lines, ' </Workspace>')
+
   return(paste(xml_lines, collapse = "\n"))
 }
 
