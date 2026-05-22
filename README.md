@@ -6,11 +6,20 @@ The CyFj11 package provides tools to parse FlowJo v11 workspace files (.flowjo) 
 
 ## Installation
 
-You can install the development version of CyFj11 from GitHub with:
+### From Bioconductor (Development Version)
+
+```r
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("CyFj11", version = "devel")
+```
+
+### Development Version from GitHub
 
 ```r
 # install.packages("devtools")
-devtools::install_github("yourusername/CyFj11")
+devtools::install_github("baj12/CyFj11")
 ```
 
 ## Overview

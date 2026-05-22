@@ -3,11 +3,13 @@ Type: Package
 Title: Parse and Extract Data from FlowJo v11 Workspace Files
 Version: 0.9.3
 Authors@R: person("Bernd", "Jagla", email = "bernd.jagla@pasteur.fr", role = c("aut", "cre"))
-Description: Provides functions to parse FlowJo v11 workspace files (.flowjo) and extract gating information, populations, and associated FCS files. Includes utilities for exporting data to FlowJo v10 workspace format.
+Description: Provides functions to parse FlowJo v11 workspace files (.flowjo) and extract gating information, populations, and associated FCS files. Includes utilities for exporting data to FlowJo v10 workspace format. The package enables bidirectional data flow between FlowJo and R/Bioconductor, facilitating reproducible analysis workflows.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.3
+Depends:
+    R (>= 4.0.0)
 Imports:
     jsonlite,
     dplyr,
@@ -28,4 +30,8 @@ Suggests:
     qpdf,
     rmarkdown
 VignetteBuilder: knitr
+biocViews: FlowCytometry, DataImport, DataExport, Gating, WorkspaceConversion
+URL: https://github.com/baj12/CyFj11
+BugReports: https://github.com/baj12/CyFj11/issues
+SystemRequirements: None
 Roxygen: list(markdown = TRUE)
