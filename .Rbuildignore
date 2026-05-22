@@ -26,5 +26,8 @@ FJ10.wsp
 flowjo_export_tests
 inst/dev
 lib
+manuscript/
+export_approaches/
 plans/
 slurm_output/
+^inst/Gating-ML 2\.0 Full 20130122/

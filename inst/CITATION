@@ -1,8 +1,9 @@
-citation("CyFj11")
-
-bibentry("Article",
+citEntry(
+  entry = "Article",
   title = "CyFj11: FlowJo v11 Workspace Import and Legacy Format Export for R-Based Flow Cytometry Analysis",
-  author = person("Bernd", "Jagla", email = "bernd.jagla@pasteur.fr"),
+  author = personList(
+    person("Bernd", "Jagla", email = "bernd.jagla@pasteur.fr")
+  ),
   journal = "Cytometry Part A",
   year = "2026",
   note = "Submitted for publication"
