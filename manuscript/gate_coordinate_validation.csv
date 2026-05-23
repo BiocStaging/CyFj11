@@ -1,0 +1,9 @@
+"test","population","gate_type","transform","n_coords","mean_pct","max_pct","known_drift","pass"
+"test02","FSC_filter","rectangle","linear",2,0,0,FALSE,TRUE
+"test03","cells","rectangle","linear",4,0,0,FALSE,TRUE
+"test04","singlets","polygon","linear",6,0,0,FALSE,TRUE
+"test06","FITC_pos","rectangle","biexp",2,0,0,FALSE,TRUE
+"test07","PE_pos","rectangle","log",2,0,0,TRUE,TRUE
+"test08","APC_pos","rectangle","arcsinh",2,0,0,FALSE,TRUE
+"test09_cells","cells","rectangle","linear",4,0,0,FALSE,TRUE
+"test09_singlets","singlets","rectangle","linear",4,0,0,FALSE,TRUE

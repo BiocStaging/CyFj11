@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" demote-non-dropping-particle="sort-only" default-locale="en-US">
+  <info>
+    <title>Cytometry Part A</title>
+    <id>http://www.zotero.org/styles/cytometry-part-a</id>
+    <link href="http://www.zotero.org/styles/cytometry-part-a" rel="self"/>
+    <link href="http://www.zotero.org/styles/american-medical-association" rel="template"/>
+    <link href="https://onlinelibrary.wiley.com/page/journal/15524930/homepage/forauthors.html" rel="documentation"/>
+    <author>
+      <name>CyFj11 manuscript</name>
+    </author>
+    <category citation-format="numeric"/>
+    <category field="biology"/>
+    <issn>1552-4922</issn>
+    <eissn>1552-4930</eissn>
+    <updated>2024-01-01T00:00:00+00:00</updated>
+    <rights license="http://creativecommons.org/licenses/by-sa/3.0/">This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 License</rights>
+  </info>
+
+  <macro name="author">
+    <names variable="author">
+      <name sort-separator=" " initialize-with="" name-as-sort-order="all" delimiter=", " delimiter-precedes-last="always"/>
+      <label form="short" prefix=", "/>
+      <substitute>
+        <names variable="editor"/>
+      </substitute>
+    </names>
+  </macro>
+
+  <macro name="editor">
+    <names variable="editor">
+      <name sort-separator=" " initialize-with="" name-as-sort-order="all" delimiter=", " delimiter-precedes-last="always"/>
+      <label form="short" prefix=", "/>
+    </names>
+  </macro>
+
+  <macro name="publisher">
+    <group delimiter=": ">
+      <text variable="publisher-place"/>
+      <text variable="publisher"/>
+    </group>
+  </macro>
+
+  <macro name="access">
+    <choose>
+      <if variable="URL">
+        <group delimiter=". ">
+          <text variable="URL" prefix="Available at: "/>
+          <group prefix="Accessed ">
+            <date variable="accessed">
+              <date-part name="month" form="long" suffix=" "/>
+              <date-part name="day" suffix=", "/>
+              <date-part name="year"/>
+            </date>
+          </group>
+        </group>
+      </if>
+    </choose>
+  </macro>
+
+  <macro name="journal-title">
+    <choose>
+      <if type="article-journal article-magazine" match="any">
+        <text variable="container-title" form="short" font-style="italic" strip-periods="true"/>
+      </if>
+      <else>
+        <text variable="container-title" font-style="italic"/>
+      </else>
+    </choose>
+  </macro>
+
+  <macro name="title">
+    <choose>
+      <if type="book">
+        <text variable="title" font-style="italic"/>
+      </if>
+      <else>
+        <text variable="title"/>
+      </else>
+    </choose>
+  </macro>
+
+  <macro name="edition">
+    <choose>
+      <if is-numeric="edition">
+        <group delimiter=" ">
+          <number variable="edition" form="ordinal"/>
+          <text term="edition" form="short"/>
+        </group>
+      </if>
+      <else>
+        <text variable="edition" suffix="."/>
+      </else>
+    </choose>
+  </macro>
+
+  <macro name="date">
+    <date variable="issued">
+      <date-part name="year"/>
+    </date>
+  </macro>
+
+  <citation collapse="citation-number">
+    <sort>
+      <key variable="citation-number"/>
+    </sort>
+    <layout prefix="[" suffix="]" delimiter=",">
+      <text variable="citation-number"/>
+    </layout>
+  </citation>
+
+  <bibliography et-al-min="7" et-al-use-first="6" second-field-align="flush" entry-spacing="0">
+    <layout suffix=".">
+      <text variable="citation-number" suffix=". "/>
+      <group delimiter=". ">
+        <text macro="author"/>
+        <text macro="title"/>
+        <choose>
+          <if type="article-journal">
+            <group delimiter=" ">
+              <text macro="journal-title"/>
+              <group delimiter=":">
+                <group delimiter=";">
+                  <text macro="date"/>
+                  <text variable="volume"/>
+                </group>
+                <text variable="page"/>
+              </group>
+            </group>
+          </if>
+          <else-if type="chapter paper-conference" match="any">
+            <group delimiter=". ">
+              <group delimiter=" ">
+                <text term="in" text-case="capitalize-first" suffix=":"/>
+                <text macro="editor"/>
+              </group>
+              <text variable="container-title" font-style="italic"/>
+              <text macro="edition"/>
+              <text macro="publisher"/>
+              <group delimiter=":">
+                <text macro="date"/>
+                <text variable="page"/>
+              </group>
+            </group>
+          </else-if>
+          <else-if type="book">
+            <group delimiter=". ">
+              <text macro="edition"/>
+              <text macro="publisher"/>
+              <text macro="date"/>
+            </group>
+          </else-if>
+          <else>
+            <group delimiter=". ">
+              <text macro="date"/>
+              <text macro="access"/>
+            </group>
+          </else>
+        </choose>
+      </group>
+    </layout>
+  </bibliography>
+</style>
