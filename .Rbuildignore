@@ -15,6 +15,7 @@
 ^.*\.Rproj$
 ^\.git$
 ^\.Rproj\.user$
+^\.zenodo\.json$
 ^data$
 ^doc$
 ^Meta$
