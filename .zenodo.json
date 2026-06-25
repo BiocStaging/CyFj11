@@ -1,0 +1,50 @@
+{
+  "title": "CyFj11 validation suite: synthetic test workspaces, FCS files, and analysis scripts for FlowJo v11 / R interoperability",
+  "description": "This dataset contains the structured validation materials for the R/Bioconductor package CyFj11, which enables import of FlowJo v11 workspaces into R GatingSet objects and export to the FlowJo v10 XML format.\n\nContents:\n- 14 test scenarios (test01/ to test14/): each directory contains FCS files, CyFj11-exported FlowJo v10 workspaces (*_export.wsp), and comparison copies (*_export.llm.wsp).\n- Synthetic FCS data for tests 01-13, generated programmatically from normal and log-normal distributions with fixed random seeds using generate_all_tests.R.\n- Public example data for test 14: the FlowSOM Bioconductor package example files 68983.fcs and gating.wsp, retrieved automatically from system.file(\"extdata\", ..., package = \"FlowSOM\").\n- Regeneration scripts: generate_all_tests.R and generate_test13.R.\n- Validation records: validation_counts.csv, validation_counts.tsv, validation_transforms.tsv, and history.txt.\n\nData provenance:\n- Tests 01-13: entirely synthetic; no human or patient-derived material.\n- Test 14: public example dataset from the Bioconductor FlowSOM package (GPL >= 2).\n\nRelated software:\n- CyFj11: https://github.com/baj12/CyFj11\n- FlowSOM: https://bioconductor.org/packages/FlowSOM",
+  "creators": [
+    {
+      "name": "Jagla, Bernd",
+      "affiliation": "Institut Pasteur",
+      "orcid": "0000-0002-7696-0484"
+    }
+  ],
+  "keywords": [
+    "flow cytometry",
+    "FlowJo",
+    "GatingSet",
+    "Gating-ML",
+    "workspace interoperability",
+    "R",
+    "Bioconductor",
+    "CyFj11",
+    "validation"
+  ],
+  "license": "MIT",
+  "upload_type": "dataset",
+  "access_right": "open",
+  "version": "1.0.0",
+  "language": "eng",
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/baj12/CyFj11",
+      "resource_type": "software"
+    },
+    {
+      "relation": "isDerivedFrom",
+      "identifier": "https://bioconductor.org/packages/FlowSOM",
+      "resource_type": "software"
+    },
+    {
+      "relation": "isDescribedBy",
+      "identifier": "https://github.com/baj12/CyFj11/tree/main/manuscript",
+      "resource_type": "publication-article"
+    }
+  ],
+  "communities": [
+    {
+      "identifier": "bioconductor"
+    }
+  ],
+  "notes": "Test 14 FCS and workspace files are redistributed from the public example data of the Bioconductor FlowSOM package (GPL >= 2). All other files are original and synthetic."
+}
