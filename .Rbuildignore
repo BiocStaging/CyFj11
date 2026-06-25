@@ -16,7 +16,6 @@
 ^\.git$
 ^\.Rproj\.user$
 ^\.zenodo\.json$
-^\.zenodoignore$
 ^data$
 ^doc$
 ^Meta$
