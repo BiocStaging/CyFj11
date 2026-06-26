@@ -1,0 +1,329 @@
+“Cytometry Part A” Author Guidelines
+Quick links
+New submissions
+Journal policies
+Support for authors
+Editorial standards and expectations
+Manuscript Preparation
+Post-acceptance
+Detailed guidelines for specific submission types
+New submissions
+New submissions should be made via the Research Exchange submission portal. You may check the status of your submission at any time by logging on to authors.wiley.com and clicking the “My Submissions” button. For technical help with the submission system, please review our FAQs or contact submissionhelp@wiley.com..
+
+Journal policies
+Authorship
+All listed authors should have contributed to the manuscript substantially and have agreed to the final submitted version. Review editorial standards for a description of authorship criteria. For all articles, this journal mandates the CRediT (Contribution Roles Taxonomy)—more information is available on our Author Services site.
+
+Preprint policy
+Cytometry Part A will consider for review articles previously available as preprints. You may also post the submitted version of a manuscript to a preprint server at any time. You are requested to update any pre-publication versions with a link to the final published article.
+
+Data protection
+By submitting a manuscript to or reviewing for this publication, your name, email address, and affiliation, and other contact details the publication might require, will be used for the regular operations of the publication. Please review Wiley’s Data Protection Policy to learn more.
+
+Funding
+You should list all funding sources in the Acknowledgments section. You are responsible for the accuracy of their funder designation. If in doubt, please check the Open Funder Registry for the correct nomenclature.
+
+Data citation
+Please review Wiley’s Data Citation policy.
+
+ORCID
+This journal requires the use of ORCID. Please refer to Wiley’s resources on ORCID.
+
+Reproduction of copyright material
+If excerpts from copyrighted works owned by third parties are included, credit must be shown in the contribution. It is your responsibility to also obtain written permission for reproduction from the copyright owners. For more information visit Wiley’s Obtaining Permission to Reproduce Material.
+
+The corresponding author is responsible for obtaining written permission to reproduce the material "in print and other media" from the publisher of the original source, and for supplying Wiley with that permission upon submission.
+
+Plagiarism detection and ethical compliance
+This journal utilizes iThenticate’s CrossCheck software to identify overlapping or similar text in submitted manuscripts, ensuring originality and adherence to ethical standards. Authors are encouraged to review Wiley’s Top 10 Publishing Ethics Tips for Authors and Wiley’s Publication Ethics Guidelines to familiarize themselves with best practices in publishing ethics.
+
+For studies involving human or animal subjects, include statements of ethical approval in the Methods section. Adhere to the Declaration of Helsinki and relevant institutional/national guidelines.
+
+Conflict of interest
+All authors must disclose any potential conflicts of interest. This includes financial relationships, patents, or affiliations that could bias the study. If no conflicts exist, explicitly state this.
+
+Open access
+This journal is a subscription-based publication that offers an Open Access option. You’ll have the option to make your article open access after acceptance, subject to an APC unless a waiver applies. Read more about APCs here.
+
+Use of AI systems
+Artificial Intelligence Generated Content (AIGC) tools—such as ChatGPT, Claude, Gemini, and others based on large language models (LLMs)—cannot be considered capable of initiating an original piece of research without direction by human authors. They also cannot be accountable for published work or research design, a generally held requirement of authorship (as discussed in the other sections), nor do they have legal standing or the ability to hold or assign copyright. Therefore—in accordance with COPE’s position statement on AI tools—these tools cannot fulfill the role of, nor be listed as, an author of an article. If an author has used this kind of tool to develop any portion of a manuscript, its use must be described, transparently and in detail, in the Methods or Acknowledgements section. The author is fully responsible for the accuracy of any information provided by the tool and for correctly referencing any supporting work on which that information depends. Tools that are used to improve spelling, grammar, and general editing are not included in the scope of these guidelines. The final decision about whether the use of an AIGC tool is appropriate or permissible in the circumstances of a submitted manuscript or a published article lies with the Editor-in-Chief.
+
+Support for authors
+Article preparation support
+Wiley Editing Services offers expert help with English Language Editing, as well as translation, manuscript formatting, figure illustration, figure formatting, and graphical abstract design – so you can submit your manuscript with confidence.
+
+Also, check out our resources for Preparing Your Article for general guidance about writing and preparing your manuscript.
+
+Submission to PubMed Central
+Cytometry Part A supports authors by facilitating the submission of accepted manuscripts to PubMed Central (PMC). Wiley will deposit the accepted version of articles funded by the NIH to PMC upon acceptance. These accepted versions—post-peer review but pre-typesetting—will become publicly available on PMC 12 months after publication.
+
+Additionally, Wiley offers agreements with the Howard Hughes Medical Institute (HHMI) to make post-peer-reviewed articles publicly available six months after publication. Cytometry Part A content is freely available on Wiley Online Library 12 months after publication.
+
+Editorial integrity
+Cytometry Part A adheres to the principles of the Committee on Publication Ethics (COPE).
+
+Editorial standards and expectations
+General editorial policy
+Cytometry Part A, the Journal of Quantitative Cell Science, publishes research that utilizes innovative single-cell biology techniques for cell measurement, manipulation, engineering, and modeling. The journal prioritizes studies that explore molecular and cellular mechanisms via cytometry and high-content screening. Key areas of focus include cellular heterogeneity and functionality, rare cell subpopulations, tracing lineages of cellular phenotypes, and other emerging topics in single-cell biology. Cytometry Part A is the official journal of the International Society for Advancement of Cytometry. The full description of the journal’s scope can be found on the Cytometry Part A home page and the Overview page.
+Submissions must present new experimental findings or methodological advancements in single-cell analysis. These may include novel experimental protocols, innovative scientific instrumentation, newly developed algorithms, and data processing tools, or reinterpretations of previously published data.
+To ensure rigorous evaluation, all new methods should be directly compared to established gold standards in the field. In instances where no such standards exist or where such comparisons are logistically unfeasible, authors are required to provide a comprehensive explanation detailing the rationale and limitations of the evaluation process.
+Manuscripts must be written in American English to ensure clarity and consistency. Authors for whom English is not their first language are strongly encouraged to utilize professional editing services to enhance the quality and readability of their submissions. This step can help ensure that the manuscript meets the journal’s linguistic and professional standards.
+Membership in the International Society for Advancement of Cytometry is not a requirement for submission.
+Article types
+Cytometry Part A accepts several article types, including full-length research articles, reviews, technical notes, OMIP articles, and brief reports. Detailed formatting guidelines for specific article types are available in the section below.
+
+Peer review process
+Manuscripts are subject to a rigorous peer review process led by associate editors and supported by at least two independent reviewers. This thorough evaluation is guided by a comprehensive set of criteria designed to uphold the journal’s standards for high-quality and impactful publications. Submissions are assessed based on the following guidelines:
+
+Relevance to the journal’s scope. The manuscript addresses topics aligned with the journal’s focus and areas of interest.
+Impact on the field. The potential influence of the findings on future research, clinical applications, or technological developments is evident.
+Originality and significance of findings. The work presents novel findings or methodologies with a significant contribution to the field.
+Clarity of aims, results, and discussions. The manuscript articulates its objectives, findings, and conclusions clearly and concisely.
+Experimental methods’ adequacy and reproducibility, including data transparency and accessibility. the described methods are robust, well-documented, and provide sufficient detail for reproducibility. Raw data, code, or supplementary materials are provided to facilitate independent validation and adhere to the journal’s data-sharing policies.
+Statistical rigor. The statistical analyses are appropriate, clearly described, and adequately support the conclusions.
+Ethical compliance. The research adheres to ethical standards for human, animal, or sensitive data studies, including clear statements of ethical approval and informed consent where applicable.
+Integration with existing literature. The work is contextualized within the current body of knowledge through an accurate and comprehensive review of relevant literature.
+Documentation and presentation quality. The manuscript demonstrates high standards of writing, organization, and formatting, ensuring clarity and readability.
+Visual presentation quality. Figures, tables, and graphical representations are clear, accurate, and effectively complement the manuscript’s content.
+Appeals and complaints
+Authors may appeal an editorial decision if they feel that the decision to reject was based on either a significant misunderstanding of a core aspect of the manuscript, a failure to understand how the manuscript advances the literature, or concerns regarding the manuscript-handling process. Differences in opinion regarding the novelty or significance of the reported findings are not considered grounds for appeal. To raise an appeal, please contact this journal by email, quoting your manuscript ID number and explaining your rationale for the appeal. The editor’s decision following an appeal consideration is final.
+
+To raise a complaint concerning the editorial staff, policies, or procedures, please contact the journal in the first instance. Should you believe that further support outside of the journal’s management is required, kindly refer to Wiley’s Best Practice Guidelines on Research Integrity and Publishing Ethics.
+
+Statistical reporting and data analysis presentation
+General advice
+Authors are strongly encouraged to adopt a nuanced and thoughtful approach to statistical reporting, moving beyond dichotomous interpretations of statistical significance (e.g., "p < 0.05"). Manuscripts should report p-values as continuous measures, interpreted within the broader scientific context, and avoid labeling findings as simply "significant" or "not significant." Although effect sizes and confidence intervals are not mandatory, they are highly recommended and encouraged components of statistical reporting for Cytometry Part A, and should be interpreted as the primary measures of practical importance, with p-values serving only as supplementary information about statistical uncertainty.
+
+Statistical design and analysis integrity
+Authors must ensure appropriate experimental design with adequate control conditions that account for all non-specific effects, including time-dependent changes, learning effects, and measurement artifacts. When drawing conclusions about differences between groups or conditions, authors must perform direct statistical comparisons rather than inferring differences from separate significance tests. This includes avoiding the common error of concluding that effects differ between groups simply because one reaches statistical significance while another does not.
+
+Sample size and statistical power
+Manuscripts should report sample size justification through power analyses conducted a priori, specifying the expected effect size, desired power (typically 80%), and significance level. Bayesian approaches offer valuable alternatives to traditional power analysis, allowing researchers to incorporate prior knowledge and continuously update evidence as data accumulate. Authors should acknowledge that small sample sizes can lead to inflated effect size estimates and reduced reproducibility and should interpret findings accordingly. Bayesian methods are particularly advantageous for small-sample studies, as they provide more nuanced interpretations of uncertainty and can formally incorporate prior information from related studies.
+
+P-value reporting conventions:
+The use of so-called “roving alphas,” where thresholds for statistical significance are adjusted post hoc or inconsistently applied across analyses, is strongly discouraged. Instead, authors should transparently define and justify any statistical thresholds prior to analysis. As mentioned before, authors should prioritize reporting effect sizes rather than simply presenting p-values. This provides a clearer and more refined understanding of the magnitude and significance of observed effects, offering readers greater insight into the study’s implications.
+
+When reporting p-values, authors should provide exact values (e.g., p = 0.032) rather than threshold statements (e.g., p < 0.05) to facilitate meta-analyses and provide complete information. However, following established typographical conventions, p-values smaller than 0.001 may be reported as "p < 0.001" without requiring the exact value. This convention recognizes that extremely small p-values provide little additional information beyond indicating very strong evidence against the null hypothesis, while the exact value is less meaningful than the associated effect size and confidence interval.
+
+Using stars (*, **, ***) to indicate levels of statistical significance (e.g., p < 0.05, p < 0.01, p < 0.001) in plots, graphs, and figures is a common practice, but it carries significant drawbacks and risks of misinterpretation. We strongly discourage authors from relying on such arbitrary thresholds and annotations. This practice can incentivize p-hacking, tempting researchers to manipulate analyses to achieve a "star-worthy" p-value. Furthermore, readers may misinterpret stars as representing practical significance or effect size, wrongly assuming that more stars equate to more meaningful or impactful results. Instead, figures should display effect sizes, confidence intervals, or credible intervals from Bayesian analyses, which provide far more informative and scientifically meaningful representations of the data.
+
+Terminology and reproducibility standards
+Authors must avoid using proprietary or nonstandard terminology when describing mathematical concepts, metrics, measures, or indices employed in cytometry data analysis pipelines. Instead, all terms must conform to established mathematical and statistical conventions and be accompanied by references to their theoretical foundations. This ensures that terminology is precise, universally understood, and grounded in the relevant literature.
+
+For software parameters or hyperparameters, authors are required to provide a rigorous and mathematically accurate definition of each term, including its statistical interpretation and role within the model or algorithm. Alternatively, a citation to a credible and authoritative source may be provided to explain the parameter's meaning and significance. Authors should report sufficient methodological detail to enable reproduction of analyses, including software versions, random seeds where applicable, and complete analysis code when feasible.
+
+Information about used reagents
+Cytometry Part A is committed to ensuring complete transparency in the reporting of labels, reagents, and other chemical or biochemical processing kits. Authors are strongly encouraged to explicitly document all components used in their research or provide citations to publicly available sources that describe these materials in detail. The journal discourages the use of undefined or proprietary components that lack sufficient disclosure, as this compromises transparency and reproducibility.
+
+In addition, the journal supports the Resource Identification Initiative, which aims to enhance the identification, discovery, and reuse of research resources. This initiative, led by the Neuroscience Information Framework and the Oregon Health & Science University Library, provides unique identifiers known as Research Resource Identifiers (RRIDs). These identifiers are machine-readable and enable researchers to trace the use of specific resources across published literature, thereby improving accessibility to critical data and facilitating the selection of appropriate reagents and tools.
+
+Authors are encouraged to include RRIDs when citing resources used in their research, where applicable, in a manner similar to standard citations or GenBank Accession numbers.
+
+Manuscript Preparation
+General requirements
+Manuscripts must include the following essential components: a title page, abstract, main text, figures, tables, and references. While the journal does not mandate a specific format, clear organization and adherence to professional formatting standards are strongly recommended. Authors should structure their manuscripts with clearly labeled headings, sections, and subsections to enhance readability and navigability.
+
+For document preparation, the use of word processing software such as Microsoft Word is recommended, and authors are encouraged to utilize built-in automated styles for consistent formatting. Alternatively, typesetting software such as LaTeX may be employed to achieve a polished and professionally organized document. Regardless of the software used, all manuscripts should prioritize clarity, coherence, and ease of review.
+
+Manuscripts can be uploaded either as a single document (containing the main text, tables and figures), or with figures and tables provided as separate files. The main manuscript file can be submitted in Microsoft Word (.doc or .docx) or LaTeX (.tex) format.
+
+Specific guidelines for LaTeX users
+For authors requiring a LaTeX template, we strongly recommend reviewing Wiley’s New Journal Design (NJD) LaTeX Authoring Template.
+
+If submitting your manuscript file in LaTeX format via Research Exchange, select the file designation “Main Document – LaTeX. tex File” on upload. When submitting a LaTeX Main Document, you must also provide a PDF version of the manuscript for Peer Review. Please upload this file as “Main Document - LaTeX PDF.” All supporting files that are referred to in the LaTeX Main Document should be uploaded as a “LaTeX Supplementary File.”
+
+Post-acceptance, please check that you have supplied the following files for typesetting:
+
+PDF of the finalized source manuscript files compiled without any errors.
+The LaTeX source code files (text, figure captions, and tables, preferably in a single file), BibTeX files (if used), any associated packages/files along with all other files needed for compiling without any errors. This is particularly important if authors have used any LaTeX style or class files, bibliography files (.bbl, .bst, .blg) or packages apart from those used in the NJD LaTeX Template class file.
+Electronic graphics files for the illustrations in Encapsulated PostScript (EPS), PDF or TIFF format. Authors are requested not to create figures using LaTeX codes.
+Free Format submission
+Cytometry Part A offers Free Format submission for a simplified and streamlined submission process.
+
+Before you submit, you will need:
+
+Your manuscript: this should be an editable file including text, figures, and tables, or separate files—whichever you prefer. All required sections should be contained in your manuscript, including abstract, introduction, methods, results, and conclusions. Figures and tables should have legends. Figures should be uploaded in the highest resolution possible. If the figures are not of sufficiently high quality, your manuscript may be delayed. References may be submitted in any style or format, as long as it is consistent throughout the manuscript. Supporting information should be submitted in separate files. If the manuscript, figures or tables are difficult for you to read, they will also be difficult for the editors and reviewers, and the editorial office will send it back to you for revision. Your manuscript may also be sent back to you for revision if the quality of English language is poor.
+An ORCID ID, freely available at https://orcid.org. (Why is this important? Your article, if accepted and published, will be attached to your ORCID profile. Institutions and funders are increasingly requiring authors to have ORCID IDs.)
+The title page of the manuscript (see below)
+Statements relating to our ethics and integrity policies, which may include any of the following (Why are these important? We need to uphold rigorous ethical standards for the research we consider for publication):
+data availability statement
+funding statement
+conflict of interest disclosure
+ethics approval statement
+patient consent statement
+permission to reproduce material from other sources
+clinical trial registration
+Title page
+The title page should contain:
+
+A brief informative title containing the major key words. The title should avoid abbreviations (see Wiley's best practice SEO tips).
+A short running title of less than 40 characters.
+The full names of the authors and their email addresses.
+The author's institutional affiliations where the work was conducted, with a footnote for the author’s present address if different from where the work was conducted.
+Acknowledgments.
+Funding information.
+Figures and supporting information
+Figures, supporting information, and appendices should be supplied as separate files. You should review the basic figure requirements for manuscripts for peer review, as well as the more detailed post-acceptance figure requirements. View Wiley’s FAQs on supporting information.
+
+Minimum Information about a Flow Cytometry Experiment (MIFlowCyt Standard)
+The MIFlowCyt standard, established by the International Society for the Advancement of Cytometry (ISAC), is a mandatory requirement for all manuscripts submitted to Cytometry Part A that include flow cytometry data. This standard specifies the minimum information necessary to ensure that flow cytometry (FCM) experiments can be independently validated and their data reliably interpreted. Examples of manuscripts adhering to this standard can be found here.
+
+To comply with the MIFlowCyt standard, manuscripts must include the following key components:
+
+Experiment overview. A concise description of the study design and objectives.
+Flow sample and specimen description. Detailed information on the samples, including their preparation and handling.
+Instrument details. Specifications of the flow cytometry instrumentation used in the study.
+Data analysis details. A thorough explanation of the methods and parameters used for data analysis.
+Submissions must also include a completed MIFlowCyt Item Checklist. For additional information, the full MIFlowCyt specification is available in the article by Lee et al.: “MIFlowCyt: The Minimum Information about a Flow Cytometry Experiment.”
+
+Authors conducting flow cytometry studies involving microvesicles are encouraged to represent their data in accordance with the recommendations outlined in the MIFlowCyt-EV guidelines. These standards, detailed in the publication MIFlowCyt-EV, provide a framework for the consistent and accurate reporting of extracellular vesicle data, ensuring clarity, reproducibility, and alignment with best practices in the field.
+
+Data sharing
+Cytometry Part A requires authors to share the data underlying their research in accordance with Wiley’s Data Sharing Policy. Authors must select an appropriate data availability statement at submission. Data sharing supports transparency, reproducibility, and the advancement of scientific knowledge.
+
+Please note that FlowRepository.org is currently unavailable for new data deposits. If the resource transitions to a new platform, updates will be provided. Until then, authors should deposit their data in reputable, field-appropriate repositories that ensure long-term accessibility and proper attribution.
+
+Preference is given to repositories that participate in the DataCite consortium, as these services issue persistent DOI links that ensure discoverability and facilitate accurate citation. Examples of recommended repositories include
+
+Institutional repositories (DOI-enabled)
+PURR (Purdue University Research Repository),
+Harvard Dataverse,
+Illinois Data Bank,
+Deep Blue Data – University of Michigan,
+Apollo – University of Cambridge,
+Oxford Research Archive (ORA-Data),
+Edinburgh DataShare,
+4TU.ResearchData,
+Monash Figshare,
+University of Sydney eScholarship Repository.
+General-purpose repositories (open to all researchers)
+Zenodo,
+Figshare,
+Dryad,
+Open Science Framework (OSF),
+Mendeley Data.
+Field-specific repositories
+Immunology: ImmPort, CEDAR
+Neuroscience: OpenNeuro, NeuroMorpho.Org
+Genomics & Transcriptomics: NCBI GEO, SRA, ENA
+Proteomics & Metabolomics: PRIDE, MetaboLights
+Biomedical & Imaging: BioStudies, Image Data Resource (IDR)
+Authors are strongly encouraged to consult their institution’s library when selecting a repository. Many universities maintain DOI-enabled repositories or provide access to trusted services. Several repositories, such as Harvard Dataverse, also support collaborations across multiple institutions.
+
+All manuscripts must include the repository link and DOI (or accession number) to enable readers to access the dataset directly.
+
+If the shared data includes clinical information, users must adhere to the specific guidelines outlined for the clinical OMIP submissions. See the section Special Considerations for Clinical Datasets.
+
+Style guidelines
+Authors are required to ensure that their manuscripts adhere to the stylistic standards outlined in The Chicago Manual of Style, 18th Edition, and The CSE Manual: Scientific Style and Format for Authors, Editors, and Publishers, 9th Edition. These authoritative guides provide detailed instructions on grammar, punctuation, citations, formatting, and overall style. Compliance with these standards is essential to maintain the clarity, professionalism, and consistency of articles published in the journal.
+
+Trademarks
+Specifically, Cytometry Part A follows the guidance of The CSE Manual: Scientific Style and Format for Authors, Editors, and Publishers, 9th Edition, and the AMA Manual of Style, 11th Edition regarding the treatment of trademarks in scholarly writing. In line with these recommendations, authors should not use the symbols ®, ™, in manuscripts, references, or figure legends. Such designations are primarily intended for marketing materials and are unnecessary in formal scholarly publications, provided that trademarked names are spelled correctly and their usage is clearly identified.
+
+Trademarked names should be presented in a consistent, conventional scholarly style. In most cases, this means using an initial capital letter followed by lowercase letters (e.g., Cytek, Chroma, Scopus). Certain exceptions apply: abbreviations should be written in their customary all-capital form (eg, IBM, DSM-5), and words that employ intercapped constructions should retain their original style (e.g., PubMed, CellTracker).
+
+Although trademark owners sometimes request that their names be styled in all capital letters, with specific capitalization patterns, or always accompanied by a trademark symbol, authors and editors are not obligated to comply with such requests in the context of scientific writing. In scholarly publications, journal style conventions take precedence.
+
+Finally, it is worth noting that the restrictions governing the use of trademarks under US law primarily apply to commercial and marketing contexts, rather than to editorial use in scientific journals. Accordingly, authors may refer to trademarked names without trademark symbols and without risk of infringement, as long as such references occur in a scholarly and descriptive context.
+
+Post-acceptance
+Wiley Author Services
+When an accepted article is received by Wiley’s production team, the corresponding author will receive an email asking them to login or register with Wiley Author Services. You will be asked to sign a publication license at this point as well as pay for any applicable APCs.
+
+Early View
+Upon publication, articles are available as full-text HTML or PDF in Early View prior to inclusion in an issue and can be cited as references using their Digital Object Identifier (DOI) number.
+
+Proofs
+Authors will receive an e-mail notification with a link and instructions for accessing HTML page proofs online/with their proofs included as a pdf. Authors should also make sure that any renumbered tables, figures, or references match text citations and that figure legends correspond with text citations and actual figures. Proofs must be returned within 48 hours of receipt of the email.
+
+Article promotion support
+Wiley Editing Services offers professional video, design, and writing services to create shareable video abstracts, infographics, conference posters, lay summaries, and research news stories for your research – so you can help your research get the attention it deserves.
+
+Correction to Authorship
+In accordance with Wiley’s Best Practice Guidelines on Research Integrity and Publishing Ethics and the Committee on Publication Ethics’ guidance, Cytometry Part A will allow authors to correct authorship on a submitted, accepted, or published article if a valid reason exists to do so. All authors – including those to be added or removed – must agree to any proposed change. To request a change to the author list, please complete the Request for Changes to a Journal Article Author List Form and contact either the journal’s editorial or production office, depending on the status of the article. Authorship changes will not be considered without a fully completed Author Change form. [Correcting the authorship is different from changing an author’s name; the relevant policy for that can be found in Wiley’s Best Practice Guidelines under “Author name changes after publication.”
+
+Detailed guidelines for specific submission types
+Original Research Articles
+Articles are full-length reports of original research in all fields of analytical cytology. They should contribute to the development, evaluation, or application of cytometric methods and their use in biology and medicine.
+
+Reviews
+Reviews are comprehensive appraisals of current cytometric issues and advances. They are subject to the same review process as other papers. Authors are encouraged to consult with the Editor-in-Chief regarding the suitability of a proposed review before submission.
+
+Computational Articles
+Computational Articles should focus on novel or significantly improved tools, algorithms, or software frameworks developed to analyze cytometry, automated microscopy, high-content screening, high-throughput screening, or other types of single-cell analysis-related data. These articles are essential for advancing computational methodologies in single-cell analysis, providing tools that address current challenges, enhance analytical capabilities, and enable reproducibility in the field.
+
+Manuscripts must address the following key elements:
+
+Clearly defined problems: Clearly articulate the problem or gap in the field that the computational tool or method is intended to address. Provide sufficient background and context to demonstrate the significance of the problem and the need for the proposed solution.
+Comparative results. Provide rigorous evaluation and validation of the tool by comparing its performance against existing solutions. This comparison should include metrics relevant to the specific field, such as accuracy, efficiency, scalability, or usability. Authors must demonstrate how the proposed tool offers advantages or addresses limitations in current methods. For computational methods that are novel and cannot be directly compared to existing methods or where existing methods are well-documented to have significant shortcomings, the manuscript must provide a clear rationale for the absence of comparative evaluations.
+Reproducibility and open-source principles. Manuscripts must prioritize reproducibility by ensuring that all computational methods, workflows, and analyses are clearly documented and easy to replicate. Compliance with open-source principles is mandatory; all code and associated data must be publicly available, preferably in a code-sharing repository that allows for a permanent DOI (e.g., Zenodo, GitHub with Zenodo integration, or similar platforms). Providing clear installation instructions, example datasets, and user documentation is essential.
+OMIPs - Optimized Multicolor Immunofluorescence Panel(s)
+An OMIP is a standardized, peer-reviewed report detailing the design and optimization of panels used in various cytometry techniques. While OMIPs, as the name suggests, historically focused on fluorescence-based methods, such as flow cytometry, fluorescence microscopy, and image cytometry, they have since evolved to encompass a wider range of multi-parameter technologies. These include non-fluorescent techniques such as mass cytometry (cytometry by time-of-flight, CyTOF) and imaging mass cytometry. Despite the name, OMIPs now cover a broad spectrum of methodologies used in cytometry, reflecting the diverse technological advancements in the field.
+
+OMIPs are specifically designed to provide researchers with highly optimized protocols that enhance the efficiency, accuracy, and reproducibility of immunophenotyping experiments. These protocols enable complex cellular analyses by allowing the simultaneous measurement of multiple markers within a single assay, thereby addressing the challenges of modern cytometric research.
+
+OMIPs for Research Applications
+Authors should detail how the panel facilitates exploratory investigations such as immune profiling, biomarker discovery, or the study of complex cellular interactions. Manuscripts must describe the steps taken to ensure reproducibility and efficiency in research workflows. Examples showing how the panel advances scientific understanding and contributes to the development of cytometric methods are strongly encouraged. All validation data relevant to the research context, including appropriate controls, benchmarks, and raw data, must be included to support the panel’s performance and reproducibility.
+
+OMIPs for Clinical and Translational Applications
+For clinical and translational contexts (including diagnostics), authors must demonstrate how the panel supports diagnostic workflows, therapeutic monitoring, or assay standardization in clinical laboratories. Manuscripts should detail the validation process, emphasizing compliance with relevant regulatory or clinical standards. Examples of clinical use cases (such as in immune disorders, oncology, or infectious disease monitoring) are essential. Authors should highlight how the panel enhances reliability, reproducibility, and efficiency in clinical assays.
+
+Data Sharing and Transparency Requirement
+All OMIP submissions must include and publicly share the complete underlying data supporting the panel’s design, optimization, and validation. This includes raw and processed datasets, relevant metadata, and documentation necessary to reproduce the reported results. Data must be deposited in a recognized, accessible public repository (e.g., Zenodo, ImmPort, or equivalent), and the corresponding accession or DOI must be provided in the manuscript. The shared data should allow independent verification of all claims, reflecting OMIP’s core commitment to transparency, reproducibility, and community value.
+
+Special Considerations for Clinical Datasets
+If an OMIP is based on, or includes, clinical or patient-derived data, the following additional requirements apply:
+
+Institutional review and compliance verification: Authors must obtain formal verification from their institutional data officer, compliance office, or ethics committee confirming that all applicable data protection, de-identification, and sharing policies have been met. This verification must occur prior to data deposition.
+
+Data de-identification: All shared datasets must be fully de-identified in accordance with institutional, national, and international standards (e.g., HIPAA, GDPR, or equivalent). No personally identifiable information may be retained in any form.
+
+Controlled access and repository selection: Authors must deposit de-identified clinical datasets in repositories that provide controlled access mechanisms and enforce appropriate data use agreements (DUAs). These repositories must ensure that access is limited to qualified researchers and that all requests are reviewed and logged in accordance with established data governance procedures. Repositories such as ImmPort, dbGaP, or the European Genome-phenome Archive (EGA) are strongly recommended for datasets containing clinical or human subject information.
+
+Authors must specify the repository name, accession number, access type (e.g., controlled, registered, or embargoed), and any applicable data use conditions within their manuscript.
+
+Use of open-access repositories for human-derived data is permissible only when explicitly approved by the authors’ institutional data governance office.
+
+Data governance statement: Each OMIP manuscript involving clinical data must include a concise statement summarizing the data governance and compliance measures undertaken, including confirmation of de-identification, repository selection, access conditions, and institutional oversight.
+
+Additional information on submission requirements can be found here.
+
+Brief Reports
+Brief Reports describe biological observations of interest to the cytometry community that may not warrant a full-length article. They should include:
+
+A brief statement of purpose.
+An adequately detailed description of the observations.
+A statement of expected results.
+References to pertinent literature.
+Communications to the Editor and Commentaries
+Communications to the Editor offers a platform for sharing opinions, interpretations, or new information on scientific or policy matters. These should be concise (1,500–2,000 words)  and include 1–2 figures or tables, as well as up to 12 references. All submissions are peer-reviewed.
+
+Technical Notes
+General Technical Notes
+Technical Notes provide brief descriptions of improvements or helpful modifications in procedures for cytometric techniques. Each note should include:
+
+A brief statement of purpose
+An adequately detailed description of the procedure.
+A description of expected results and observations based on the application of the method may also be included.
+References to pertinent literature.
+Phenotype Reports
+Phenotype Reports focus on well-recognized markers and selection (“gating”) strategies for specific cell populations in a single species.
+
+Reports must include:
+
+A short, focused title clearly describing the specific population of interest
+A maximum of 200-word abstract summarizing critical points of the method
+The main body of the report is limited to ~1200 words, excluding references.
+Phenotypic reports should include two required tables:
+
+Table 1: A schematic table on marker clones, describing the best clone choices under specific biological conditions.
+Table 2: A detailed immunophenotype marker table with expression levels and references.
+SRL Communications
+SRL Communications aim to present best practices for Shared Research Laboratories (SRL), including SOPs, training, quality assurance, safety, data management, and staffing. Manuscripts should include:
+
+An abstract.
+A statement of purpose.
+Adequately detailed procedure descriptions.
+Expected results and relevant references.
+SRL Communication submissions are limited to 5,000 words with up to six graphical items.
+
