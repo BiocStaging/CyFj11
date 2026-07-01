@@ -1,0 +1,152 @@
+I have not modified any code. Here is what I found and my targeted suggestions for `export_flowjo10_workspace`.
+
+## XML schema differences
+
+The **overall XML schema / namespace declarations are the same** in both versions:
+
+- `version="20.0"`
+- `flowJoVersion="10.10.1"`
+- Same namespaces: `xsi`, `gating`, `transforms`, `data-type`
+- Same `xsi:schemaLocation` pointing to Gating-ML v2.0 XSD files
+
+So there is **no XSD-level incompatibility** preventing FlowJo 11 from reading the original `.wsp`. FlowJo 11 can open the file; the differences are in how FlowJo re-serializes the content, not in the schema itself.
+
+What *does* change structurally:
+
+| Element/attribute | Original export | After FlowJo save |
+|---|---|---|
+| `clientTimestamp` | `"NA"` | real epoch ms |
+| `modDate` | export time | save time |
+| `nonAutoSaveFileName` | export path | saved `.llm.wsp` path |
+| Empty `<Subpopulations>` | kept | removed |
+| `<Graph>` under populations | missing / minimal | added with full `<GraphEnvironment>` |
+| `lineWeight` | `"1"` | `"Hairline"` |
+| `percentX/Y` | often `"0"` | often dropped / `None` |
+| `quadId` / `gateResolution` | absent | added (`-1` / `256`) for polygon gates |
+| `Cytometer` (test14) | `GENERIC` | rewritten to `DIVA` |
+
+These are all **FlowJo-internal serialization preferences**, not schema violations.
+
+## Suggested changes to `export_flowjo10_workspace`
+
+Based on the diffs, I would target these areas **before** changing any code:
+
+### 1. Stop forcing scatter channels to `linear` when the original data uses something else
+Currently the code does:
+
+```r
+if(force_XSC_linear){
+  lin_trans = linearTransform(...)
+  for (marker in c("SSC-A", "SSC-H", "SSC-W", "FSC-A", "FSC-H", "FSC-W")){
+    transforms[[marker]] = lin_trans@.Data
+    attr(transforms[[marker]], "type") = "Linear"
+  }
+}
+```
+
+Then it *also* writes `FSC-W` and `SSC-W` as linear. FlowJo removes those width channels from `<Transformations>` entirely when they are not actually used for gating. Recommendation: **only emit a transformation for a channel if it is referenced by a gate or axis**, and use the channel's true transform from the GatingSet rather than overriding to linear.
+
+### 2. Preserve the original fluorescence transformation type
+FlowJo converts `biex`/`fasinh`/linear fluorescence channels to `log` on save. The export currently writes:
+
+- `biex` with `length="4096"` → FlowJo rewrites as `length="256"`
+- `fasinh` with `M="4"`, `length="1"`, `W="-262144"` → FlowJo rewrites as `M="5.418539922"`, `length="256"`, `W="-262144.0000000001"`
+
+These specific FlowJo-preferred defaults should be discovered and used at export time. Recommendation: **for fluorescence channels, write the transform parameters that FlowJo 10/11 itself would write**, rather than the R/flowWorkspace internal values. This likely means matching FlowJo's `log`, `biex`, and `fasinh` defaults (e.g., `length="256"` for `biex`/`fasinh`, `M="5.418539922"` for `fasinh`).
+
+### 3. Fix gate coordinate / transformation inverse mapping
+Tests with big population-count changes (test07, test12, test13) suggest the gate boundaries are not being inverse-transformed consistently with the way FlowJo expects them. The code already tries to apply inverse transforms, but the mismatch implies:
+
+- The transform used for inverse may not match the transform FlowJo applies.
+- Display-space vs. data-space coordinates may be confused.
+
+Recommendation: **audit `convert_rectangle_to_flowjo10`, `convert_polygon_to_flowjo10`, and `convert_ellipsoid_to_flowjo10`** to ensure gate coordinates are written in the same space FlowJo will read them. In particular, verify that `biex`/`fasinh` fluorescence gates are inverse-transformed with the same parameters FlowJo uses.
+
+### 4. Ellipsoid gate display-space conversion is fragile
+`convert_ellipsoid_to_flowjo10` converts ellipse parameters to a 0–256 display space using `get_display_range`. This is highly dependent on the transformation ranges matching FlowJo's expectations. Recommendation: **re-check the `to_display_coords` helper** and the `get_display_range` fallback logic. Test05 / test12 use ellipsoid gates and show count drift, which could come from this conversion.
+
+### 5. Boolean gate handling and parent references
+test13 shows `/live/FITC_PE_gate` becoming unfiltered (count equals parent). The boolean gate code has a special-case for `parent & !dep` → `NotNode`, and for pure `!dep`. Recommendation: **verify that `generate_logical_node_xml` produces the correct `<Dependents>` references and that parent/child gate IDs are wired correctly** after FlowJo regenerates IDs. The fact that a gate becomes 100% of parent suggests the boolean reference is lost or points to a non-existent gate.
+
+### 6. Cytometer detection (test14)
+In test14 the export writes `GENERIC`, but FlowJo changes it to `DIVA` with `useTransform="1"`, `transformType="BIEX"`, and different min/max values. This likely triggers the cascade where all terminal subset counts become 0. Recommendation: **detect the cytometer from FCS keywords** (e.g., `$CYT`, `$INSTRUMENT`) and emit a matching `<Cytometer>` entry, or at least avoid the hard-coded `GENERIC` instrument for BD/Fortessa-style files.
+
+### 7. Population count recomputation on open
+test14 is catastrophic: all terminal populations drop to 0. This means FlowJo cannot recompute the gates from the saved workspace. The most likely causes are:
+
+- Missing or incompatible transformations.
+- Gate coordinates in the wrong coordinate space.
+- Cytometer mismatch.
+
+Fixing items 1–6 above should resolve this, but test14 should be treated as the primary regression test.
+
+### 8. Optional cosmetic alignment
+The following would make the export look more native but have no functional impact:
+
+- Remove empty `<Subpopulations>` nodes.
+- Add `<Graph>`/`<GraphEnvironment>` under each `<Population>` in group nodes.
+- Use `lineWeight="Hairline"` and omit `percentX/Y`.
+- Add `quadId="-1"` and `gateResolution="256"` to `<PolygonGate>`.
+- Set a real `clientTimestamp` and `modDate`.
+
+I would prioritize the functional items (1–7) over the cosmetic ones (8).
+
+---
+
+## Implementation log
+
+### 2026-07-01: Item 1 implemented — stop forcing scatter channels to linear
+
+Changed in `R/export-flowjo10.R`:
+
+- Added helper `get_referenced_channels()` to collect only channel names actually referenced by gates.
+- Changed `generate_flowjo10_xml()` default `force_XSC_linear = FALSE`.
+- Rewrote the `<Transformations>` emission logic to:
+  - Read the GatingSet's true transforms via `flowWorkspace::gh_get_transformations()`.
+  - Filter to only channels referenced by gates/axes.
+  - No longer override scatter channels to linear by default.
+  - Keep `force_XSC_linear` as an opt-in that still respects referenced channels.
+
+Verification:
+
+- `tests/testthat/test-export-flowjo10.R`: `[ FAIL 0 | WARN 54 | SKIP 0 | PASS 369 ]`.
+- Smoke-tested that a GatingSet with biex-transformed scatter channels preserves `<transforms:biex>`.
+- Smoke-tested that unreferenced channels no longer receive a forced linear transform.
+
+Pre-existing warnings (`NAs introduced by coercion to integer range`, missing exports in `NAMESPACE`) are unrelated to this change and already present on the branch.
+
+### 2026-07-01: Restored always-add-y-axis behavior in `R/export-flowjo10.R`
+
+FlowJo expects every `<Graph>` under `<SampleNode>` and `<Population>` to contain both `<Axis dimension="x">` and `<Axis dimension="y">`. The current `manuscript` branch code conditionally emitted the Y axis only when a second gate dimension existed, causing FlowJo `<SampleList>` parse errors for 1-D gates.
+
+Investigation of git history showed that the correct "always add y-axis" logic was originally implemented in commit `7f89839` on the `miApplication` branch and preserved through `42cfdad`, but was accidentally reverted to conditional emission during the `33e1fd9` Bioconductor lintr merge.
+
+Changed in `R/export-flowjo10.R`:
+
+- `generate_flowjo10_xml()`: always emit `<Axis dimension="y" name="" label="" auto="auto" />` after the X axis for 1-D gates.
+- `generate_sample_subpopulations_xml()`: same change for population-level `<Graph>` elements.
+
+Verification:
+
+- `tests/testthat/test-export-flowjo10.R`: `[ FAIL 0 | WARN 4 | SKIP 76 | PASS 35 ]`.
+- The 4 warnings are pre-existing and unrelated to this change.
+
+### 2026-07-01: Item 8 implemented — cosmetic alignment of test workspace copies
+
+Created `*_export_cosmetic.wsp` copies for all `flowjo_export_tests/test*/test*_export.wsp` files (14 files) and applied cosmetic-only changes to make the exports look more native to FlowJo:
+
+- Set real `modDate` and `clientTimestamp` on each `<Workspace>` root.
+- Removed empty `<Subpopulations>` nodes.
+- Added `<Graph>`/`<GraphEnvironment>` under `<Population>` elements in group nodes when absent.
+- Changed gate `lineWeight` to `"Hairline"` on `RectangleGate`, `PolygonGate`, `EllipsoidGate`, and `BooleanGate` elements.
+- Removed `percentX` and `percentY` attributes from gating elements.
+- Added `quadId="-1"` and `gateResolution="256"` to `<PolygonGate>` elements where missing.
+
+Verification:
+
+- All 14 generated `.wsp` files are XML well-formed.
+- Original files were left untouched; only `*_export_cosmetic.wsp` copies were modified.
+
+### General rule for future sessions
+
+Append all implementation summaries and following changes to `output.txt` so the file becomes a continuous project log.
