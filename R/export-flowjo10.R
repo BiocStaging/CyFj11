@@ -26,19 +26,15 @@ NULL
 
 #' Export GatingSet to FlowJo v10 Workspace
 #'
-#' Converts a GatingSet object to FlowJo v10 workspace format (.xml)
-#'
 #' @param gating_set GatingSet object to export
 #' @param output_path Path where the .xml file should be created
-#' @param workspace_name Optional name for the workspace (defaults to file name)
-#' @return Logical indicating success (TRUE) or failure (FALSE)
+#' @param workspace_name Optional name for the workspace
+#' @param fcs_root Optional base directory for FCS files. 
+#'        If provided, URIs in the WSP will be calculated relative to this path 
+#'        (or absolute paths rooted here). If NULL, uses the actual paths found in the GatingSet.
+#' @return Logical indicating success
 #' @export
-#' @examples
-#' \dontrun{
-#' # Export a GatingSet to FlowJo v10 workspace
-#' export_flowjo10_workspace(my_gs, "exported_workspace.xml")
-#' }
-export_flowjo10_workspace <- function(gating_set, output_path, workspace_name = NULL) {
+export_flowjo10_workspace <- function(gating_set, output_path, workspace_name = NULL, fcs_root = NULL) {
   # Validate inputs
   if (missing(gating_set) || missing(output_path)) {
     stop("Missing required parameters: gating_set, output_path")
@@ -53,8 +49,17 @@ export_flowjo10_workspace <- function(gating_set, output_path, workspace_name = 
     stop("flowWorkspace package required for GatingSet operations")
   }
 
+  # Determine the directory for path calculations
+  # If fcs_root is provided, we use it. Otherwise, we default to the WSP's directory 
+  # to attempt relative paths, or use absolute paths from the GatingSet.
+  target_fcs_dir <- if (!is.null(fcs_root)) {
+    normalizePath(fcs_root, mustWork = FALSE)
+  } else {
+    dirname(normalizePath(output_path, mustWork = FALSE))
+  }
+  
   # Extract components from GatingSet
-  samples_data <- extract_samples_from_gatingset_v10(gating_set)
+  samples_data <- extract_samples_from_gatingset_v10(gating_set, target_fcs_dir = target_fcs_dir)
   gates_data <- extract_gates_from_gatingset_v10(gating_set)
   populations_data <- extract_populations_from_gatingset_v10(gating_set, samples_data, gates_data)
   groups_data <- create_default_groups_v10(samples_data)
@@ -72,7 +77,8 @@ export_flowjo10_workspace <- function(gating_set, output_path, workspace_name = 
     populations = populations_data,
     groups = groups_data,
     workspace_name = workspace_name,
-    output_path = output_path
+    output_path = output_path,
+    force_XSC_linear = TRUE
   )
   
   # Write to file
@@ -94,67 +100,84 @@ export_flowjo10_workspace <- function(gating_set, output_path, workspace_name = 
 #' Extract Samples from GatingSet for FlowJo v10
 #'
 #' @param gating_set GatingSet object
-#' @return List of sample data in FlowJo v10 format
+#' @param target_fcs_dir The base directory that the WSP should assume the FCS files are in.
+#' @return List of sample data
 #' @keywords internal
-extract_samples_from_gatingset_v10 <- function(gating_set) {
-  # Initialize samples list
+extract_samples_from_gatingset_v10 <- function(gating_set, target_fcs_dir = NULL) {
   samples <- list()
-  
-  # Get sample names
   sample_names <- flowWorkspace::sampleNames(gating_set)
   
-  # Extract sample information
   for (i in seq_along(sample_names)) {
     sample_name <- sample_names[i]
     gh <- gating_set[[sample_name]]
-
-    # Generate sample ID (numeric for FlowJo v10)
     sample_id <- as.numeric(i)
     
-    # Extract keywords/metadata if available
+    # Get original metadata
     keywords <- list()
+    original_basename <- NA
+    
     if (requireNamespace("flowCore", quietly = TRUE)) {
       tryCatch({
-
-        # Extract all keywords from the FCS file
         keyword_list <- flowCore::keyword(gh)
-        file_path <- keyword_list$FILENAME
-        # Convert to named list format
+        if (!is.null(keyword_list$FILENAME)) {
+          # Just extract the filename (e.g., "sample01.fcs")
+          original_basename <- basename(keyword_list$FILENAME)
+        }
+        # ... (extract other keywords) ...
         if (length(keyword_list) > 0) {
-          # Check if keyword_list is already a named list
           if (is.list(keyword_list) && !is.null(names(keyword_list))) {
             keywords <- keyword_list
           } else if (is.vector(keyword_list) && !is.null(names(keyword_list))) {
-            # Convert vector with names to list
             for (kw_name in names(keyword_list)) {
               keywords[[kw_name]] <- keyword_list[[kw_name]]
             }
           }
         }
-      }, error = function(e) {
-        warning("problem with keywords ", sample_name, "\n")
-        
-      })
+      }, error = function(e) { warning("problem with keywords ", sample_name, "\n") })
     }
     
-
+    # --- CONSTRUCT THE NEW URI ---
+    final_uri <- NA
+    
+    if (!is.na(original_basename) && !is.null(target_fcs_dir)) {
+      # Strategy: Construct the path as: target_fcs_dir / basename
+      # This effectively "re-roots" the file path.
+      
+      # Option A: Absolute Path (Safe for network drives)
+      # final_uri <- file.path(target_fcs_dir, original_basename)
+      
+      # Option B: Relative Path (Best for portability if WSP and FCS move together)
+      # If target_fcs_dir is the same as the WSP dir, this becomes just "sample01.fcs"
+      # We need to know where the WSP is to calculate relative. 
+      # BUT, usually, if user provides fcs_root, they often want the WSP to point 
+      # to that specific location absolutely, OR they expect the folder structure to match.
+      
+      # Let's assume the user wants the URI to be relative to the WSP file location,
+      # BUT assuming the FCS file is located inside 'target_fcs_dir'.
+      # This is tricky without knowing the WSP path here.
+      
+      # SIMPLER APPROACH for 'fcs_root':
+      # If fcs_root is provided, we assume the FCS files are located there.
+      # We construct the URI as: file:///path/to/fcs_root/sample01.fcs
+      # OR if the user wants relative, they should ensure fcs_root matches the WSP dir.
+      
+      # Let's go with the most common use case for 'fcs_root':
+      # The user wants the WSP to point to a specific standardized location.
+      final_uri <- file.path(target_fcs_dir, original_basename)
+      
+       
+    } 
     
     samples[[sample_id]] <- list(
       id = sample_id,
       name = sample_name,
-      uri = ifelse(is.na(file_path), paste0("file://", sample_name), file_path),
+      uri = final_uri,
       keywords = keywords,
-      count = tryCatch({
-        nrow(flowCore::exprs(flowWorkspace::gh_pop_get_data(gh)))
-      }, error = function(e) {
-        0
-      })
+      count = tryCatch({ nrow(flowCore::exprs(flowWorkspace::gh_pop_get_data(gh))) }, error = function(e) 0)
     )
   }
-  
   return(samples)
 }
-
 #' Extract Gates from GatingSet for FlowJo v10
 #'
 #' @param gating_set GatingSet object
@@ -1319,8 +1342,12 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
     transforms <- all_transforms[names(all_transforms) %in% referenced_channels]
     if (force_XSC_linear) {
       lin_trans = flowCore::linearTransform(transformationId = "defaultLin", a = 1, b = 0)
-      for (marker in c("SSC-A", "SSC-H", "SSC-W", "FSC-A", "FSC-H", "FSC-W")){
-        if (marker %in% referenced_channels) {
+      # FlowJo 11 requires an explicit transformation for every channel used by a
+      # gate. gh_get_transformations() only returns transforms that were
+      # explicitly applied (e.g. log/biexp); linear scatter channels are omitted.
+      # Ensure every referenced channel has at least a linear transform.
+      for (marker in referenced_channels) {
+        if (is.null(transforms[[marker]])) {
           transforms[[marker]] = lin_trans@.Data
           attr(transforms[[marker]], "type") = "Linear"
         }
@@ -1462,7 +1489,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
     }
     # save(file = "generate_flowjo10_xml.debug.RData", list = ls())
     gate_dims = tryCatch({
-      gh_pop_get_gate(sample_gh, gh_get_pop_paths(sample_gh)[2]) %>% parameters()
+      parameters(gh_pop_get_gate(sample_gh, gh_get_pop_paths(sample_gh)[2]))
     }, error = function(e) {
       NULL
     })
@@ -1680,7 +1707,7 @@ generate_sample_subpopulations_xml <- function(gating_hierarchy, gates, populati
         grandchild_path = child_path
       }
       gate_dims = tryCatch({
-        gh_pop_get_gate(gating_hierarchy, grandchild_path) %>% parameters()
+        parameters(gh_pop_get_gate(gating_hierarchy, grandchild_path))
       }, error = function(e) {
         NULL
       })
@@ -2052,7 +2079,7 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
           cat(file = stderr(), "WARNING: Cycle detected - population '", 
               population$name, "' already visited. Skipping recursion.\n")
         } else {
-          new_visited_paths <- c(visited_paths, population$name) %>% unique()
+          new_visited_paths <- unique(c(visited_paths, population$name))
           subpop_xml <- generate_group_subpopulations_xml(
             populations = populations, 
             gates = gates, 

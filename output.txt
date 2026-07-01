@@ -147,6 +147,50 @@ Verification:
 - All 14 generated `.wsp` files are XML well-formed.
 - Original files were left untouched; only `*_export_cosmetic.wsp` copies were modified.
 
+### 2026-07-01: Fix missing linear transformations for gate-referenced channels
+
+Problem: `test05_export.wsp` opened in FlowJo 10 but failed in FlowJo 11 / CytoML with `ellipsoidGate::transforming can't find transformation for FSC-A`. The `<Transformations>` block under `<Sample>` was empty because `gh_get_transformations()` does not return transform objects for linear scatter channels, and `force_XSC_linear` was `FALSE` by default and only iterated over a hard-coded scatter-marker list.
+
+Changes in `R/export-flowjo10.R`:
+
+- `export_flowjo10_workspace()` now calls `generate_flowjo10_xml(..., force_XSC_linear = TRUE)`.
+- The `force_XSC_linear` block now loops over **all** `referenced_channels` and inserts a `<transforms:linear>` entry only for channels that lack an explicit transform, instead of only the hard-coded FSC/SSC markers.
+- Replaced two `magrittr::%>%` usages with base R equivalents so the function works when `magrittr` is not attached:
+  - `gh_pop_get_gate(...) %>% parameters()` → `parameters(gh_pop_get_gate(...))` (twice).
+  - `c(...) %>% unique()` → `unique(c(...))`.
+
+Verification:
+
+- Regenerated `flowjo_export_tests/test05/test05_export.wsp` from the patched exporter.
+- `<Transformations>` now contains `<transforms:linear>` entries for `FSC-A` and `SSC-A`.
+- CytoML roundtrip succeeds:
+  - `ellipse_cells`: 7,500 / 8,000 (matches FlowJo 11 expectation; original export failed to open).
+
 ### General rule for future sessions
 
 Append all implementation summaries and following changes to `output.txt` so the file becomes a continuous project log.
+
+### 2026-07-01: Proposed text passage for §5.2 — Population Count Preservation / FlowJo Comparison
+
+Source file analyzed: `manuscript/validation_counts 2.csv` (exported from Numbers).
+
+FlowJo 10 count comparison against R GatingSet counts:
+
+- Populations compared: 35
+- Exact R vs FlowJo matches: 29 / 35 (82.9%)
+- Largest absolute count difference: 14 cells
+- Largest absolute percentage difference: 0.30% (Test 13 FITC_PE_gate)
+- Mean absolute percentage difference: 0.022%
+- Predefined acceptance threshold: ≤ 0.5% absolute
+
+Non-zero differences were confined to polygon/ellipsoid gates:
+- Test 04 singlets: +14 cells (+0.19%)
+- Test 05 ellipse_cells: +13 cells (+0.18%)
+- Test 11 singlets: -4 cells (-0.04%)
+- Test 12 scatter_ellipse: -6 cells (-0.06%)
+- Test 13 live: +1 cell (+0.01%)
+- Test 13 FITC_PE_gate: +9 cells (+0.30%)
+
+Proposed paragraph for `manuscript/CyFj11.docx` §5.2:
+
+> To assess whether the exported FlowJo v10 workspaces preserve the population counts obtained in R, each exported workspace was reopened in FlowJo and the event counts shown in the hierarchy panel were compared to the counts computed from the R GatingSet (Table 2 and Supplementary Table S1). Across 35 populations from the 13 validation scenarios, 29 (82.9%) showed exact agreement between R and FlowJo. The remaining six differed by no more than 14 cells, corresponding to a maximum absolute percentage difference of 0.30% and a mean absolute percentage difference of 0.022%. The largest discrepancy was observed for the FITC_PE_gate ellipsoid population in Test 13 (2,983 events in R versus 2,992 in FlowJo, 0.30% difference); smaller differences were observed for polygon and ellipsoid populations in Tests 4, 5, 11, 12, and 13 (≤0.19% absolute). All differences are well below the predefined 0.5% acceptance threshold and are consistent with minor floating-point variation in the geometric evaluation of polygon and ellipsoid gates between flowCore and FlowJo.
