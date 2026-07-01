@@ -183,8 +183,6 @@ find_root_population <- function(populations, populationDefinitions, sample_uuid
 
 #' Build Gating Tree for given Sample
 #' @keywords internal
-#' Build Gating Tree for given Sample
-#' @keywords internal
 build_gating_tree <- function(sample_uuid, populations, populationDefinitions, root_uuid) {
   
   # First, identify all logical gates before building the tree

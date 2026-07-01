@@ -476,6 +476,33 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
   NULL
 }
 
+#' Collect all channel names referenced by gates in the workspace
+#'
+#' @param gates Gate data list as returned by \code{extract_gates_from_gatingset_v10}
+#' @return Character vector of unique channel names referenced by gates.
+#' @keywords internal
+get_referenced_channels <- function(gates) {
+  channels <- character(0)
+  if (is.null(gates) || is.null(gates$gates)) {
+    return(channels)
+  }
+  for (gate in gates$gates) {
+    def <- gate$definition
+    if (is.null(def)) next
+    dims <- def$dimensions
+    if (!is.null(dims)) {
+      for (dim in dims) {
+        if (!is.null(dim$parameter)) {
+          channels <- c(channels, dim$parameter)
+        }
+      }
+    }
+    if (!is.null(def$x_param)) channels <- c(channels, def$x_param)
+    if (!is.null(def$y_param)) channels <- c(channels, def$y_param)
+  }
+  unique(channels)
+}
+
 #' Format Gate Value for XML Output
 #'
 #' Formats gate values for XML output, replacing Inf with appropriate values
@@ -1116,7 +1143,7 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
 #' @importFrom flowWorkspace gh_pop_get_data
 #' @return Character string containing XML content
 #' @keywords internal
-generate_flowjo10_xml <- function(gating_set, samples, gates, populations, groups, workspace_name, output_path, force_XSC_linear=TRUE, minimal_fj11=FALSE) {
+generate_flowjo10_xml <- function(gating_set, samples, gates, populations, groups, workspace_name, output_path, force_XSC_linear=FALSE, minimal_fj11=FALSE) {
 
   if (minimal_fj11) {
     # Minimal FJ11 format - very simple structure
@@ -1284,14 +1311,20 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                            xml_encode(sample$uri), sample_id)
     )
     # Transformations
-    transforms = gh_get_transformations(sample_gh)
-    if(force_XSC_linear){
-      lin_trans = linearTransform(transformationId = "defaultLin", a = 1, b = 0)
+    all_transforms = flowWorkspace::gh_get_transformations(sample_gh)
+    # Only emit transformations for channels actually referenced by gates or axes.
+    # This avoids forcing scatter channels to linear and matches FlowJo 11's
+    # serialization behaviour, which drops unused channels from <Transformations>.
+    referenced_channels <- get_referenced_channels(gates)
+    transforms <- all_transforms[names(all_transforms) %in% referenced_channels]
+    if (force_XSC_linear) {
+      lin_trans = flowCore::linearTransform(transformationId = "defaultLin", a = 1, b = 0)
       for (marker in c("SSC-A", "SSC-H", "SSC-W", "FSC-A", "FSC-H", "FSC-W")){
-        transforms[[marker]] = lin_trans@.Data
-        attr(transforms[[marker]], "type") = "Linear"
+        if (marker %in% referenced_channels) {
+          transforms[[marker]] = lin_trans@.Data
+          attr(transforms[[marker]], "type") = "Linear"
+        }
       }
-      
     }
     xml_lines <- c(xml_lines, '      <Transformations>')
     # browser()
@@ -1442,12 +1475,10 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                    '         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="BUV395-A" type="Pseudocolor" fast="1" >',
                    sprintf('           <Axis dimension="x" name="%s" label="" auto="auto" />', if(is.null(gate_dims) || length(gate_dims) < 1) "FSC-A" else gate_dims[[1]])
     )
-    # Only add y-axis if second dimension exists
-    if(length(gate_dims) >= 2) {
-      xml_lines <- c(xml_lines,
-                     sprintf('           <Axis dimension="y" name="%s" label="" auto="auto" />', if(is.null(gate_dims) || length(gate_dims) < 2) "SSC-A" else gate_dims[[2]])
-      )
-    }
+    # Always add y-axis - empty name for 1D gates
+    xml_lines <- c(xml_lines,
+                   sprintf('           <Axis dimension="y" name="%s" label="" auto="auto" />', if(is.null(gate_dims) || length(gate_dims) < 2) "" else gate_dims[[2]])
+    )
     xml_lines <- c(xml_lines,
                    '           <GraphSettings level="5%" smoothingHighResolution="1" contourHighResolution="1" histogramSmoothingCount="0" graphResolution="256" showOutliers="0" drawLargeDots="0" dotsToDraw="8000" tint="le.chartfill.tinted.40" lineWeight="le.lineweight.normal" lineStyle="le.linestyle.solid" />',
                    '           <GraphEnvironment showGrid="0" showAxes="tnlTNL" showGates="1" showFreqOnPlots="1" showGateNameOnPlots="1" showMedians="0" showUncomped="0" addEventParam="0" lastYAxisName="" >',
@@ -1657,12 +1688,10 @@ generate_sample_subpopulations_xml <- function(gating_hierarchy, gates, populati
                      '        <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="BUV395-A" type="Pseudocolor" fast="1">',
                      sprintf('          <Axis dimension="x" name="%s" label="" auto="auto" />', if(is.null(gate_dims) || length(gate_dims) < 1) "FSC-A" else gate_dims[[1]])
       )
-      # Only add y-axis if second dimension exists
-      if(length(gate_dims) >= 2) {
-        xml_lines <- c(xml_lines,
-                       sprintf('          <Axis dimension="y" name="%s" label="" auto="auto" />', if(is.null(gate_dims) || length(gate_dims) < 2) "SSC-A" else gate_dims[[2]])
-        )
-      }
+      # Always add y-axis - empty name for 1D gates
+      xml_lines <- c(xml_lines,
+                     sprintf('          <Axis dimension="y" name="%s" label="" auto="auto" />', if(is.null(gate_dims) || length(gate_dims) < 2) "" else gate_dims[[2]])
+      )
       xml_lines <- c(xml_lines,
                      '          <GraphSettings level="5%" smoothingHighResolution="1" contourHighResolution="1" histogramSmoothingCount="0" graphResolution="256" showOutliers="0" drawLargeDots="0" dotsToDraw="8000" tint="le.chartfill.tinted.40" lineWeight="le.lineweight.normal" lineStyle="le.linestyle.solid" />',
                      '          <GraphEnvironment showGrid="0" showAxes="tnlTNL" showGates="1" showFreqOnPlots="1" showGateNameOnPlots="1" showMedians="0" showUncomped="0" addEventParam="0" lastYAxisName="">',
