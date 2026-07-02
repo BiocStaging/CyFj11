@@ -1751,12 +1751,12 @@ generate_sample_subpopulations_xml <- function(gating_hierarchy, gates, populati
             # Add dimensions
             for (dim in gate_def$dimensions) {
               xml_lines <- c(xml_lines,
-                             sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f">', indent, dim$min, dim$max),
+                             sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f" yRatio="0.5">', indent, dim$min, dim$max),
                              sprintf('%s        <data-type:fcs-dimension data-type:name="%s"/>', indent, xml_encode(dim$parameter)),
                              sprintf('%s      </gating:dimension>', indent)
               )
             }
-            
+
             xml_lines <- c(xml_lines, sprintf('%s    </gating:RectangleGate>', indent))
           } else if (gate_def$type == "polygon") {
             xml_lines <- c(xml_lines,

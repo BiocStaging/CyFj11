@@ -194,3 +194,125 @@ Non-zero differences were confined to polygon/ellipsoid gates:
 Proposed paragraph for `manuscript/CyFj11.docx` §5.2:
 
 > To assess whether the exported FlowJo v10 workspaces preserve the population counts obtained in R, each exported workspace was reopened in FlowJo and the event counts shown in the hierarchy panel were compared to the counts computed from the R GatingSet (Table 2 and Supplementary Table S1). Across 35 populations from the 13 validation scenarios, 29 (82.9%) showed exact agreement between R and FlowJo. The remaining six differed by no more than 14 cells, corresponding to a maximum absolute percentage difference of 0.30% and a mean absolute percentage difference of 0.022%. The largest discrepancy was observed for the FITC_PE_gate ellipsoid population in Test 13 (2,983 events in R versus 2,992 in FlowJo, 0.30% difference); smaller differences were observed for polygon and ellipsoid populations in Tests 4, 5, 11, 12, and 13 (≤0.19% absolute). All differences are well below the predefined 0.5% acceptance threshold and are consistent with minor floating-point variation in the geometric evaluation of polygon and ellipsoid gates between flowCore and FlowJo.
+
+---
+
+### 2026-07-01: Comparison of `test02_export.wsp` and `test02_export.llm.wsp`
+
+Compared the package-exported workspace `flowjo_export_tests/test02/test02_export.wsp` with the same workspace after opening and saving in FlowJo 10 (`test02_export.llm.wsp`).
+
+**Numeric gate logic is identical:**
+
+| | `test02_export.wsp` | `test02_export.llm.wsp` |
+|---|---|---|
+| `/FSC_filter` gate | `FSC-A: (60000, 180000)` | `FSC-A: (60000, 180000)` |
+| `/FSC_filter` count | 4776 | 4776 |
+| Root count | 5000 | 5000 |
+
+CytoML reads both workspaces identically and reports the same gate and counts.
+
+**Serialization differences likely causing the gate to be missing in FlowJo 11:**
+
+1. **SampleNode graph type for 1-D gate:** Package export uses `type="Pseudocolor"`; FlowJo save uses `type="Histogram"` with `smoothing="13"`. A rectangular gate on a single axis should be drawn on a histogram.
+2. **Missing `yRatio` on sample-level gate dimension:** Package export omits `yRatio="0.5"` on the sample-level `RectangleGate`; FlowJo adds it.
+3. **Gate rendering attributes:** Package uses `lineWeight="1"` and `percentX="0" percentY="0"`; FlowJo normalizes to `lineWeight="Hairline"` and drops `percentX/Y`.
+4. **Gate ID placement:** Package writes `gating:id` on both `<Gate>` and `<RectangleGate>`; FlowJo keeps it only on `<Gate>`.
+5. **Missing `<Graph>` under group-level `<Population>`:** FlowJo adds a full `<Graph>` subtree there; the package export has none.
+6. **Transformations block:** Package export only emits `FSC-A` linear transform; FlowJo emits transforms for all channels (scatter linear, fluorescence log).
+
+Other differences are cosmetic and match patterns seen across all 14 tests (timestamps, file URIs, empty `<Subpopulations>`, editor titles, keyword order).
+
+**Recommended exporter changes to match FlowJo 11 serialization:**
+
+1. Use `type="Histogram"` (and set `smoothing="13"`) for 1-D gates in `<SampleNode>`/`<Population>` `<Graph>` elements.
+2. Add `yRatio="0.5"` to 1-D rectangular gate `<dimension>` elements at the sample level.
+3. Use `lineWeight="Hairline"` and omit `percentX/Y` on gating elements.
+4. Keep `gating:id` only on the wrapper `<Gate>`, not on inner gate elements.
+5. Add a `<Graph>` element under group-level `<Population>` nodes.
+6. Emit transforms for all channels, not only those referenced by gates (already partially addressed by the `force_XSC_linear=TRUE` fix).
+
+The gate coordinates themselves are correct; this is a presentation/serialization compatibility issue rather than a gating-logic bug.
+
+---
+
+### 2026-07-01: Deep dive on `yRatio="0.5"`
+
+`yRatio` is a display hint on `<gating:dimension>` elements inside `<RectangleGate>`. It tells FlowJo where to draw the gate along the Y-axis when the gate is defined on only one axis (or when the dimension is the X-axis of a 2-D rectangle gate). The value is consistently `0.5`, meaning "center the gate vertically at 50% of the plot height."
+
+**Observed usage across all `.llm.wsp` files:**
+
+| Test | `clientTimestamp` | 1-D rects | 2-D rects | `yRatio` count |
+|---|---|---|---|---|
+| test01 | `NA` | 0 | 0 | 0 |
+| test02 | real | 2 | 0 | 2 |
+| test03 | `NA` | 0 | 2 | 2 |
+| test04 | `NA` | 0 | 0 | 0 |
+| test05 | `NA` | 0 | 0 | 0 |
+| test06 | `NA` | 2 | 0 | 1 |
+| test07 | `NA` | 2 | 0 | 1 |
+| test08 | `NA` | 2 | 0 | 1 |
+| test09 | `NA` | 0 | 3 | 2 |
+| test10 | `NA` | 4 | 0 | 2 |
+| test11 | `NA` | 2 | 2 | 2 |
+| test12 | `NA` | 2 | 2 | 2 |
+| test13 | `NA` | 2 | 1 | 0 |
+| test14 | `NA` | 0 | 12 | 0 |
+
+`yRatio` is absent from the native FlowJo 10.5.3 reference file (`test14_flowsom.wsp`), so it appears to be a FlowJo 10.10+ serialization convention. It is **only emitted on `<RectangleGate>` dimensions**; `PolygonGate` and `EllipsoidGate` never carry it.
+
+**Pattern for successfully saved files:**
+
+- `test02` is the only file with a real `clientTimestamp`, i.e. the only one fully re-saved by FlowJo 10.10.1.
+- In that file, `yRatio="0.5"` appears on **both** group-level and sample-level 1-D `RectangleGate` dimensions.
+- In the partially-saved files, `yRatio` usually appears only on the group-level dimensions.
+- The package export currently adds `yRatio` only to **group-level** `RectangleGate` dimensions (in `generate_group_subpopulations_xml`), but **not** to sample-level gates (in `generate_sample_subpopulations_xml`).
+
+**Where to add it in `R/export-flowjo10.R`:**
+
+1. `generate_sample_subpopulations_xml()` — line ~1753: change the sample-level `RectangleGate` `<dimension>` line from:
+   ```r
+   sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f">', indent, dim$min, dim$max),
+   ```
+   to:
+   ```r
+   sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f" yRatio="0.5">', indent, dim$min, dim$max),
+   ```
+
+2. `generate_group_subpopulations_xml()` already has `yRatio="0.5"` at line ~1974; keep it.
+
+3. Optionally also add `yRatio="0.5"` to 2-D `RectangleGate` dimensions in both group and sample generators. The LLM files show `yRatio` on group-level 2-D dimensions, so matching that is safer.
+
+**Recommended conservative rule:** emit `yRatio="0.5"` on **every** `<gating:dimension>` child of a `<RectangleGate>`, regardless of whether the gate is 1-D or 2-D, and regardless of whether it appears under a `GroupNode` or a `SampleNode`. This matches FlowJo 10.10.1's behavior on the only fully successful re-save (`test02`) and is harmless when not strictly required.
+
+---
+
+### 2026-07-01: Implemented `yRatio="0.5"` on sample-level `RectangleGate` dimensions
+
+Changed in `R/export-flowjo10.R`, function `generate_sample_subpopulations_xml()`:
+
+```r
+# Before:
+sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f">', indent, dim$min, dim$max),
+
+# After:
+sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f" yRatio="0.5">', indent, dim$min, dim$max),
+```
+
+This adds the vertical-position display hint to sample-level rectangle gates, matching what FlowJo 10.10.1 writes on the only fully re-saved workspace (`test02_export.llm.wsp`). Group-level rectangle gates already had `yRatio="0.5"`.
+
+**Verification:**
+
+- `devtools::test(filter='export-flowjo10')`: `[ FAIL 0 | WARN 54 | SKIP 0 | PASS 369 ]`.
+- The 54 warnings are pre-existing (`NAs introduced by coercion to integer range`) and unrelated to this change.
+- Smoke-tested 1-D and 2-D rectangle gate exports; all `<gating:dimension>` elements under `<RectangleGate>` now include `yRatio="0.5"`.
+
+**Additional serialization fixes still needed:**
+
+- Change sample-level graph `type="Pseudocolor"` to `type="Histogram"` for 1-D gates.
+- Use `lineWeight="Hairline"` and drop `percentX/Y` on all gating elements.
+- Keep `gating:id` only on the wrapper `<Gate>`, not on inner gate elements.
+- Add a `<Graph>` element under group-level `<Population>` nodes.
+- Emit transforms for all channels (not only gate-referenced ones).
+
+compare flowjo_export_tests/test02 test02_export.llm.wsp and test02_export.wsp. test02_export.llm.wsp is saved by Fj10 and can be read with FJ11 with the correct gate. test02_export.wsp is created by this package can be read with FJ10 but when read with FJ11 the gate is missing though the population is displayed.
+
