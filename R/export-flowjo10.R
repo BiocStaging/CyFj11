@@ -612,7 +612,7 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
   }
   
   # ---- apply inverse transformations (if gating hierarchy supplied) ---------
-  if (!is.null(gh) && requireNamespace("flowWorkspace", quietly = TRUE)) {
+  if (!is.null(gh) ) {
 
     # Fetch once for non-log types (log closures from gh_get_transformations
     # are broken — they capture `t` as base::t() instead of the numeric param).
@@ -625,8 +625,8 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
       switch(
         spec$transformType,
         "Linear" = val,
-        "Log"        = ,
-        "logtGml2"   = ,
+        # "Log"        = ,
+        # "logtGml2"   = ,
         "flowJo_log" = {
           log_spec <- spec[names(spec) %in% valid_log_args]
           tt <- create_log_transform(spec = log_spec)
@@ -855,22 +855,28 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
     y_range <- get_display_range(gh, y_param)
     
     # Helper function using these ranges
+    valid_log_args <- c("decade", "offset", "scale", "n", "equal.space")
+    
     to_display_coords <- function(value, range_vals, param) {
-      min_val <- range_vals[1]
-      max_val <- range_vals[2]
-      range_span <- max_val - min_val
-      
-      if (range_span == 0) return(50)
-      
-      # Apply inverse transformation only if one is defined for this parameter
-      transformed_value <- if (!is.null(transF[[param]])) {
-        transF[[param]](value)
+      if (!is.null(transF[[param]])) {
+        # Transformed channel: value is in the forward-transform output space.
+        # Normalise to [0, 256] using the transform's output at raw ceiling.
+        fwd_fn    <- fwdF[[param]]
+        trans_max <- if (is.function(fwd_fn)) {
+          out <- tryCatch(fwd_fn(262144), error = function(e) NA_real_)
+          if (is.finite(out) && out > 0) out else 1.0
+        } else {
+          1.0   # arcsinh fallback: output range is [0, 1]
+        }
+        return((value / trans_max) * 256)
       } else {
-        value
+        # Linear channel: normalise raw value by channel range
+        min_val    <- range_vals[1]
+        max_val    <- range_vals[2]
+        range_span <- max_val - min_val
+        if (range_span == 0) return(50)
+        return(((value - min_val) / range_span) * 256)
       }
-      
-      normalized <- ((transformed_value - min_val) / range_span) * 256
-      return(normalized)
     }
     
     # Convert all x coordinates
@@ -1457,7 +1463,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
       )
       
       xml_lines <- c(xml_lines,
-                     sprintf('        <transforms:%s %s >\n          %s\n        </transforms:%s>',
+                     sprintf('        <transforms:%s %s >\n          %s\n        </transforms:%s >',
                              xml_encode(type), 
                              xml_encode(param_str),
                              xml_encode(d_type_str),
@@ -1837,7 +1843,7 @@ generate_sample_subpopulations_xml <- function(gating_hierarchy, gates, populati
             
             xml_lines <- c(xml_lines, sprintf('%s    </gating:EllipsoidGate>', indent))
           } else if (gate_def$type == "boolean") {
-            browser()
+            # browser()
             xml_lines <- c(xml_lines,
                            sprintf('%s    <gating:BooleanGate gating:id="%s" eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="1" userDefined="1">', indent, xml_encode(gate$id))
             )
@@ -1846,7 +1852,7 @@ generate_sample_subpopulations_xml <- function(gating_hierarchy, gates, populati
             if (!is.null(gate_def$parameters)) {
               for (param in gate_def$parameters) {
                 xml_lines <- c(xml_lines,
-                               sprintf('%s      <data-type:parameter data-type:name="%s"/>', indent, xml_encode(param))
+                               sprintf('%s      <data-type:parameter data-type:name="%s" />', indent, xml_encode(param))
                 )
               }
             }
