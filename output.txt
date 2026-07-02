@@ -316,3 +316,30 @@ This adds the vertical-position display hint to sample-level rectangle gates, ma
 
 compare flowjo_export_tests/test02 test02_export.llm.wsp and test02_export.wsp. test02_export.llm.wsp is saved by Fj10 and can be read with FJ11 with the correct gate. test02_export.wsp is created by this package can be read with FJ10 but when read with FJ11 the gate is missing though the population is displayed.
 
+---
+
+### 2026-07-01: Corrected `yRatio` rule — only for 1-D `RectangleGate`
+
+Re-examining the `.llm.wsp` files showed that FlowJo removes `yRatio` from 2-D `RectangleGate` dimensions. For example, `test03_export.wsp` (package export) had `yRatio="0.5"` on both dimensions of its 2-D `cells` gate, but `test03_export.llm.wsp` (after FlowJo) has **no** `yRatio` at all. In contrast, the 1-D gate in `test02_export.llm.wsp` keeps `yRatio="0.5"` on its single dimension.
+
+**Correct rule:** `yRatio="0.5"` is a display hint for **histogram-style (1-D)** rectangle gates and should be omitted for **2-D pseudocolor** rectangle gates.
+
+Updated `R/export-flowjo10.R` in both `generate_sample_subpopulations_xml()` and `generate_group_subpopulations_xml()`:
+
+```r
+is_1d_rect <- length(gate_def$dimensions) == 1L
+for (dim in gate_def$dimensions) {
+  if (is_1d_rect) {
+    # emit <gating:dimension ... yRatio="0.5">
+  } else {
+    # emit <gating:dimension ...> without yRatio
+  }
+}
+```
+
+**Verification:**
+
+- `devtools::test(filter='export-flowjo10')`: `[ FAIL 0 | WARN 54 | SKIP 0 | PASS 369 ]`.
+- Smoke-tested 1-D rectangle gate: single dimension has `yRatio="0.5"`.
+- Smoke-tested 2-D rectangle gate: neither dimension has `yRatio`.
+

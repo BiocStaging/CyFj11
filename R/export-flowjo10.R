@@ -1748,13 +1748,24 @@ generate_sample_subpopulations_xml <- function(gating_hierarchy, gates, populati
             xml_lines <- c(xml_lines,
                            sprintf('%s    <gating:RectangleGate gating:id="%s" eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="1" userDefined="1" percentX="0" percentY="0">', indent, xml_encode(gate$id))
             )
+            # yRatio is a display hint for histogram-style (1-D) gates. It should only
+            # be emitted when the rectangle gate has a single dimension.
+            is_1d_rect <- length(gate_def$dimensions) == 1L
             # Add dimensions
             for (dim in gate_def$dimensions) {
-              xml_lines <- c(xml_lines,
-                             sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f" yRatio="0.5">', indent, dim$min, dim$max),
-                             sprintf('%s        <data-type:fcs-dimension data-type:name="%s"/>', indent, xml_encode(dim$parameter)),
-                             sprintf('%s      </gating:dimension>', indent)
-              )
+              if (is_1d_rect) {
+                xml_lines <- c(xml_lines,
+                               sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f" yRatio="0.5">', indent, dim$min, dim$max),
+                               sprintf('%s        <data-type:fcs-dimension data-type:name="%s"/>', indent, xml_encode(dim$parameter)),
+                               sprintf('%s      </gating:dimension>', indent)
+                )
+              } else {
+                xml_lines <- c(xml_lines,
+                               sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f">', indent, dim$min, dim$max),
+                               sprintf('%s        <data-type:fcs-dimension data-type:name="%s"/>', indent, xml_encode(dim$parameter)),
+                               sprintf('%s      </gating:dimension>', indent)
+                )
+              }
             }
 
             xml_lines <- c(xml_lines, sprintf('%s    </gating:RectangleGate>', indent))
@@ -1964,23 +1975,36 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
         if (!is.null(gate_def)) {
           if (gate_def$type == "rectangle") {
             xml_lines <- c(xml_lines,
-                           sprintf('%s    <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Hairline" userDefined="1">', 
+                           sprintf('%s    <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Hairline" userDefined="1">',
                                    indent)
             )
-            
+
+            # yRatio is a display hint for histogram-style (1-D) gates. It should only
+            # be emitted when the rectangle gate has a single dimension.
+            is_1d_rect <- length(gate_def$dimensions) == 1L
             # Add dimensions
             for (dim in gate_def$dimensions) {
-              xml_lines <- c(xml_lines,
-                             sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f" yRatio="0.5">', 
-                                     indent, dim$min, dim$max),
-                             sprintf('%s        <data-type:fcs-dimension data-type:name="%s"/>', 
-                                     indent, xml_encode(dim$parameter)),
-                             sprintf('%s      </gating:dimension>', indent)
-              )
+              if (is_1d_rect) {
+                xml_lines <- c(xml_lines,
+                               sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f" yRatio="0.5">',
+                                       indent, dim$min, dim$max),
+                               sprintf('%s        <data-type:fcs-dimension data-type:name="%s"/>',
+                                       indent, xml_encode(dim$parameter)),
+                               sprintf('%s      </gating:dimension>', indent)
+                )
+              } else {
+                xml_lines <- c(xml_lines,
+                               sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f">',
+                                       indent, dim$min, dim$max),
+                               sprintf('%s        <data-type:fcs-dimension data-type:name="%s"/>',
+                                       indent, xml_encode(dim$parameter)),
+                               sprintf('%s      </gating:dimension>', indent)
+                )
+              }
             }
-            
+
             xml_lines <- c(xml_lines, sprintf('%s    </gating:RectangleGate>', indent))
-            
+
           } else if (gate_def$type == "polygon") {
             xml_lines <- c(xml_lines,
                            sprintf('%s    <gating:PolygonGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Hairline" userDefined="1">', 
