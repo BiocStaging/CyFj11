@@ -33,6 +33,11 @@ NULL
 #'        If provided, URIs in the WSP will be calculated relative to this path 
 #'        (or absolute paths rooted here). If NULL, uses the actual paths found in the GatingSet.
 #' @return Logical indicating success
+#' @details
+#' FlowJo 11 natively supports three transformation types: linear, logarithmic, and biexponential.
+#' While other transformations (arcsinh, logicle) can be imported from FlowJo v10 workspaces,
+#' they do not serialize consistently in FlowJo 11's native JSON format. Exported workspaces
+#' therefore use only the three natively supported transformation types to ensure reproducibility.
 #' @export
 export_flowjo10_workspace <- function(gating_set, output_path, workspace_name = NULL, fcs_root = NULL) {
   # Validate inputs
@@ -846,17 +851,21 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
   edge4_y <- center_y - semi_minor * cos(rotation_angle_rad)
   
   
-  # FlowJo v10 ellipse gates use normalized display coordinates
-  # Need to convert from data space to display space using transform range
+  # FlowJo v10 ellipse gates use normalized display coordinates [0, 256].
+  # For linear channels the raw value is divided by the channel's $PnR range.
+  # For transformed channels (arcsinh, biex, log) the gate coordinates are
+  # already in the transform's output space.  We normalise to [0, 256] by
+  # dividing by the transform's maximum output value, which equals
+  # forward_transform(262144).  For GML2 arcsinh that is 1.0 (so multiply by
+  # 256).  For biex with channelRange=4096 that is 4096 (so divide by 16).
   if (!is.null(gh)) {
     transF <- gh_get_transformations(gh, inverse = TRUE)
+    fwdF   <- gh_get_transformations(gh)             # forward transforms
     # Get the display ranges that WILL BE WRITTEN to the XML
     x_range <- get_display_range(gh, x_param)
     y_range <- get_display_range(gh, y_param)
     
-    # Helper function using these ranges
-    valid_log_args <- c("decade", "offset", "scale", "n", "equal.space")
-    
+    # Helper: map a value to FlowJo display units [0, 256].
     to_display_coords <- function(value, range_vals, param) {
       if (!is.null(transF[[param]])) {
         # Transformed channel: value is in the forward-transform output space.
@@ -870,7 +879,7 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
         }
         return((value / trans_max) * 256)
       } else {
-        # Linear channel: normalise raw value by channel range
+        # Linear channel: normalise raw value to [0, 256] by channel range.
         min_val    <- range_vals[1]
         max_val    <- range_vals[2]
         range_span <- max_val - min_val
