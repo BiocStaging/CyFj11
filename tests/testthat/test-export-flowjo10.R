@@ -165,12 +165,13 @@ create_test_fcs <- function(n = 10000, seed = 123) {
     )
   )
   
+  fcs_basename <- basename(tempfile(pattern = "test_sample_", tmpdir = ".", fileext = ".fcs"))
   ff <- new("flowFrame",
             exprs = mat,
             parameters = params,
             description = list(
-              `$FIL` = sprintf("test_sample_%03d.fcs", seed),
-              FILENAME = sprintf("test_sample_%03d.fcs", seed),
+              `$FIL` = fcs_basename,
+              FILENAME = fcs_basename,
               `$TOT` = as.character(n),
               `$PAR` = as.character(ncol(mat))
             ))
@@ -3033,5 +3034,493 @@ test_that("export_flowjo10_workspace: log transform consistent across multiple s
     expect_true(any(grepl(sn, xml_content, fixed = TRUE)),
                 label = sprintf("sample '%s' in XML", sn))
   }
+})
+
+# ── Keyword preservation regression tests ────────────────────────────────
+
+test_that("export_flowjo10_workspace preserves $P*S stain keyword values verbatim", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+
+  # Build a flowFrame whose $P*S keywords contain "/" characters.  Some FCS files
+  # use slashes in stain names; FlowJo's XML may later rewrite them, but the
+  # exporter itself must not alter the value it receives from the GatingSet
+  # keywords.
+  n <- 1000
+  set.seed(42)
+  mat <- cbind(
+    FSC_A = rnorm(n, 100000, 20000),
+    FITC_A = rlnorm(n, 2, 0.8)
+  )
+  mat <- pmax(pmin(mat, 262144), 0)
+  colnames(mat) <- c("FSC-A", "FITC-A")
+
+  params <- new("AnnotatedDataFrame",
+    data = data.frame(
+      name = colnames(mat),
+      desc = c("FSC-A", "l/d"),
+      range = rep(262144, ncol(mat)),
+      minRange = rep(0, ncol(mat)),
+      maxRange = rep(262144, ncol(mat)),
+      row.names = colnames(mat),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  ff <- new("flowFrame",
+            exprs = mat,
+            parameters = params,
+            description = list(
+              `$FIL`   = "stain_test.fcs",
+              FILENAME  = "stain_test.fcs",
+              `$TOT`   = as.character(n),
+              `$PAR`   = as.character(ncol(mat)),
+              `$P1N`   = "FSC-A",
+              `$P1S`   = " ",
+              `$P2N`   = "FITC-A",
+              `$P2S`   = "l/d"
+            ))
+
+  gs <- GatingSet(flowSet(ff))
+
+  temp_file <- tempfile(fileext = ".wsp")
+  on.exit(unlink(temp_file))
+
+  expect_true(export_flowjo10_workspace(gs, temp_file))
+
+  doc <- read_xml(temp_file)
+  kw_nodes <- xml_find_all(doc, "//Keyword")
+  values <- setNames(xml_attr(kw_nodes, "value"), xml_attr(kw_nodes, "name"))
+
+  expect_equal(values[["$P2S"]], "l/d",
+               info = "$P2S stain keyword must keep '/' verbatim")
+})
+
+# ── Compensation / SPILL keyword regression tests ───────────────────────────
+
+create_comp_test_fcs <- function(n = 5000, seed = 200) {
+  skip_if_not_installed("flowCore")
+  library(flowCore)
+
+  set.seed(seed)
+
+  mat <- cbind(
+    FSC_A  = rnorm(n, 100000, 20000),
+    FSC_H  = rnorm(n, 100000, 20000),
+    SSC_A  = rnorm(n, 80000, 15000),
+    FITC_A = c(rlnorm(n * 0.7, 2, 0.8), rlnorm(n * 0.3, 7, 0.5))[1:n],
+    PE_A   = c(rlnorm(n * 0.6, 2.5, 0.7), rlnorm(n * 0.4, 7.5, 0.6))[1:n]
+  )
+  mat <- pmax(pmin(mat, 262144), 0)
+  colnames(mat) <- c("FSC-A", "FSC-H", "SSC-A", "FITC-A", "PE-A")
+
+  params <- new("AnnotatedDataFrame",
+    data = data.frame(
+      name = colnames(mat),
+      desc = colnames(mat),
+      range = rep(262144, ncol(mat)),
+      minRange = rep(0, ncol(mat)),
+      maxRange = rep(262144, ncol(mat)),
+      row.names = colnames(mat),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  # 2x2 compensation matrix for the two fluorescence channels.
+  spill <- matrix(c(1.0, 0.05, 0.02, 1.0), nrow = 2, ncol = 2)
+  rownames(spill) <- colnames(spill) <- c("Comp-FITC-A", "Comp-PE-A")
+
+  new("flowFrame",
+      exprs = mat,
+      parameters = params,
+      description = list(
+        `$FIL`   = sprintf("comp_sample_%03d.fcs", seed),
+        FILENAME  = sprintf("comp_sample_%03d.fcs", seed),
+        `$TOT`   = as.character(n),
+        `$PAR`   = as.character(ncol(mat)),
+        SPILL     = spill
+      ))
+}
+
+test_that("export_flowjo10_workspace emits correct compensation matrix and SPILL keyword", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+
+  ff <- create_comp_test_fcs(n = 1000, seed = 201)
+  gs <- GatingSet(flowSet(ff))
+
+  temp_file <- tempfile(fileext = ".wsp")
+  on.exit(unlink(temp_file))
+
+  expect_true(export_flowjo10_workspace(gs, temp_file))
+
+  doc <- read_xml(temp_file)
+
+  # Workspace-level spillover matrix
+  ws_matrix <- xml_find_first(doc, "//*[local-name()='Matrices']/*[local-name()='spilloverMatrix']")
+  expect_false(is.na(ws_matrix), info = "workspace-level spillover matrix found")
+
+  matrix_id <- xml_attr(ws_matrix, "id")
+  expect_false(is.na(matrix_id), info = "workspace matrix has transforms:id")
+
+  # Sample-level spillover matrix
+  sample_matrix <- xml_find_first(doc, "//*[local-name()='Sample']/*[local-name()='spilloverMatrix']")
+  expect_false(is.na(sample_matrix), info = "sample-level spillover matrix found")
+
+  sample_matrix_id <- xml_attr(sample_matrix, "id")
+  expect_equal(sample_matrix_id, matrix_id, info = "sample matrix UUID matches workspace matrix UUID")
+
+  # MatrixID reference inside Cytometer/TransformStore
+  matrix_id_ref <- xml_find_first(doc, "//*[local-name()='MatrixID']")
+  expect_false(is.na(matrix_id_ref), info = "Cytometer MatrixID found")
+  expect_equal(xml_attr(matrix_id_ref, "matrixId"), matrix_id,
+               info = "Cytometer MatrixID references the matrix")
+
+  # SPILL keyword value
+  spill_kw <- xml_find_first(doc, "//Keyword[@name='SPILL']")
+  expect_false(is.na(spill_kw), info = "SPILL keyword found")
+
+  spill_value <- xml_attr(spill_kw, "value")
+  spill_parts <- strsplit(spill_value, ",")[[1]]
+  expect_equal(length(spill_parts), 1 + 2 + 4,
+               info = "SPILL keyword has 1 + n + n^2 values")
+  expect_equal(spill_parts[1], "2", info = "SPILL keyword starts with channel count")
+  expect_true(all(spill_parts[2:3] == c("FITC-A", "PE-A")),
+              info = "SPILL keyword channel header is correct")
+})
+
+test_that("export_flowjo10_workspace handles GatingSet without compensation", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+
+  ff <- create_test_fcs(n = 500, seed = 202)
+  gs <- GatingSet(flowSet(ff))
+
+  temp_file <- tempfile(fileext = ".wsp")
+  on.exit(unlink(temp_file))
+
+  expect_true(export_flowjo10_workspace(gs, temp_file))
+
+  xml_content <- readLines(temp_file)
+  expect_true(any(grepl("<Matrices/>", xml_content, fixed = TRUE)),
+              info = "Matrices section is empty for uncompensated data")
+  expect_false(any(grepl("spilloverMatrix", xml_content)),
+               info = "No spillover matrix emitted without compensation")
+})
+
+# ── FCS export / raw keyword regression tests ────────────────────────────────
+
+test_that("export_flowjo10_workspace references original raw FCS files by default", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+
+  raw_dir <- tempfile("raw_")
+  dir.create(raw_dir)
+  on.exit(unlink(raw_dir, recursive = TRUE))
+
+  # Write a raw FCS file into the directory that will become the WSP directory.
+  ff <- create_test_fcs(n = 500, seed = 300)
+  raw_fcs <- file.path(raw_dir, keyword(ff)[["$FIL"]])
+  write.FCS(ff, raw_fcs)
+
+  gs <- GatingSet(flowSet(ff))
+
+  out_wsp <- file.path(raw_dir, "export.wsp")
+  expect_true(export_flowjo10_workspace(gs, out_wsp))
+
+  # No new FCS file should have been written.
+  fcs_files <- list.files(raw_dir, pattern = "\\.fcs$", full.names = TRUE)
+  expect_length(fcs_files, 1)
+  expect_equal(basename(fcs_files[1]), basename(raw_fcs))
+
+  doc <- read_xml(out_wsp)
+  ds <- xml_find_first(doc, "//*[local-name()='DataSet']")
+  expect_false(is.na(ds))
+  expect_true(grepl(basename(raw_fcs), xml_attr(ds, "uri"), fixed = TRUE))
+
+  raw_kw <- keyword(flowCore::read.FCS(raw_fcs, transformation = FALSE))
+  kw_nodes <- xml_find_all(doc, "//Keyword")
+  kw_values <- setNames(xml_attr(kw_nodes, "value"), xml_attr(kw_nodes, "name"))
+  expect_equal(kw_values[["$P2N"]], raw_kw[["$P2N"]])
+})
+
+test_that("export_flowjo10_workspace raw_fcs_dir restores uncompensated parameter names", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+
+  raw_dir <- tempfile("raw_")
+  dir.create(raw_dir)
+  on.exit(unlink(raw_dir, recursive = TRUE))
+
+  # Build a minimal raw FCS file whose true parameter name is FITC-A.
+  set.seed(400)
+  n <- 100
+  mat <- cbind(
+    FSC_A = pmin(pmax(rnorm(n, 100000, 20000), 0), 262144),
+    FITC_A = pmin(pmax(rlnorm(n, 2, 0.8), 0), 262144)
+  )
+  colnames(mat) <- c("FSC-A", "FITC-A")
+  params <- new("AnnotatedDataFrame",
+    data = data.frame(
+      name = colnames(mat), desc = colnames(mat),
+      range = rep(262144, ncol(mat)),
+      minRange = rep(0, ncol(mat)),
+      maxRange = rep(262144, ncol(mat)),
+      row.names = colnames(mat), stringsAsFactors = FALSE
+    )
+  )
+  raw_fcs <- file.path(raw_dir, "raw.fcs")
+  raw_ff <- new("flowFrame",
+                exprs = mat, parameters = params,
+                description = list(
+                  `$FIL` = "raw.fcs", FILENAME = raw_fcs,
+                  `$TOT` = as.character(n), `$PAR` = "2",
+                  `$P1N` = "FSC-A", `$P2N` = "FITC-A"
+                ))
+  write.FCS(raw_ff, raw_fcs)
+
+  # Build a GatingSet whose cytoframe claims the compensated name Comp-FITC-A.
+  gs <- GatingSet(flowSet(raw_ff))
+  cf <- gs_cyto_data(gs)[[1]]
+  colnames(cf) <- c("FSC-A", "Comp-FITC-A")
+  kw <- keyword(cf)
+  kw[["$P2N"]] <- "Comp-FITC-A"
+  keyword(cf) <- kw
+  expect_equal(keyword(gs[[1]])[["$P2N"]], "Comp-FITC-A")
+
+  out_wsp <- file.path(raw_dir, "export.wsp")
+  expect_true(export_flowjo10_workspace(gs, out_wsp, raw_fcs_dir = raw_dir))
+
+  doc <- read_xml(out_wsp)
+  kw_nodes <- xml_find_all(doc, "//Keyword")
+  kw_values <- setNames(xml_attr(kw_nodes, "value"), xml_attr(kw_nodes, "name"))
+
+  expect_equal(kw_values[["$P2N"]], "FITC-A",
+               info = "raw_fcs_dir should restore the original uncompensated $P2N")
+
+  ds <- xml_find_first(doc, "//*[local-name()='DataSet']")
+  expect_false(is.na(ds))
+  expect_true(grepl("raw\\.fcs", xml_attr(ds, "uri")))
+})
+
+test_that("export_flowjo10_workspace falls back to writing cytoframes when raw FCS is missing by default", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+
+  temp_dir <- tempfile("missing_")
+  dir.create(temp_dir)
+  on.exit(unlink(temp_dir, recursive = TRUE))
+
+  ff <- create_test_fcs(n = 500, seed = 301)
+  gs <- GatingSet(flowSet(ff))
+
+  out_wsp <- file.path(temp_dir, "export.wsp")
+  expect_true(export_flowjo10_workspace(gs, out_wsp))
+
+  fcs_files <- list.files(temp_dir, pattern = "\\.fcs$", full.names = TRUE)
+  expect_length(fcs_files, 1)
+
+  doc <- read_xml(out_wsp)
+  ds <- xml_find_first(doc, "//*[local-name()='DataSet']")
+  expect_false(is.na(ds))
+  expect_true(grepl(basename(fcs_files[1]), xml_attr(ds, "uri"), fixed = TRUE))
+})
+
+test_that("export_flowjo10_workspace errors when explicit raw_fcs_dir is missing", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+
+  library(flowWorkspace)
+  library(flowCore)
+
+  temp_dir <- tempfile("missing_")
+  dir.create(temp_dir)
+  on.exit(unlink(temp_dir, recursive = TRUE))
+
+  ff <- create_test_fcs(n = 500, seed = 304)
+  gs <- GatingSet(flowSet(ff))
+
+  out_wsp <- file.path(temp_dir, "export.wsp")
+  expect_error(
+    export_flowjo10_workspace(gs, out_wsp, raw_fcs_dir = tempfile()),
+    "Could not locate original FCS file"
+  )
+})
+
+test_that("export_flowjo10_workspace writes modified cytoframes when fcs_output_dir is set", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+
+  temp_dir <- tempfile("wsp_")
+  dir.create(temp_dir)
+  on.exit(unlink(temp_dir, recursive = TRUE))
+
+  ff <- create_test_fcs(n = 500, seed = 303)
+  gs <- GatingSet(flowSet(ff))
+
+  out_wsp <- file.path(temp_dir, "export.wsp")
+  expect_true(export_flowjo10_workspace(gs, out_wsp, fcs_output_dir = temp_dir))
+
+  fcs_files <- list.files(temp_dir, pattern = "\\.fcs$", full.names = TRUE)
+  expect_length(fcs_files, 1)
+
+  doc <- read_xml(out_wsp)
+  ds <- xml_find_first(doc, "//*[local-name()='DataSet']")
+  expect_false(is.na(ds))
+  expect_true(grepl(basename(fcs_files[1]), xml_attr(ds, "uri"), fixed = TRUE))
+
+  written_kw <- keyword(flowCore::read.FCS(fcs_files[1], transformation = FALSE))
+
+  kw_nodes <- xml_find_all(doc, "//Keyword")
+  kw_values <- setNames(xml_attr(kw_nodes, "value"), xml_attr(kw_nodes, "name"))
+  expect_equal(kw_values[["$P2N"]], written_kw[["$P2N"]])
+})
+
+test_that("export_flowjo10_workspace rejects fcs_output_dir and raw_fcs_dir together", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+
+  library(flowWorkspace)
+  library(flowCore)
+
+  ff <- create_test_fcs(n = 500, seed = 302)
+  gs <- GatingSet(flowSet(ff))
+
+  expect_error(
+    export_flowjo10_workspace(gs, tempfile(fileext = ".wsp"),
+                                fcs_output_dir = tempdir(), raw_fcs_dir = tempdir()),
+    "mutually exclusive"
+  )
+})
+
+test_that("export_flowjo10_workspace maps Comp-* gate/transform/axis names back to raw FCS names", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+
+  raw_dir <- tempfile("raw_")
+  dir.create(raw_dir)
+  on.exit(unlink(raw_dir, recursive = TRUE))
+
+  # Build a minimal raw FCS file whose true parameter name is FITC-A.
+  set.seed(500)
+  n <- 100
+  mat <- cbind(
+    FSC_A = pmin(pmax(rnorm(n, 100000, 20000), 0), 262144),
+    FITC_A = pmin(pmax(rlnorm(n, 2, 0.8), 0), 262144)
+  )
+  colnames(mat) <- c("FSC-A", "FITC-A")
+  params <- new("AnnotatedDataFrame",
+    data = data.frame(
+      name = colnames(mat), desc = colnames(mat),
+      range = rep(262144, ncol(mat)),
+      minRange = rep(0, ncol(mat)),
+      maxRange = rep(262144, ncol(mat)),
+      row.names = colnames(mat), stringsAsFactors = FALSE
+    )
+  )
+  raw_fcs <- file.path(raw_dir, "raw.fcs")
+  raw_ff <- new("flowFrame",
+                exprs = mat, parameters = params,
+                description = list(
+                  `$FIL` = "raw.fcs", FILENAME = raw_fcs,
+                  `$TOT` = as.character(n), `$PAR` = "2",
+                  `$P1N` = "FSC-A", `$P2N` = "FITC-A"
+                ))
+  write.FCS(raw_ff, raw_fcs)
+
+  # Build a GatingSet whose cytoframe claims the compensated name Comp-FITC-A.
+  gs <- GatingSet(flowSet(raw_ff))
+  cf <- gs_cyto_data(gs)[[1]]
+  colnames(cf) <- c("FSC-A", "Comp-FITC-A")
+  kw <- keyword(cf)
+  kw[["$P2N"]] <- "Comp-FITC-A"
+  keyword(cf) <- kw
+  expect_equal(keyword(gs[[1]])[["$P2N"]], "Comp-FITC-A")
+
+  # Add a 1D rectangle gate on the compensated channel and a biexp transform.
+  biexp_trans <- flowjo_biexp_trans(channelRange = 4096, maxValue = 262144,
+                                    pos = 4.5, neg = 0, widthBasis = -10)
+  gs <- flowWorkspace::transform(gs, transformerList("Comp-FITC-A", biexp_trans))
+  gate <- rectangleGate(filterId = "FITC_pos", "Comp-FITC-A" = c(1000, 3000))
+  gs_pop_add(gs, gate, parent = "root")
+  recompute(gs)
+
+  out_wsp <- file.path(raw_dir, "export.wsp")
+  expect_true(export_flowjo10_workspace(gs, out_wsp, raw_fcs_dir = raw_dir))
+
+  doc <- read_xml(out_wsp)
+
+  # DataSet should reference the raw FCS file.
+  ds <- xml_find_first(doc, "//*[local-name()='DataSet']")
+  expect_false(is.na(ds))
+  expect_true(grepl("raw\\.fcs", xml_attr(ds, "uri")))
+
+  # No Comp-* references in gate dimensions, transforms, or axes.
+  fcs_dims <- xml_attr(xml_find_all(doc, "//*[local-name()='fcs-dimension']"), "name")
+  axis_names <- xml_attr(xml_find_all(doc, "//Axis[@name != '']"), "name")
+  trans_params <- xml_attr(xml_find_all(doc, "//*[local-name()='parameter']"), "name")
+
+  expect_false(any(grepl("^Comp-", c(fcs_dims, axis_names, trans_params), perl = TRUE)),
+               info = paste("Found Comp-* reference(s) in:",
+                            paste(c(fcs_dims, axis_names, trans_params)[grepl("^Comp-", c(fcs_dims, axis_names, trans_params))], collapse = ", ")))
+
+  # The gate/transform/axis should reference the raw FITC-A name.
+  expect_true("FITC-A" %in% fcs_dims)
+  expect_true("FITC-A" %in% trans_params)
+
+  # The keyword $P2N should be raw FITC-A.
+  kw_nodes <- xml_find_all(doc, "//Keyword")
+  kw_values <- setNames(xml_attr(kw_nodes, "value"), xml_attr(kw_nodes, "name"))
+  expect_equal(kw_values[["$P2N"]], "FITC-A")
 })
 

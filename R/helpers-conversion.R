@@ -828,7 +828,11 @@ create_gatingset_from_cytoset <- function(cytoset,
     gs_single <- GatingSet(cs)
     
     # Apply transformations (sample-specific)
-    sample_transformations <- transformations[[sample_uuid]] %||% transformations[[1]]
+    # sample_transformations <- transformations[[sample_uuid]] %||% transformations[[1]]
+    sample_transformations <- transformations[[sample_uuid]]
+    if (is.null(sample_transformations) && length(transformations) > 0) {
+      sample_transformations <- transformations[[1]]
+    }
     
     if (!is.null(sample_transformations) && length(sample_transformations) > 0) {
       # Map transformation channel names to flowFrame parameter names
