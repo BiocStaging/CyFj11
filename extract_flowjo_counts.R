@@ -69,7 +69,7 @@ get_counts_from_gs <- function(gs, test_name, flowjo_path) {
   do.call(rbind, rows)
 }
 devtools::load_all()
-fj_path = flowjo_files[1]
+fj_path = flowjo_files[13]
 # Process every .flowjo file ---------------------------------------------------
 all_counts <- lapply(flowjo_files, function(fj_path) {
   test_name <- basename(dirname(fj_path))

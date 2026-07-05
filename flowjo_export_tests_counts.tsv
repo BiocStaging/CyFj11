@@ -39,3 +39,19 @@ test12	test12.flowjo	sample12.fcs	And gate of FITC_hi, PE_hi	2879
 test12	test12.flowjo	sample12.fcs	Or gate of FITC_hi, PE_hi	3886
 test12	test12.flowjo	sample12.fcs	Not gate of FITC_hi	7066
 test12	test12.flowjo	sample12.fcs	Not gate of PE_hi	6169
+test14	test14_export.llm.flowjo	68983.fcs	root	19225
+test14	test14_export.llm.flowjo	68983.fcs	Lymphocytes	19079
+test14	test14_export.llm.flowjo	68983.fcs	Singlets	18545
+test14	test14_export.llm.flowjo	68983.fcs	Singlets2	18418
+test14	test14_export.llm.flowjo	68983.fcs	NK1_1-	17358
+test14	test14_export.llm.flowjo	68983.fcs	B cells	2452
+test14	test14_export.llm.flowjo	68983.fcs	T cells	10747
+test14	test14_export.llm.flowjo	68983.fcs	gd T cells	1470
+test14	test14_export.llm.flowjo	68983.fcs	ab T cells	9182
+test14	test14_export.llm.flowjo	68983.fcs	CD8 T cells	1413
+test14	test14_export.llm.flowjo	68983.fcs	CD4 T cells	7469
+test14	test14_export.llm.flowjo	68983.fcs	DP T cells	7
+test14	test14_export.llm.flowjo	68983.fcs	DN T cells	264
+test14	test14_export.llm.flowjo	68983.fcs	NK1_1+	940
+test14	test14_export.llm.flowjo	68983.fcs	NK cells	314
+test14	test14_export.llm.flowjo	68983.fcs	NK T cells	552
