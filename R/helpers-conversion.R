@@ -667,99 +667,128 @@ summarize_logical_gates <- function(tree) {
   }
 }
 
-# Move logical gates up one level in hierarchy
+# Move logical gates up to the nearest non-logical ancestor
+#
+# FlowJo v11 stores boolean (logical) populations as children of the populations
+# that appear in their definition.  In flowWorkspace, however, a boolean gate is
+# evaluated within its parent population.  This means a gate such as
+# "bothNOT = NOT both" must be attached at the same level as "both" (i.e. under
+# root) in order to count the complement of "both".  Keeping it as a child of
+# "both" would always yield zero events.
+#
+# This helper walks the raw tree and pulls every logical gate up until its
+# parent is a non-logical gate (or root).  Non-logical children are processed
+# recursively so that logical gates nested under logical gates are also moved
+# up to the correct level.
 move_logical_gates_up <- function(tree) {
-  
-  # Recursive function to process each node
-  process_node <- function(node) {
+
+  # Recursive function to process each node.
+  # target_ancestor_name is the name of the nearest non-logical ancestor that
+  # logical descendants should be attached to.
+  process_node <- function(node, target_ancestor_name = NULL) {
     if (!is.list(node) || is.null(node$children) || length(node$children) == 0) {
       return(node)
     }
-    
-    # Lists to hold children that stay vs gates to move up
+
+    node_is_logical <- !is.null(node$type) && node$type %in% c("and", "or", "not")
+    current_target <- if (!node_is_logical) unlist(node$name) else target_ancestor_name
+
     children_to_keep <- list()
-    gates_from_grandchildren <- list()
-    
-    # Process each child
+    gates_to_move_up <- list()
+
     for (child in node$children) {
       if (!is.list(child)) {
         children_to_keep <- c(children_to_keep, list(child))
         next
       }
-      
-      # Check if this child is a logical gate
+
       is_logical_gate <- !is.null(child$type) && child$type %in% c("and", "or", "not")
-      
+
       if (is_logical_gate) {
-        # This is a logical gate - mark where it came from and move it up
-        child$moved_from <- unlist(child$parent)
-        child$parent <- unlist(node$name)  # Update parent to current node
-        
-        if (.pkgenv$verbose) message(sprintf("Moving logical gate '%s' from '%s' to '%s'", 
-                        unlist(child$name),
-                        child$moved_from,
-                        child$parent))
-        
-        # Add to current level (don't process its children yet)
-        children_to_keep <- c(children_to_keep, list(child))
-      } else {
-        # Not a logical gate - process recursively
-        processed_child <- process_node(child)
-        
-        # Check if this child has logical gates in its children that should move up
+        # Process children first so nested logical gates can bubble up.
+        processed_child <- process_node(child, current_target)
+
+        # Any logical grandchildren of a logical gate belong at the target
+        # ancestor level, not under this gate.
         if (!is.null(processed_child$children)) {
-          child_logical_gates <- list()
-          child_regular_children <- list()
-          
           for (grandchild in processed_child$children) {
-            if (is.list(grandchild) && !is.null(grandchild$type) && 
+            if (is.list(grandchild) &&
+                !is.null(grandchild$type) &&
                 grandchild$type %in% c("and", "or", "not")) {
-              # This grandchild is a logical gate - move it up to current level
               grandchild$moved_from <- unlist(processed_child$name)
-              grandchild$parent <- unlist(node$name)
-              
-              if (.pkgenv$verbose) message(sprintf("Moving logical gate '%s' from '%s' (grandchild) to '%s'", 
-                              unlist(grandchild$name),
-                              grandchild$moved_from,
-                              grandchild$parent))
-              
+              grandchild$parent <- current_target
+              gates_to_move_up <- c(gates_to_move_up, list(grandchild))
+            }
+          }
+
+          processed_child$children <- Filter(
+            function(g) {
+              !(is.list(g) && !is.null(g$type) && g$type %in% c("and", "or", "not"))
+            },
+            processed_child$children
+          )
+          if (length(processed_child$children) == 0) {
+            processed_child$children <- NULL
+          }
+        }
+
+        processed_child$moved_from <- unlist(processed_child$parent)
+        processed_child$parent <- current_target
+
+        if (.pkgenv$verbose) {
+          message(sprintf("Moving logical gate '%s' from '%s' to '%s'",
+                          unlist(processed_child$name),
+                          processed_child$moved_from,
+                          processed_child$parent))
+        }
+
+        if (!node_is_logical) {
+          # Keep the logical gate at this non-logical level.
+          children_to_keep <- c(children_to_keep, list(processed_child))
+        } else {
+          # Bubble it up further.
+          gates_to_move_up <- c(gates_to_move_up, list(processed_child))
+        }
+      } else {
+        # Non-logical child: recurse, then pull its logical grandchildren up.
+        processed_child <- process_node(child, current_target)
+
+        child_logical_gates <- list()
+        child_regular_children <- list()
+
+        if (!is.null(processed_child$children)) {
+          for (grandchild in processed_child$children) {
+            if (is.list(grandchild) &&
+                !is.null(grandchild$type) &&
+                grandchild$type %in% c("and", "or", "not")) {
+              grandchild$moved_from <- unlist(processed_child$name)
+              grandchild$parent <- current_target
               child_logical_gates <- c(child_logical_gates, list(grandchild))
             } else {
               child_regular_children <- c(child_regular_children, list(grandchild))
             }
           }
-          
-          # Update the child's children to only have non-logical gates
-          processed_child$children <- child_regular_children
-          if (length(processed_child$children) == 0) {
-            processed_child$children <- NULL
-          }
-          
-          # Add the child to keep
-          children_to_keep <- c(children_to_keep, list(processed_child))
-          
-          # Add logical gates from this child to current level
-          gates_from_grandchildren <- c(gates_from_grandchildren, child_logical_gates)
-        } else {
-          children_to_keep <- c(children_to_keep, list(processed_child))
         }
+
+        processed_child$children <- child_regular_children
+        if (length(processed_child$children) == 0) {
+          processed_child$children <- NULL
+        }
+
+        children_to_keep <- c(children_to_keep, list(processed_child))
+        gates_to_move_up <- c(gates_to_move_up, child_logical_gates)
       }
     }
-    
-    # Combine regular children with logical gates moved up from grandchildren
-    node$children <- c(children_to_keep, gates_from_grandchildren)
-    
+
+    node$children <- c(children_to_keep, gates_to_move_up)
     if (length(node$children) == 0) {
       node$children <- NULL
     }
-    
+
     return(node)
   }
-  
-  # Process the tree
-  processed_tree <- process_node(tree)
-  
-  return(processed_tree)
+
+  process_node(tree)
 }
 
 
