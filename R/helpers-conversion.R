@@ -833,29 +833,33 @@ create_gatingset_from_cytoset <- function(cytoset,
     if (is.null(sample_transformations) && length(transformations) > 0) {
       sample_transformations <- transformations[[1]]
     }
-    
-    if (!is.null(sample_transformations) && length(sample_transformations) > 0) {
+
+    # Keep cytoframe data in raw space so that gates (which are converted to raw
+    # coordinates by display_to_raw()) match the workspace counts. Permanent
+    # transformation is skipped; gate coordinates are already in the same space
+    # as the data.
+    if (FALSE && !is.null(sample_transformations) && length(sample_transformations) > 0) {
       # Map transformation channel names to flowFrame parameter names
       # This handles cases where transformation names don't match (e.g., "Comp-APC-Ax700-A" vs "APC-Ax700-A")
       trans_mapped <- map_transformation_names(
         sample_transformations,
         colnames(cf)
       )
-      
+
       # Filter out NULL or linear transforms
       tryCatch({
         if (length(trans_mapped) > 0) {
           transList = flowWorkspace::transformerList(from=names(trans_mapped), trans=trans_mapped)
           gs_single <- flowWorkspace::transform(gs_single, transList)
         }
-        
+
       }, error = function(e) {
         warning(sprintf("Failed to apply transformations for sample %d: %s",
                         i, e$message))
       })
-      
+
     }
-    
+
     # Extract the GatingHierarchy
     gsList[[i]] <- gs_single
   }

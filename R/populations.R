@@ -102,60 +102,65 @@ adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) 
   mapped_params <- map_gate_params_to_gh(gate_params, gh_param_names, strip_comp_prefix = strip_comp_prefix)
   
   # Check if we need to adjust transformations
+  # With the current pipeline the cytoframe is kept in raw space and gate
+  # coordinates are already converted to raw space by display_to_raw().  There
+  # is therefore no need to forward-transform gate coordinates before gating.
   needs_adjustment <- FALSE
   trans_to_apply <- list()
-  
-  for (i in seq_along(gate_params)) {
-    gate_param <- gate_params[i]
-    gh_param <- mapped_params[[gate_param]]
-    
-    # Skip if no mapping found
-    if (is.null(gh_param)) {
-      warning("Could not map gate parameter '", gate_param, "' to GatingSet parameters")
-      next
-    }
-    
-    # Get transformation from hierarchy using mapped name
-    gh_trans_func <- gh_trans[[gh_param]]
-    
-    # Skip if no transformation in hierarchy
-    if (is.null(gh_trans_func)) {
-      next
-    }
-    
-    # Get transformation type from hierarchy
-    gh_trans_type <- attr(gh_trans_func, "type")
-    
-    # If hierarchy has a transformation (not "none"), we need to apply it to gate coords
-    if (!is.null(gh_trans_type)) {
-      # Gate coordinates are in raw space, need to convert to transformed space
-      needs_adjustment <- TRUE
-      trans_to_apply[[gh_param]] <- gh_trans_func
-      
-      if (.pkgenv$verbose) {
-        message("Parameter '", gate_param, "' -> '", gh_param, "' needs adjustment:")
-        message("  Gate coords in: raw data space")
-        message("  Hierarchy expects: ", gh_trans_type, " transformed space")
+
+  if (FALSE) {
+    for (i in seq_along(gate_params)) {
+      gate_param <- gate_params[i]
+      gh_param <- mapped_params[[gate_param]]
+
+      # Skip if no mapping found
+      if (is.null(gh_param)) {
+        warning("Could not map gate parameter '", gate_param, "' to GatingSet parameters")
+        next
+      }
+
+      # Get transformation from hierarchy using mapped name
+      gh_trans_func <- gh_trans[[gh_param]]
+
+      # Skip if no transformation in hierarchy
+      if (is.null(gh_trans_func)) {
+        next
+      }
+
+      # Get transformation type from hierarchy
+      gh_trans_type <- attr(gh_trans_func, "type")
+
+      # If hierarchy has a transformation (not "none"), we need to apply it to gate coords
+      if (!is.null(gh_trans_type)) {
+        # Gate coordinates are in raw space, need to convert to transformed space
+        needs_adjustment <- TRUE
+        trans_to_apply[[gh_param]] <- gh_trans_func
+
+        if (.pkgenv$verbose) {
+          message("Parameter '", gate_param, "' -> '", gh_param, "' needs adjustment:")
+          message("  Gate coords in: raw data space")
+          message("  Hierarchy expects: ", gh_trans_type, " transformed space")
+        }
       }
     }
   }
-  
+
   # If no mapping found at all, return original gate
   if (all(sapply(mapped_params, is.null))) {
     return(gate_obj)
   }
-  
+
   # Always update parameter names to match flowFrame (critical for compensated data)
   gate_obj <- update_gate_param_names(gate_obj, mapped_params)
-  
+
   # If no transformation adjustment needed, return gate with updated names
   if (!needs_adjustment) {
     return(gate_obj)
   }
-  
+
   # Apply transformations to convert from raw space to transformed space
   gate_obj_adjusted <- apply_transforms_to_gate(gate_obj, trans_to_apply)
-  
+
   return(gate_obj_adjusted)
 }
 

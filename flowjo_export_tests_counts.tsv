@@ -1,0 +1,41 @@
+test	flowjo_file	sample	population	count
+test01	test01_export.llm.flowjo	sample01.fcs	root	5000
+test02	test02_export.llm.flowjo	sample02.fcs	root	5000
+test02	test02_export.llm.flowjo	sample02.fcs	FSC_filter	4776
+test03	test03_export.llm.flowjo	sample03.fcs	root	5000
+test03	test03_export.llm.flowjo	sample03.fcs	cells	4631
+test04	test04_export.llm.flowjo	sample04.fcs	root	8000
+test04	test04_export.llm.flowjo	sample04.fcs	singlets	7555
+test05	test05.flowjo	sample05.fcs	root	8000
+test05	test05.flowjo	sample05.fcs	ellips_cells	7217
+test06	test06.flowjo	sample06.fcs	root	8000
+test06	test06.flowjo	sample06.fcs	FITC_pos	2396
+test07	test07.flowjo	sample07.fcs	root	8000
+test07	test07.flowjo	sample07.fcs	PE_pos	3198
+test08	test08.flowjo	sample08.fcs	root	8000
+test08	test08.flowjo	sample08.fcs	APC_pos	1599
+test09	test09_export.llm.flowjo	sample09.fcs	root	10000
+test09	test09_export.llm.flowjo	sample09.fcs	cells	9441
+test09	test09_export.llm.flowjo	sample09.fcs	singlets	8800
+test10	test10_export.llm.flowjo	sample10.fcs	root	8000
+test10	test10_export.llm.flowjo	sample10.fcs	FSC_gate	7558
+test10	test10_export.llm.flowjo	sample10.fcs	SSC_gate	7392
+test10	test10_export.llm.flowjo	sample10.fcs	bothOR	7967
+test10	test10_export.llm.flowjo	sample10.fcs	both	6983
+test10	test10_export.llm.flowjo	sample10.fcs	bothNOT	0
+test11	test11.flowjo	sample11.fcs	root	10000
+test11	test11.flowjo	sample11.fcs	cells	9696
+test11	test11.flowjo	sample11.fcs	APC_pos	1930
+test11	test11.flowjo	sample11.fcs	singlets	9478
+test11	test11.flowjo	sample11.fcs	FITC_pos	2897
+test11	test11.flowjo	sample11.fcs	Or gate of APC_pos, FITC_pos	2899
+test11	test11.flowjo	sample11.fcs	And gate of APC_pos, FITC_pos	1928
+test12	test12.flowjo	sample12.fcs	root	10000
+test12	test12.flowjo	sample12.fcs	cells	9765
+test12	test12.flowjo	sample12.fcs	FITC_hi	2934
+test12	test12.flowjo	sample12.fcs	PE_hi	3831
+test12	test12.flowjo	sample12.fcs	scatter_ellipse	9759
+test12	test12.flowjo	sample12.fcs	And gate of FITC_hi, PE_hi	2879
+test12	test12.flowjo	sample12.fcs	Or gate of FITC_hi, PE_hi	3886
+test12	test12.flowjo	sample12.fcs	Not gate of FITC_hi	7066
+test12	test12.flowjo	sample12.fcs	Not gate of PE_hi	6169

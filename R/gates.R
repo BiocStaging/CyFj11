@@ -210,16 +210,14 @@ display_to_raw <- function(display_coords, transform_spec, gate_resolution = NUL
     return(raw_coords)
     
   } else if (trans_type == "Biex") {
-    
-    # Scale display coords to transform space if gate_resolution differs
-    if (!is.null(gate_resolution) && gate_resolution != (transform_spec$vectorLength %||% 256)) {
-      scaled_coords <- (display_coords / gate_resolution) * (transform_spec$vectorLength %||% 256)
-    } else {
-      scaled_coords <- display_coords
-    }
-    
-    return(scaled_coords)
-    
+
+    # Biex: display coords are in transformed space. Convert to raw data space
+    # by applying the inverse of the biexponential transform used for the channel.
+    trans_spec <- parse_transformation_info(transform_spec)
+    trans_obj <- create_biexponential_transform(trans_spec)
+    raw_coords <- trans_obj$inverse(display_coords)
+    return(raw_coords)
+
   } else {
     warning("Unsupported transform type: ", trans_type, ". Returning coordinates as-is.")
     return(display_coords)
