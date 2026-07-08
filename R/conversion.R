@@ -61,6 +61,9 @@ NULL
 #' @param include_empty_tree Logical. Include samples without gates? Default FALSE.
 #' @param correct_faulty_gate Numerical, zero = don't correct, otherwise use this value as transformation max value and Try to correct faulty gates instead of erroring? Default TRUE.
 #' @param transform Logical. Apply transformations? Default TRUE.
+#' @param use_transformed_coords Logical. Keep gate coordinates in FlowJo display
+#'   (transformed) space rather than raw space? Default is the value of \code{transform}.
+#'   Only relevant when \code{transform = TRUE}.
 #' @param max_search_depth Integer. Maximum directory depth when searching for FCS files.
 #'   Default 5.
 #' @param stop_on_multiple Logical. Stop if multiple FCS files match a sample?
@@ -158,6 +161,7 @@ fj11_to_gatingset <- function(fj11_workspace,
                               include_empty_tree = FALSE,
                               correct_faulty_gate = 0,
                               transform = TRUE,
+                              use_transformed_coords = transform,
                               max_search_depth = 5,
                               stop_on_multiple = TRUE,
                               mc.cores = 1,
@@ -302,6 +306,7 @@ fj11_to_gatingset <- function(fj11_workspace,
   # Step 6: Extract gates ----
   if (include_gates) {
     if (.pkgenv$verbose) cat("\nExtracting gates...\n")
+
     # save(file = "extract_all_gates.Rdata", list = ls())
     # load("extract_all_gates.Rdata")
     gates_list <- extract_all_gates(
@@ -309,7 +314,9 @@ fj11_to_gatingset <- function(fj11_workspace,
       sample_uuids = sample_uuids,
       channel.ignore.case = channel.ignore.case,
       extend_val = extend_val,
-      extend_to = extend_to, correct_faulty_gate = correct_faulty_gate
+      extend_to = extend_to,
+      correct_faulty_gate = correct_faulty_gate,
+      use_transformed_coords = use_transformed_coords
     )
   }
   # browser()
