@@ -1,8 +1,8 @@
 ---
-title: "Compensation Workflow with CyFj11"
+title: "Compensation and Round-Trip Workflow with CyFj11"
 output: BiocStyle::html_document
 vignette: >
-  %\VignetteIndexEntry{Compensation Workflow with CyFj11}
+  %\VignetteIndexEntry{Compensation and Round-Trip Workflow with CyFj11}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
   %\VignettePackage{CyFj11}
@@ -13,174 +13,191 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+
+# Only evaluate data-dependent chunks when FlowSOM is available.
+has_flowsom <- requireNamespace("FlowSOM", quietly = TRUE)
 ```
 
 ```{r setup}
 library(CyFj11)
-library(flowWorkspace)
 library(flowCore)
+library(flowWorkspace)
 library(ggcyto)
 ```
 
 ## Introduction
 
-This vignette walks through a complete compensation-focused workflow using
-`CyFj11`. It demonstrates how to:
+This vignette walks through a complete round-trip workflow using public example
+data from the Bioconductor `FlowSOM` package. The workflow demonstrates how to:
 
-1. Read an FCS file and inspect its spillover matrix.
-2. Modify the spillover matrix and write a new FCS file.
-3. Parse a FlowJo v11 workspace.
-4. Convert the workspace into a `GatingSet`.
-5. Merge per-sample `GatingSet` objects and extract population counts.
-6. Visualize the data with `ggcyto`.
+1. Locate the public FlowSOM example FCS file and v10 workspace.
+2. Import the v10 workspace into a `GatingSet` with `CytoML`.
+3. Export the `GatingSet` back to a FlowJo v10 `.wsp` file with `CyFj11`.
+4. Re-import the exported workspace and compare population counts.
+5. Visualize the result with `ggcyto`.
 
-The code below mirrors the workflow captured in the package's
-`test.compensation.R` development script. Example file paths point to the
-`flowjo_export_tests/test14/` directory, which is available in the development
-repository but not shipped with the package. Set `eval = TRUE` only when those
-files are present, or adapt the paths to your own data.
+All data are taken unchanged from `FlowSOM`; no compensation matrix is modified.
 
-## Inspecting and modifying compensation
+## Data availability
 
-Start by reading an FCS file and looking at its compensation-related keywords.
+The example data are bundled with the `FlowSOM` package. If it is not installed,
+you can install it from Bioconductor:
 
-```{r inspect-fcs, eval=FALSE}
-# Path to an FCS file referenced by a FlowJo v11 workspace
-fcs_path <- "flowjo_export_tests/test14/68983.fcs"
-
-ff <- flowCore::read.FCS(fcs_path)
-kw <- flowCore::keyword(ff)
-kw[grep("SPILL|COMP", names(kw), ignore.case = TRUE)]
+```{r install-flowsom, eval=FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("FlowSOM")
 ```
 
-Extract the original spillover matrix, scale it (for example by 100), and
-attach the modified matrix to a new `flowFrame`.
+Locate the files:
 
-```{r modify-spillover, eval=FALSE}
-spill_orig <- flowCore::keyword(ff, "SPILL")[[1]]
-cat("Original spillover matrix:\n")
-print(spill_orig)
+```{r locate-flowsom, eval=has_flowsom}
+flowsom_fcs <- system.file("extdata", "68983.fcs", package = "FlowSOM")
+flowsom_wsp <- system.file("extdata", "gating.wsp", package = "FlowSOM")
 
-spill_new <- spill_orig * 100
-flowCore::keyword(ff)[["SPILL"]] <- spill_new
-
-modified_fcs_path <- "flowjo_export_tests/test14/68983_modified.fcs"
-flowCore::write.FCS(ff, modified_fcs_path)
+stopifnot(file.exists(flowsom_fcs), file.exists(flowsom_wsp))
+cat("FCS:", flowsom_fcs, "\n")
+cat("WSP:", flowsom_wsp, "\n")
 ```
 
-Verify that the resaved file contains the updated spillover matrix.
+Copy the FCS file into a clean temporary directory so the workspace can find it
+by its original name:
 
-```{r verify-spillover, eval=FALSE}
-ff_check <- flowCore::read.FCS(modified_fcs_path, transformation = FALSE)
-spill_check <- flowCore::keyword(ff_check, "SPILL")[[1]]
-cat("Spillover in resaved file:\n")
-print(spill_check)
+```{r prepare-temp, eval=has_flowsom}
+test_dir <- tempfile("cyfj11_flowsom_")
+dir.create(test_dir, showWarnings = FALSE)
+file.copy(flowsom_fcs, file.path(test_dir, "68983.fcs"), overwrite = TRUE)
+cat("Working directory:", test_dir, "\n")
 ```
 
-## Parsing the FlowJo v11 workspace
+## Import the FlowSOM v10 workspace
 
-Next, parse the FlowJo v11 workspace that references the FCS file.
+Use `CytoML` to read the FlowJo v10 XML workspace and build a `GatingSet`.
 
-```{r parse-workspace, eval=FALSE}
-fj_path <- "flowjo_export_tests/test14/test14.compensation.flowjo"
+```{r import-v10, eval=has_flowsom}
+library(CytoML)
 
-ws <- tryCatch(
-  read_flowjo11_workspace(fj_path),
-  error = function(e) {
-    warning("Failed to parse ", fj_path, ": ", e$message)
-    return(NULL)
-  }
+ws <- CytoML::open_flowjo_xml(flowsom_wsp)
+gs <- CytoML::flowjo_to_gatingset(
+  ws,
+  path                = test_dir,
+  name                = "All Samples",
+  subset              = "68983.fcs",
+  sample_names_from   = "sampleID"
 )
-if (is.null(ws)) stop("Workspace parsing failed")
+
+cat("Samples:", length(gs), "\n")
+cat("Populations:\n")
+print(flowWorkspace::gs_get_pop_paths(gs))
 ```
 
-## Converting to a GatingSet
+Inspect the population counts:
 
-`fj11_to_gatingset()` returns a named list of `GatingSet` objects, one per
-sample. Because the FCS files live next to the workspace, we use the workspace
-directory as the search path.
+```{r counts-before, eval=has_flowsom}
+stats_before <- flowWorkspace::gs_pop_get_count_fast(gs)
+head(stats_before[, c("Population", "Count")])
+```
 
-```{r convert-gatingset, eval=FALSE}
-fcs_search_path <- dirname(fj_path)
+## Export the GatingSet to FlowJo v10 with CyFj11
 
-gs_list <- tryCatch(
-  fj11_to_gatingset(
-    fj11_workspace     = ws,
-    group_name         = 1,
-    path               = fcs_search_path,
-    execute            = TRUE,
-    stop_on_multiple   = FALSE,
-    include_empty_tree = FALSE
-  ),
-  error = function(e) {
-    warning("Failed to convert ", fj_path, " to GatingSet: ", e$message)
-    return(NULL)
-  }
+Now export the same `GatingSet` to a new FlowJo v10 `.wsp` file using
+`CyFj11::export_flowjo10_workspace()`.
+
+```{r export-v10, eval=has_flowsom}
+export_path <- file.path(test_dir, "test14_export.wsp")
+CyFj11::export_flowjo10_workspace(gs[[1]], export_path)
+
+stopifnot(file.exists(export_path))
+cat("Exported workspace:", export_path, "\n")
+```
+
+## Re-import and validate
+
+Read the exported workspace back with `CytoML` and compare the population
+counts. They should match the original import.
+
+```{r reimport, eval=has_flowsom}
+ws2 <- CytoML::open_flowjo_xml(export_path)
+gs2 <- CytoML::flowjo_to_gatingset(
+  ws2,
+  path              = test_dir,
+  name              = "All Samples",
+  subset            = "68983.fcs",
+  sample_names_from = "sampleID"
 )
-if (is.null(gs_list) || length(gs_list) == 0) stop("GatingSet conversion failed")
-```
 
-## Merging and summarizing
+stats_after <- flowWorkspace::gs_pop_get_count_fast(gs2)
 
-Merge the per-sample list into a single `GatingSet` for downstream analysis and
-extract population counts.
+all_equal <- all(stats_before$Count == stats_after$Count)
+cat("Population counts identical:", all_equal, "\n")
 
-```{r merge-counts, eval=FALSE}
-gs <- flowWorkspace::merge_list_to_gs(gs_list)
-
-# Population counts from the GatingSet
-stats <- flowWorkspace::gs_pop_get_stats(gs)
-head(stats)
+if (!all_equal) {
+  diff_idx <- which(stats_before$Count != stats_after$Count)
+  print(cbind(
+    Population = stats_before$Population[diff_idx],
+    Before     = stats_before$Count[diff_idx],
+    After      = stats_after$Count[diff_idx]
+  ))
+}
 ```
 
 ## Visualization
 
-After conversion, plot a sample. When transformations are applied by
-`fj11_to_gatingset()`, `limits = "data"` usually gives a clearer view of the
-gated populations than the raw 0-262,144 linear range.
+Plot a gate from the imported `GatingSet`. Because the original FlowSOM
+workspace uses linear scaling, the default axes are appropriate here. For
+biexponential channels you may prefer `ggcyto_par_set(limits = "data")`.
 
-```{r plot, eval=FALSE}
-autoplot(gs[[1]], bins = 264) +
-  ggcyto::ggcyto_par_set(limits = "data")
+```{r plot, eval=has_flowsom, fig.width=7, fig.height=6}
+pops <- flowWorkspace::gs_get_pop_paths(gs)
+plot_pop <- if (length(pops) > 1) pops[2] else pops[1]
+
+ggcyto::autoplot(gs, plot_pop, bins = 128)
 ```
 
 ## Complete script
-
-Putting the pieces together:
 
 ```{r complete, eval=FALSE}
 library(CyFj11)
 library(flowCore)
 library(flowWorkspace)
+library(CytoML)
+library(ggcyto)
 
-fcs_path   <- "flowjo_export_tests/test14/68983.fcs"
-fj_path    <- "flowjo_export_tests/test14/test14.compensation.flowjo"
+# 1. Locate FlowSOM example data
+flowsom_fcs <- system.file("extdata", "68983.fcs", package = "FlowSOM")
+flowsom_wsp <- system.file("extdata", "gating.wsp", package = "FlowSOM")
 
-# 1. Modify compensation
-ff        <- flowCore::read.FCS(fcs_path)
-spill_new <- flowCore::keyword(ff, "SPILL")[[1]] * 100
-flowCore::keyword(ff)[["SPILL"]] <- spill_new
-flowCore::write.FCS(ff, "flowjo_export_tests/test14/68983_modified.fcs")
+# 2. Prepare a temporary directory with the FCS file
+test_dir <- tempfile("cyfj11_flowsom_")
+dir.create(test_dir)
+file.copy(flowsom_fcs, file.path(test_dir, "68983.fcs"))
 
-# 2. Parse workspace
-ws <- read_flowjo11_workspace(fj_path)
+# 3. Import the FlowJo v10 workspace
+ws  <- CytoML::open_flowjo_xml(flowsom_wsp)
+gs  <- CytoML::flowjo_to_gatingset(ws, path = test_dir, name = "All Samples",
+                                    subset = "68983.fcs",
+                                    sample_names_from = "sampleID")
 
-# 3. Convert to GatingSet
-gs_list <- fj11_to_gatingset(
-  fj11_workspace = ws,
-  group_name     = 1,
-  path           = dirname(fj_path),
-  execute        = TRUE
-)
+# 4. Export with CyFj11
+export_path <- file.path(test_dir, "test14_export.wsp")
+CyFj11::export_flowjo10_workspace(gs[[1]], export_path)
 
-# 4. Merge and inspect
-gs <- flowWorkspace::merge_list_to_gs(gs_list)
-autoplot(gs[[1]], bins = 264) + ggcyto::ggcyto_par_set(limits = "data")
+# 5. Re-import and compare counts
+ws2 <- CytoML::open_flowjo_xml(export_path)
+gs2 <- CytoML::flowjo_to_gatingset(ws2, path = test_dir, name = "All Samples",
+                                    subset = "68983.fcs",
+                                    sample_names_from = "sampleID")
+all(flowWorkspace::gs_pop_get_count_fast(gs)$Count ==
+    flowWorkspace::gs_pop_get_count_fast(gs2)$Count)
+
+# 6. Plot
+pops <- flowWorkspace::gs_get_pop_paths(gs)
+ggcyto::autoplot(gs, pops[2], bins = 128)
 ```
 
 ## See also
 
-* `vignette("getting-started")` for the basic import/export workflow.
-* `?fj11_to_gatingset` for all conversion options, including the
-  `use_transformed_coords` and `transform` arguments that control whether gate
-  coordinates remain in FlowJo display space.
+* `vignette("getting-started")` for the basic FlowJo v11 import workflow.
+* `?export_flowjo10_workspace` for details on exporting a `GatingSet` to FlowJo
+  v10 format.
+* `?fj11_to_gatingset` for importing FlowJo v11 workspaces.
