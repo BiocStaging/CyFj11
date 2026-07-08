@@ -1,0 +1,186 @@
+---
+title: "Compensation Workflow with CyFj11"
+output: BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Compensation Workflow with CyFj11}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignettePackage{CyFj11}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(CyFj11)
+library(flowWorkspace)
+library(flowCore)
+library(ggcyto)
+```
+
+## Introduction
+
+This vignette walks through a complete compensation-focused workflow using
+`CyFj11`. It demonstrates how to:
+
+1. Read an FCS file and inspect its spillover matrix.
+2. Modify the spillover matrix and write a new FCS file.
+3. Parse a FlowJo v11 workspace.
+4. Convert the workspace into a `GatingSet`.
+5. Merge per-sample `GatingSet` objects and extract population counts.
+6. Visualize the data with `ggcyto`.
+
+The code below mirrors the workflow captured in the package's
+`test.compensation.R` development script. Example file paths point to the
+`flowjo_export_tests/test14/` directory, which is available in the development
+repository but not shipped with the package. Set `eval = TRUE` only when those
+files are present, or adapt the paths to your own data.
+
+## Inspecting and modifying compensation
+
+Start by reading an FCS file and looking at its compensation-related keywords.
+
+```{r inspect-fcs, eval=FALSE}
+# Path to an FCS file referenced by a FlowJo v11 workspace
+fcs_path <- "flowjo_export_tests/test14/68983.fcs"
+
+ff <- flowCore::read.FCS(fcs_path)
+kw <- flowCore::keyword(ff)
+kw[grep("SPILL|COMP", names(kw), ignore.case = TRUE)]
+```
+
+Extract the original spillover matrix, scale it (for example by 100), and
+attach the modified matrix to a new `flowFrame`.
+
+```{r modify-spillover, eval=FALSE}
+spill_orig <- flowCore::keyword(ff, "SPILL")[[1]]
+cat("Original spillover matrix:\n")
+print(spill_orig)
+
+spill_new <- spill_orig * 100
+flowCore::keyword(ff)[["SPILL"]] <- spill_new
+
+modified_fcs_path <- "flowjo_export_tests/test14/68983_modified.fcs"
+flowCore::write.FCS(ff, modified_fcs_path)
+```
+
+Verify that the resaved file contains the updated spillover matrix.
+
+```{r verify-spillover, eval=FALSE}
+ff_check <- flowCore::read.FCS(modified_fcs_path, transformation = FALSE)
+spill_check <- flowCore::keyword(ff_check, "SPILL")[[1]]
+cat("Spillover in resaved file:\n")
+print(spill_check)
+```
+
+## Parsing the FlowJo v11 workspace
+
+Next, parse the FlowJo v11 workspace that references the FCS file.
+
+```{r parse-workspace, eval=FALSE}
+fj_path <- "flowjo_export_tests/test14/test14.compensation.flowjo"
+
+ws <- tryCatch(
+  read_flowjo11_workspace(fj_path),
+  error = function(e) {
+    warning("Failed to parse ", fj_path, ": ", e$message)
+    return(NULL)
+  }
+)
+if (is.null(ws)) stop("Workspace parsing failed")
+```
+
+## Converting to a GatingSet
+
+`fj11_to_gatingset()` returns a named list of `GatingSet` objects, one per
+sample. Because the FCS files live next to the workspace, we use the workspace
+directory as the search path.
+
+```{r convert-gatingset, eval=FALSE}
+fcs_search_path <- dirname(fj_path)
+
+gs_list <- tryCatch(
+  fj11_to_gatingset(
+    fj11_workspace     = ws,
+    group_name         = 1,
+    path               = fcs_search_path,
+    execute            = TRUE,
+    stop_on_multiple   = FALSE,
+    include_empty_tree = FALSE
+  ),
+  error = function(e) {
+    warning("Failed to convert ", fj_path, " to GatingSet: ", e$message)
+    return(NULL)
+  }
+)
+if (is.null(gs_list) || length(gs_list) == 0) stop("GatingSet conversion failed")
+```
+
+## Merging and summarizing
+
+Merge the per-sample list into a single `GatingSet` for downstream analysis and
+extract population counts.
+
+```{r merge-counts, eval=FALSE}
+gs <- flowWorkspace::merge_list_to_gs(gs_list)
+
+# Population counts from the GatingSet
+stats <- flowWorkspace::gs_pop_get_stats(gs)
+head(stats)
+```
+
+## Visualization
+
+After conversion, plot a sample. When transformations are applied by
+`fj11_to_gatingset()`, `limits = "data"` usually gives a clearer view of the
+gated populations than the raw 0-262,144 linear range.
+
+```{r plot, eval=FALSE}
+autoplot(gs[[1]], bins = 264) +
+  ggcyto::ggcyto_par_set(limits = "data")
+```
+
+## Complete script
+
+Putting the pieces together:
+
+```{r complete, eval=FALSE}
+library(CyFj11)
+library(flowCore)
+library(flowWorkspace)
+
+fcs_path   <- "flowjo_export_tests/test14/68983.fcs"
+fj_path    <- "flowjo_export_tests/test14/test14.compensation.flowjo"
+
+# 1. Modify compensation
+ff        <- flowCore::read.FCS(fcs_path)
+spill_new <- flowCore::keyword(ff, "SPILL")[[1]] * 100
+flowCore::keyword(ff)[["SPILL"]] <- spill_new
+flowCore::write.FCS(ff, "flowjo_export_tests/test14/68983_modified.fcs")
+
+# 2. Parse workspace
+ws <- read_flowjo11_workspace(fj_path)
+
+# 3. Convert to GatingSet
+gs_list <- fj11_to_gatingset(
+  fj11_workspace = ws,
+  group_name     = 1,
+  path           = dirname(fj_path),
+  execute        = TRUE
+)
+
+# 4. Merge and inspect
+gs <- flowWorkspace::merge_list_to_gs(gs_list)
+autoplot(gs[[1]], bins = 264) + ggcyto::ggcyto_par_set(limits = "data")
+```
+
+## See also
+
+* `vignette("getting-started")` for the basic import/export workflow.
+* `?fj11_to_gatingset` for all conversion options, including the
+  `use_transformed_coords` and `transform` arguments that control whether gate
+  coordinates remain in FlowJo display space.
