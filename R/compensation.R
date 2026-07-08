@@ -131,9 +131,15 @@ extract_compensation_from_platforms <- function(spillover_matrices, dataSources 
         ncol      = ncol(comp_matrix),
         dimnames  = dimnames(comp_matrix)
       )
+      # FlowJo v11 platform matrices are often scaled so that the diagonal is 100
+      # (i.e. they are 100 * the spillover matrix). flowCore::compensation()
+      # expects a true spillover matrix with a diagonal of 1, so normalize.
+      if (all(diag(comp_matrix) > 50)) {
+        comp_matrix <- comp_matrix / 100
+      }
       comp_matrix <- flowCore::compensation(comp_matrix)
     }
-    
+
     # Try spillover section if compSpec didn't work
     if (is.null(comp_matrix) && !is.null(comp_data$spillover)) {
       spillover <- comp_data$spillover
@@ -152,6 +158,10 @@ extract_compensation_from_platforms <- function(spillover_matrices, dataSources 
         ncol      = ncol(comp_matrix),
         dimnames  = dimnames(comp_matrix)
       )
+      # Normalize FlowJo's 100-diagonal platform matrices to true spillover units.
+      if (all(diag(comp_matrix) > 50)) {
+        comp_matrix <- comp_matrix / 100
+      }
       comp_matrix <- flowCore::compensation(comp_matrix)
     }
     

@@ -321,6 +321,18 @@ fj11_to_gatingset <- function(fj11_workspace,
     custom_compensation = compensation,
     platforms = platforms
   )
+  cat("\n=== COMPENSATION DIAGNOSTIC ===\n")
+  cat("Number of samples:", length(sample_uuids), "\n")
+  cat("Number of comp matrices found:", length(comp_list), "\n")
+  cat("Comp list names:", paste(names(comp_list), collapse="\n  "), "\n")
+  cat("Sample UUIDs:\n  ", paste(unlist(sample_uuids), collapse="\n  "), "\n")
+  
+  # Check if UUIDs match
+  for (uuid in unlist(sample_uuids)) {
+    found <- !is.null(comp_list[[uuid]])
+    cat("UUID", substr(uuid,1,8), "... → comp found:", found, "\n")
+  }
+  cat("================================\n\n")
   
   # browser()
   # Step 9: Create per-sample GatingSet list ----

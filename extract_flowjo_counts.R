@@ -21,7 +21,7 @@ suppressPackageStartupMessages({
 })
 
 root_dir <- normalizePath("flowjo_export_tests", mustWork = TRUE)
-out_file <- "flowjo_export_tests_counts.tsv"
+out_file <- "flowjo_export_tests_counts.2.tsv"
 
 # Locate all .flowjo files -----------------------------------------------------
 flowjo_files <- list.files(
@@ -91,7 +91,7 @@ all_counts <- lapply(flowjo_files, function(fj_path) {
   # Convert to GatingSet list.  We request execution so counts are computed.
   gs_list <- tryCatch(
     fj11_to_gatingset(
-      ws,
+      fj11_workspace = ws,
       group_name         = 1,
       path               = fcs_search_path,
       execute            = TRUE,
@@ -117,7 +117,8 @@ all_counts <- lapply(flowjo_files, function(fj_path) {
 
   get_counts_from_gs(gs, test_name, fj_path)
 })
-
+testthat::set_max_fails(Inf)
+devtools::test()
 # Combine and write output -----------------------------------------------------
 all_counts <- do.call(rbind, all_counts)
 

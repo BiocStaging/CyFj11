@@ -158,7 +158,7 @@ parse_transformation_info <- function(trans_info) {
   params <- list(
     type = normalized_type,
     channel = trans_info$channel %||% trans_info$parameter,
-    vectorLength <- trans_info$vectorLength %||% 256
+    vectorLength = trans_info$vectorLength %||% 256
   )
   
   # Extract type-specific parameters
@@ -184,8 +184,14 @@ parse_transformation_info <- function(trans_info) {
          #   params$c = trans_info[["c"]] %||% trans_info[["C"]] %||% 0
          # },
          "log" = {
-           params$base = trans_info[["base"]] %||% trans_info[["Base"]] %||% 10
-           params$offset = trans_info[["offset"]] %||% trans_info[["r"]] %||% 1
+           # FlowJo v11 Log transform metadata uses decadesOffset (1-based start
+           # decade), numberDecades, and shift.  We store the raw metadata; the
+           # decoder in display_to_raw() implements the actual inversion.
+           params$decadesOffset <- trans_info[["decadesOffset"]] %||% trans_info[["decadesOffset"]] %||% 1
+           params$numberDecades <- trans_info[["numberDecades"]] %||% trans_info[["numberDecades"]] %||% 4
+           params$shift         <- trans_info[["shift"]]         %||% trans_info[["shift"]]         %||% 0
+           params$base          <- trans_info[["base"]]          %||% trans_info[["Base"]]          %||% 10
+           params$vectorLength  <- trans_info[["vectorLength"]]  %||% 256
          },
          "linear" = {
            params$a = trans_info[["a"]] %||% trans_info[["A"]] %||% trans_info[["maxRange"]] %||% 1
@@ -336,45 +342,83 @@ create_biexponential_transform <- function(spec) {
   
   biexpTrans
 }
-#' Create Log Transform (scales version)
+#' Create Log Transform (FlowJo / flowWorkspace compatible)
+#'
+#' Builds a scales::trans_new object that mirrors FlowJo's Log transform.
+#' Accepts two parameterisations:
+#' * flowWorkspace / FlowJo v10 style: decade, offset, scale (plus optional shift)
+#' * FlowJo v11 parsed style: numberDecades, decadesOffset, vectorLength (plus optional shift)
+#'
+#' The transform maps a raw value r to display space d as
+#'   d = (log10(max(r + shift, offset)) - log10(offset)) * scale / decade
+#' and back as
+#'   r = 10^(d * decade / scale + log10(offset)) - shift
+#'
 #' @keywords internal
-#' @importFrom flowCore logTransform
 create_log_transform <- function(spec) {
   # Verify spec is provided and is a list
   if (missing(spec) || is.null(spec)) {
     stop("spec argument is required")
   }
-  
+
   if (!is.list(spec)) {
     stop("spec must be a list")
   }
-  
-  # Get valid arguments for flowjo_log_trans
-  valid_args <- c("decade", "offset", "scale", "n", "equal.space")
-  
-  # Get arguments present in spec
-  spec_args <- names(spec)
-  
-  # Check for invalid arguments
-  invalid_args <- setdiff(spec_args, valid_args)
-  
-  if (length(invalid_args) > 0) {
-    warning(
-      "The following arguments are not valid for flowjo_log_trans and will be ignored: ",
-      paste(invalid_args, collapse = ", ")
-    )
+
+  # Detect parameterisation.  flowWorkspace / FlowJo v10 uses decade/offset/scale;
+  # FlowJo v11 parsed metadata uses numberDecades/decadesOffset/vectorLength.
+  has_v10_style <- any(c("decade", "decades", "offset", "scale") %in% names(spec))
+  has_v11_style <- any(c("numberDecades", "decadesOffset", "vectorLength") %in% names(spec))
+
+  if (has_v10_style || !has_v11_style) {
+    # flowWorkspace flowjo_log_trans parameterisation
+    decade  <- spec[["decade"]]  %||% spec[["decades"]] %||% 4.5
+    offset  <- spec[["offset"]]  %||% 1
+    scale   <- spec[["scale"]]   %||% 1
+    shift   <- spec[["shift"]]   %||% 0
+  } else {
+    # FlowJo v11 parameterisation
+    number_decades <- spec[["numberDecades"]] %||% 4
+    decades_offset <- spec[["decadesOffset"]] %||% 1
+    vector_length  <- spec[["vectorLength"]]  %||% 256
+    shift          <- spec[["shift"]]          %||% 0
+
+    if (is.null(vector_length) || length(vector_length) == 0 || vector_length == 0) {
+      warning("Log transform has invalid vectorLength (", vector_length, "). Using 256.")
+      vector_length <- 256
+    }
+
+    decade <- number_decades
+    scale  <- vector_length
+    offset <- 10^(decades_offset - 1)
   }
-  
-  # Filter spec to only include valid arguments
-  valid_spec <- spec[names(spec) %in% valid_args]
-  
-  # Call flowjo_log_trans with valid arguments only
-  fc_trans <- do.call(
-    flowWorkspace::flowjo_log_trans,
-    valid_spec
+
+  # Forward: raw -> display
+  transform <- function(r) {
+    (log10(pmax(r + shift, offset)) - log10(offset)) * scale / decade
+  }
+
+  # Inverse: display -> raw
+  inverse <- function(d) {
+    10^(d * decade / scale + log10(offset)) - shift
+  }
+
+  trans_obj <- scales::trans_new(
+    name      = paste0("flowjo_log_", decade, "dec"),
+    transform = transform,
+    inverse   = inverse,
+    domain    = c(0, Inf)
   )
-  
-  fc_trans
+
+  attr(trans_obj, "type")       <- "log"
+  attr(trans_obj, "parameters") <- list(
+    decade = decade,
+    offset = offset,
+    scale  = scale,
+    shift  = shift
+  )
+
+  trans_obj
 }
 
 #' Create Linear Transform

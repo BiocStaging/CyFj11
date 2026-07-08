@@ -29,64 +29,69 @@ NULL
 #' @param gating_set GatingSet object to export
 #' @param output_path Path where the .xml file should be created
 #' @param workspace_name Optional name for the workspace
-#' @param fcs_root Optional base directory for FCS files. 
-#'        If provided, URIs in the WSP will be calculated relative to this path 
-#'        (or absolute paths rooted here). If NULL, uses the actual paths found in the GatingSet.
+#' @param fcs_root Optional base directory for FCS files.
+#'        If provided, FCS files will be written there and URIs in the WSP will
+#'        reference that location.  If NULL, uses the actual paths found in the
+#'        GatingSet.
+#' @param overwrite Logical. When \code{fcs_root} is supplied and FCS files
+#'        already exist in that directory, \code{FALSE} (default) aborts with an
+#'        error; \code{TRUE} silently replaces existing files.
 #' @return Logical indicating success
-#' @details
-#' FlowJo 11 natively supports three transformation types: linear, logarithmic, and biexponential.
-#' While other transformations (arcsinh, logicle) can be imported from FlowJo v10 workspaces,
-#' they do not serialize consistently in FlowJo 11's native JSON format. Exported workspaces
-#' therefore use only the three natively supported transformation types to ensure reproducibility.
 #' @export
-export_flowjo10_workspace <- function(gating_set, output_path, workspace_name = NULL, fcs_root = NULL) {
+export_flowjo10_workspace <- function(gating_set, output_path,
+                                      workspace_name = NULL,
+                                      fcs_root       = NULL,
+                                      overwrite      = FALSE) {
   # Validate inputs
   if (missing(gating_set) || missing(output_path)) {
     stop("Missing required parameters: gating_set, output_path")
   }
-  
   if (!is.character(output_path) || length(output_path) != 1) {
     stop("output_path must be a single character string")
   }
-  
-  # Check if gating_set is a valid GatingSet object
   if (!requireNamespace("flowWorkspace", quietly = TRUE)) {
     stop("flowWorkspace package required for GatingSet operations")
   }
-
-  # Determine the directory for path calculations
-  # If fcs_root is provided, we use it. Otherwise, we default to the WSP's directory 
-  # to attempt relative paths, or use absolute paths from the GatingSet.
+  
+  # ---- Determine the directory for FCS path calculations ------------------
   target_fcs_dir <- if (!is.null(fcs_root)) {
-    normalizePath(fcs_root, mustWork = FALSE)
+    outDir <- normalizePath(fcs_root, mustWork = FALSE)
+    if (!dir.exists(outDir)) {
+      stop(
+        "fcs_root directory does not exist: ", outDir
+      )
+    }
+    outDir
   } else {
     dirname(normalizePath(output_path, mustWork = FALSE))
   }
   
-  # Extract components from GatingSet
-  samples_data <- extract_samples_from_gatingset_v10(gating_set, target_fcs_dir = target_fcs_dir)
-  gates_data <- extract_gates_from_gatingset_v10(gating_set)
-  populations_data <- extract_populations_from_gatingset_v10(gating_set, samples_data, gates_data)
-  groups_data <- create_default_groups_v10(samples_data)
+  # ---- Write FCS files when an explicit fcs_root is supplied --------------
+  if (!is.null(fcs_root)) {
+    write_fcs_files_to_dir(gating_set, target_fcs_dir, overwrite = overwrite)
+  }
   
-  # Generate workspace name if not provided
+  # ---- Extract components from GatingSet ----------------------------------
+  samples_data    <- extract_samples_from_gatingset_v10(gating_set, target_fcs_dir = target_fcs_dir)
+  gates_data      <- extract_gates_from_gatingset_v10(gating_set)
+  populations_data <- extract_populations_from_gatingset_v10(gating_set, samples_data, gates_data)
+  groups_data     <- create_default_groups_v10(samples_data)
+  
   if (is.null(workspace_name)) {
     workspace_name <- tools::file_path_sans_ext(basename(output_path))
   }
-
-  # Generate XML content
+  
   xml_content <- generate_flowjo10_xml(
-    gating_set = gating_set,
-    samples = samples_data,
-    gates = gates_data,
-    populations = populations_data,
-    groups = groups_data,
+    gating_set     = gating_set,
+    samples        = samples_data,
+    gates          = gates_data,
+    populations    = populations_data,
+    groups         = groups_data,
     workspace_name = workspace_name,
-    output_path = output_path,
+    output_path    = output_path,
     force_XSC_linear = TRUE
   )
   
-  # Write to file
   result <- tryCatch({
     writeLines(xml_content, output_path)
     TRUE
@@ -98,7 +103,6 @@ export_flowjo10_workspace <- function(gating_set, output_path, workspace_name = 
   if (result) {
     message("Successfully exported FlowJo v10 workspace to: ", output_path)
   }
-  
   return(result)
 }
 
@@ -111,35 +115,35 @@ export_flowjo10_workspace <- function(gating_set, output_path, workspace_name = 
 extract_samples_from_gatingset_v10 <- function(gating_set, target_fcs_dir = NULL) {
   samples <- list()
   sample_names <- flowWorkspace::sampleNames(gating_set)
-
+  
   for (i in seq_along(sample_names)) {
     sample_name <- sample_names[i]
     gh <- gating_set[[sample_name]]
     sample_id <- as.numeric(i)
-
+    
     # Get original metadata
     keywords <- list()
     original_basename <- NA
     original_fcs_path <- NA
-
+    
     if (requireNamespace("flowCore", quietly = TRUE)) {
       tryCatch({
         keyword_list <- flowCore::keyword(gh)
-        if (!is.null(keyword_list$FILENAME)) {
+        if (!is.null(keyword_list$`$FIL`)) {
           # Just extract the filename (e.g., "sample01.fcs")
-          original_basename <- basename(keyword_list$FILENAME)
+          original_basename <- basename(keyword_list$`$FIL`)
           original_fcs_path <- keyword_list$FILENAME
         }
       }, error = function(e) { warning("problem with keywords ", sample_name, "\n") })
     }
-
+    
     # --- CONSTRUCT THE NEW URI ---
     final_uri <- NA
-
+    
     if (!is.na(original_basename) && !is.null(target_fcs_dir)) {
       final_uri <- file.path(target_fcs_dir, original_basename)
     }
-
+    
     # --- RECONSTRUCT KEYWORDS FROM ORIGINAL FCS HEADER ---
     # flowWorkspace/CytoML rename compensated channels to "Comp-..." in the
     # GatingSet keywords. FlowJo expects the original FCS parameter names plus
@@ -159,23 +163,23 @@ extract_samples_from_gatingset_v10 <- function(gating_set, target_fcs_dir = NULL
         NULL
       }
     }, error = function(e) NULL)
-
+    
     # GatingSet-derived keywords that should be preserved/overlaid
     gs_keywords <- tryCatch({
       flowCore::keyword(gh)
     }, error = function(e) NULL)
-
+    
     keywords <- build_sample_keywords(
       fcs_keywords = fcs_header,
       gs_keywords = gs_keywords,
       final_filename = final_uri
     )
-
+    
     # --- EXTRACT COMPENSATION MATRIX ---
     spill_matrix <- tryCatch({
       parse_spill_keyword(keywords)
     }, error = function(e) NULL)
-
+    
     samples[[sample_id]] <- list(
       id = sample_id,
       name = sample_name,
@@ -211,32 +215,38 @@ get_fcs_header_keywords <- function(fcs_path) {
 parse_spill_keyword <- function(keywords) {
   spill <- keywords[["SPILL"]]
   if (is.null(spill)) return(NULL)
-
+  
   if (is.matrix(spill)) {
+    if (is.null(rownames(spill)) && !is.null(colnames(spill))) {
+      rownames(spill) <- colnames(spill)
+    }
+    if (is.null(colnames(spill)) && !is.null(rownames(spill))) {
+      colnames(spill) <- rownames(spill)
+    }
     return(spill)
   }
-
+  
   # SPILL may be a single comma-separated string or a character vector.
   if (is.character(spill) && length(spill) == 1) {
     spill <- strsplit(spill, ",")[[1]]
   }
-
+  
   # FCS SPILL keyword is a flat vector: first value is the number of
   # parameters, followed by the parameter names, then the column-major matrix
   # values.
   vals <- suppressWarnings(as.numeric(spill))
   tokens <- as.character(spill)
-
+  
   n <- suppressWarnings(as.integer(vals[1]))
   if (is.na(n) || n <= 0) return(NULL)
-
+  
   needed_total <- 1 + n + n * n
   if (length(spill) < needed_total) return(NULL)
-
+  
   col_names <- tokens[2:(n + 1)]
   mat_vals <- vals[(n + 2):needed_total]
   if (any(is.na(mat_vals))) return(NULL)
-
+  
   mat <- matrix(mat_vals, nrow = n, ncol = n, dimnames = list(col_names, col_names))
   mat
 }
@@ -255,28 +265,28 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
     keywords[["FILENAME"]] <- final_filename
     return(keywords)
   }
-
+  
   # Start from original FCS header
   keywords <- as.list(fcs_keywords)
-
+  
   # Overlay GatingSet-derived values that should be preserved
   overlay_keys <- c("GUID", "ORIGINALGUID", "transformation", "APPLY COMPENSATION",
-                      "AUTOBS", "EXPORT TIME", "EXPORT USER NAME", "EXPERIMENT NAME",
-                      "FSC ASF", "TUBE NAME", "THRESHOLD", "WINDOW EXTENSION")
+                    "AUTOBS", "EXPORT TIME", "EXPORT USER NAME", "EXPERIMENT NAME",
+                    "FSC ASF", "TUBE NAME", "THRESHOLD", "WINDOW EXTENSION")
   for (k in overlay_keys) {
     v <- gs_keywords[[k]]
     if (!is.null(v)) keywords[[k]] <- v
   }
-
+  
   # Overlay flowCore-derived range keywords
   flowcore_keys <- grep("^flowCore_\\$P[0-9]+R", names(gs_keywords), value = TRUE)
   for (k in flowcore_keys) {
     keywords[[k]] <- gs_keywords[[k]]
   }
-
+  
   # Rewrite FILENAME as requested
   keywords[["FILENAME"]] <- final_filename
-
+  
   # Add compensated duplicate parameters when compensation is present
   spill <- parse_spill_keyword(keywords)
   if (!is.null(spill)) {
@@ -285,24 +295,34 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
     # Determine existing $PAR
     par_val <- suppressWarnings(as.integer(keywords[["$PAR"]]))
     if (is.na(par_val)) par_val <- n_orig
-
+    
+    # TODO verify that comp name has to be changed.
     # Add $P{par_val + i}N/S/R entries for each compensated channel
     for (i in seq_along(comp_names)) {
       orig_name <- comp_names[i]
       comp_name <- paste0("Comp-", orig_name)
       idx <- par_val + i
-
+      
       # Find original parameter index for this channel
       orig_idx <- which(comp_names == orig_name)[1]
       orig_s <- keywords[[sprintf("$P%dS", orig_idx)]] %||% ""
       orig_r <- keywords[[sprintf("$P%dR", orig_idx)]] %||% "262144"
-
+      
       keywords[[sprintf("$P%dN", idx)]] <- comp_name
       keywords[[sprintf("$P%dS", idx)]] <- orig_s
       keywords[[sprintf("$P%dR", idx)]] <- as.character(orig_r)
     }
+    
+    # Ensure SPILL is serialized in FCS flat format: n, names, values
+    if (is.matrix(keywords[["SPILL"]])) {
+      sp <- keywords[["SPILL"]]
+      if (is.null(rownames(sp)) && !is.null(colnames(sp))) rownames(sp) <- colnames(sp)
+      if (is.null(colnames(sp)) && !is.null(rownames(sp))) colnames(sp) <- rownames(sp)
+      flat_spill <- paste(c(ncol(sp), colnames(sp), as.vector(sp)), collapse = ",")
+      keywords[["SPILL"]] <- flat_spill
+    }
   }
-
+  
   keywords
 }
 
@@ -315,25 +335,32 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
 #' @keywords internal
 build_spillover_matrix_xml <- function(spill_matrix, matrix_id, indent = "     ") {
   if (is.null(spill_matrix)) return(character(0))
-
+  
   param_names <- colnames(spill_matrix)
   if (is.null(param_names)) param_names <- rownames(spill_matrix)
-
+  
   lines <- c(
     sprintf('%s<transforms:spilloverMatrix spectral="0" weightOptAlgorithmType="OLS" prefix="Comp-" name="Acquisition-defined" editable="0" matrixType="wizardDefined" color="#c0c0c0" version="FlowJo-10.10.1" status="FINALIZED" transforms:id="%s" suffix="" >',
             indent, xml_encode(matrix_id)),
     sprintf('%s  <data-type:parameters>', indent)
   )
-
+  
   for (p in param_names) {
     lines <- c(lines,
                sprintf('%s    <data-type:parameter data-type:name="%s" userProvidedCompInfix="Comp-%s" />',
                        indent, xml_encode(p), xml_encode(p)))
   }
-
+  
   lines <- c(lines,
              sprintf('%s  </data-type:parameters>', indent))
-
+  
+  if (is.null(rownames(spill_matrix))) {
+    rownames(spill_matrix) <- param_names
+  }
+  if (is.null(colnames(spill_matrix))) {
+    colnames(spill_matrix) <- param_names
+  }
+  
   for (p in param_names) {
     lines <- c(lines,
                sprintf('%s  <transforms:spillover data-type:parameter="%s" userProvidedCompInfix="Comp-%s" >',
@@ -347,7 +374,7 @@ build_spillover_matrix_xml <- function(spill_matrix, matrix_id, indent = "     "
     }
     lines <- c(lines, sprintf('%s  </transforms:spillover>', indent))
   }
-
+  
   lines <- c(lines, sprintf('%s</transforms:spilloverMatrix>', indent))
   lines
 }
@@ -378,7 +405,7 @@ extract_gates_from_gatingset_v10 <- function(gating_set) {
     
     return(id_lookup[[lookup_key]])
   }
-
+  
   # Get all population paths
   sample_names <- flowWorkspace::sampleNames(gating_set)
   
@@ -394,7 +421,7 @@ extract_gates_from_gatingset_v10 <- function(gating_set) {
         warning("Failed to get population paths for sample ", sample_name, ": ", e$message)
         character(0)
       })
-
+      
       # Extract gate information for each population
       for (pop_path in pop_paths) {
         if (pop_path == "root") {
@@ -476,7 +503,7 @@ extract_populations_from_gatingset_v10 <- function(gating_set, samples_data, gat
     
     # Get population paths
     pop_paths <- tryCatch({
-
+      
       flowWorkspace::gs_get_pop_paths(gh, path = "auto")
     }, error = function(e) {
       warning("Failed to get population paths for sample ", sample_name, ": ", e$message)
@@ -573,8 +600,8 @@ convert_gate_to_flowjo10_format <- function(gate, pop_name, gh = NULL) {
     }
   }
   
-
-    return(NULL)
+  
+  return(NULL)
 }
 
 #' Get Transform Specification for Export
@@ -786,20 +813,20 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
   
   # ---- apply inverse transformations (if gating hierarchy supplied) ---------
   if (!is.null(gh) ) {
-
+    
     # Fetch once for non-log types (log closures from gh_get_transformations
     # are broken — they capture `t` as base::t() instead of the numeric param).
     trans_list     <- gh_get_transformations(gh, inverse = TRUE)
     valid_log_args <- c("decade", "offset", "scale", "n", "equal.space")
-
+    
     .apply_inverse_val <- function(val, param_name) {
       spec <- get_transform_spec(gh, param_name)
       if (is.null(spec)) return(val)
       switch(
         spec$transformType,
         "Linear" = val,
-        # "Log"        = ,
-        # "logtGml2"   = ,
+        "Log"        = ,
+        "logtGml2"   = ,
         "flowJo_log" = {
           log_spec <- spec[names(spec) %in% valid_log_args]
           tt <- create_log_transform(spec = log_spec)
@@ -811,7 +838,7 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
         }
       )
     }
-
+    
     for (i in seq_along(params)) {
       min_vals[i] <- .apply_inverse_val(min_vals[i], params[i])
       max_vals[i] <- .apply_inverse_val(max_vals[i], params[i])
@@ -986,7 +1013,7 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
   # Calculate rotation angle
   major_axis_vec <- eigenvecs[, 1]
   rotation_angle_rad <- atan2(major_axis_vec[2], major_axis_vec[1])
-
+  
   # Calculate semi-major and semi-minor axes
   # Use sqrt(distance) because Mahalanobis distance is already squared in the formula
   semi_major <- sqrt(eigenvals[1]) * distance
@@ -1350,7 +1377,7 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
 #' @return Character string containing XML content
 #' @keywords internal
 generate_flowjo10_xml <- function(gating_set, samples, gates, populations, groups, workspace_name, output_path, force_XSC_linear=FALSE, minimal_fj11=FALSE) {
-
+  
   if (minimal_fj11) {
     # Minimal FJ11 format - very simple structure
     xml_lines <- c(
@@ -1361,7 +1388,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
     # Full FJ10 format with all attributes
     current_time <- format(Sys.time(), "%a %b %d %H:%M:%S %Z %Y")
     client_ts <- as.character(as.integer(as.numeric(Sys.time()) * 1000))
-
+    
     xml_lines <- c(
       '<?xml version="1.0" encoding="UTF-8"?>',
       ' <Workspace',
@@ -1385,12 +1412,12 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
     xml_lines <- c(xml_lines,
                    '   <WindowPosition x="100" y="100" width="800" height="600" displayed="1" panelState="" />'
     )
-
+    
     # Add workspace-level TextTraits
     xml_lines <- c(xml_lines,
                    '   <TextTraits font="SansSerif" size="11" name="" style="plain" color="#000000" background="#00ffffff" just="left" />'
     )
-
+    
     # Add Columns section
     xml_lines <- c(xml_lines,
                    '   <Columns>',
@@ -1405,7 +1432,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                    '     </TColumn>',
                    '   </Columns>'
     )
-
+    
     # Add workspace-level compensation matrix if available
     ws_matrix_id <- NULL
     if (length(samples) > 0 && !is.null(samples[[1]]$spill_matrix)) {
@@ -1417,10 +1444,10 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
     } else {
       xml_lines <- c(xml_lines, '   <Matrices/>')
     }
-
+    
     # Derive cytometer attributes from the first sample's FCS header if possible
     cyt_attrs <- derive_cytometer_attrs(if (length(samples) > 0) samples[[1]]$fcs_header else NULL)
-
+    
     # Build TransformStore content from all channel transforms that will be used
     # in this workspace. We use the original (uncompensated) parameter names for
     # the cytometer-level TransformStore, matching FlowJo's display transform list.
@@ -1430,10 +1457,11 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
       tryCatch({
         sample_gh_for_ts <- gating_set[[samples[[1]]$name]]
       }, error = function(e) {})
-
+      
       if (!is.null(sample_gh_for_ts)) {
         all_ts_transforms <- flowWorkspace::gh_get_transformations(sample_gh_for_ts)
         # Strip "Comp-" prefix to map to original channel names
+        # TODO verify that comp name has to be changed.
         ts_transforms <- list()
         for (nm in names(all_ts_transforms)) {
           orig_nm <- sub("^Comp-", "", nm)
@@ -1456,14 +1484,14 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
           ts_transforms[["Time"]] <- flowCore::linearTransform(transformationId = "defaultLin", a = 1, b = 0)@.Data
           attr(ts_transforms[["Time"]], "type") <- "Linear"
         }
-
+        
         if (length(ts_transforms) > 0) {
           transform_store_lines <- c('       <TransformStore>', '         <MatrixID matrixId="18405cb6-3c7f-485d-a690-1690f98d59a8" >', '           <Transforms>')
           for (tr_idx in seq_along(ts_transforms)) {
             channel <- names(ts_transforms)[tr_idx]
             atr_tr <- attributes(ts_transforms[[tr_idx]])
             if (is.null(atr_tr$type)) atr_tr$type <- "Linear"
-
+            
             data_range <- tryCatch({
               fr <- gh_pop_get_data(sample_gh_for_ts, "root")
               kw <- flowCore::keyword(fr)
@@ -1486,9 +1514,9 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                 c(0, 262144)
               }
             }, error = function(e) c(0, 262144))
-
+            
             transform_store_lines <- c(transform_store_lines,
-                                         emit_transform_xml(atr_tr$type, channel, ts_transforms[[tr_idx]], atr_tr, data_range, indent = "             "))
+                                       emit_transform_xml(atr_tr$type, channel, ts_transforms[[tr_idx]], atr_tr, data_range, indent = "             "))
           }
           transform_store_lines <- c(transform_store_lines, '           </Transforms>', '         </MatrixID>', '       </TransformStore>')
         }
@@ -1497,7 +1525,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
     if (length(transform_store_lines) == 0) {
       transform_store_lines <- '       <TransformStore/>'
     }
-
+    
     # Add Cytometers section
     xml_lines <- c(xml_lines,
                    '   <Cytometers>',
@@ -1532,7 +1560,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                    '   </Cytometers>'
     )
   }
-
+  
   # Add groups
   xml_lines <- c(xml_lines, '   <Groups>')
   # Add group nodes
@@ -1569,7 +1597,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
     )
   }
   xml_lines <- c(xml_lines, '     </GroupNode>')
-
+  
   # Add Compensation group node
   xml_lines <- c(xml_lines,
                  '     <GroupNode name="Compensation" annotation="" owningGroup="Compensation" expanded="1" sortPriority="10" count="-1" >',
@@ -1593,7 +1621,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                  '       </Group>',
                  '     </GroupNode>'
   )
-
+  
   xml_lines <- c(xml_lines, '   </Groups>')
   
   # Add sample list
@@ -1601,7 +1629,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
   # Add samples (each containing DataSet, Transformations, Keywords, and SampleNode)
   for (sample_id in seq_along(samples)) {
     sample <- samples[[sample_id]]
-
+    
     # Get gating hierarchy for this sample if available
     sample_gh <- NULL
     if (requireNamespace("flowWorkspace", quietly = TRUE)) {
@@ -1611,25 +1639,25 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
         # Continue without sample_gh if not available
       })
     }
-
+    
     xml_lines <- c(xml_lines,
                    sprintf('     <Sample>'),
                    sprintf('       <DataSet uri="file:%s" sampleID="%d" />',
                            xml_encode(sample$uri), sample_id)
     )
-
+    
     # Add sample-level spillover matrix if compensation is present
     if (!is.null(sample$spill_matrix) && !is.null(ws_matrix_id)) {
       xml_lines <- c(xml_lines,
                      build_spillover_matrix_xml(sample$spill_matrix, ws_matrix_id, indent = "       "))
     }
-
+    
     # Sample-level Transformations: include both original and Comp- duplicate
     # channels when compensation is applied, matching FlowJo's exported shape.
     all_transforms <- flowWorkspace::gh_get_transformations(sample_gh)
     referenced_channels <- get_referenced_channels(gates)
     transforms <- all_transforms[names(all_transforms) %in% referenced_channels]
-
+    
     if (force_XSC_linear) {
       lin_trans <- flowCore::linearTransform(transformationId = "defaultLin", a = 1, b = 0)
       for (marker in referenced_channels) {
@@ -1639,12 +1667,13 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
         }
       }
     }
-
+    
     # If compensation is present, add duplicate transforms for the original
     # (uncompensated) channel names as well.
     if (!is.null(sample$spill_matrix)) {
       orig_names <- colnames(sample$spill_matrix)
       for (nm in orig_names) {
+        # TODO verify that comp name has to be changed.
         comp_nm <- paste0("Comp-", nm)
         if (!is.null(transforms[[comp_nm]]) && is.null(transforms[[nm]])) {
           transforms[[nm]] <- transforms[[comp_nm]]
@@ -1652,20 +1681,21 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
       }
       # Also ensure all Comp- channels are present
       for (nm in orig_names) {
+        # TODO verify that comp name has to be changed.
         comp_nm <- paste0("Comp-", nm)
         if (is.null(transforms[[comp_nm]]) && !is.null(transforms[[nm]])) {
           transforms[[comp_nm]] <- transforms[[nm]]
         }
       }
     }
-
+    
     xml_lines <- c(xml_lines, '      <Transformations>')
     for (tr_idx in seq_along(transforms)) {
       channel <- names(transforms)[tr_idx]
       transform_obj <- transforms[[tr_idx]]
       atr_tr <- attributes(transform_obj)
       if (is.null(atr_tr$type)) atr_tr$type <- "Linear"
-
+      
       data_range <- tryCatch({
         fr <- gh_pop_get_data(sample_gh, "root")
         kw <- flowCore::keyword(fr)
@@ -1688,12 +1718,12 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
           c(0, 262144)
         }
       }, error = function(e) c(0, 262144))
-
+      
       xml_lines <- c(xml_lines,
                      emit_transform_xml(atr_tr$type, channel, transform_obj, atr_tr, data_range, indent = "        "))
     }
     xml_lines <- c(xml_lines, '      </Transformations>')
-
+    
     # Add keywords
     xml_lines <- c(xml_lines, '      <Keywords>')
     for (kw_name in names(sample$keywords)) {
@@ -1723,7 +1753,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
     # Use $FIL keyword for sample name if available, otherwise use sample$name
     sample_display_name <- sample$keywords[["$FIL"]] %||% sample$name
     #######
-
+    
     # ---- derive heatmap parameter from first compensated channel ------------
     heat_map_param <- ""
     if (!is.null(sample$spill_matrix)) {
@@ -1780,9 +1810,9 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
     
     xml_lines <- c(xml_lines, '       </SampleNode>', '     </Sample>')
   }
-
+  
   xml_lines <- c(xml_lines, '   </SampleList>')
-
+  
   # Add TableEditor section
   xml_lines <- c(xml_lines,
                  '   <TableEditor title="FlowJo Tables" current="Table" >',
@@ -1794,7 +1824,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                  '     </Table>',
                  '   </TableEditor>'
   )
-
+  
   # Add LayoutEditor section
   xml_lines <- c(xml_lines,
                  '   <LayoutEditor title="FlowJo Layouts" current="Layout" showGrid="0" showPageBreaks="0" showGuides="0" showDebugOutput="0" >',
@@ -1809,14 +1839,14 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                  '     <WindowPosition x="0" y="3" width="900" height="600" />',
                  '   </LayoutEditor>'
   )
-
+  
   # Add Scripts section
   xml_lines <- c(xml_lines,
                  '   <Scripts>',
                  '     <Script lang="text/javascript" name="New Script 		 " />',
                  '   </Scripts>'
   )
-
+  
   # Add Experiment section
   xml_lines <- c(xml_lines,
                  '   <Experiment>',
@@ -1838,19 +1868,19 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                  '     </PlateEditorState>',
                  '   </Experiment>'
   )
-
+  
   # Add Exports section
   xml_lines <- c(xml_lines, '   <Exports/>')
-
+  
   # Add SOPS section
   xml_lines <- c(xml_lines, '   <SOPS/>')
-
+  
   # Add weights section
   xml_lines <- c(xml_lines, '   <weights/>')
-
+  
   # Close workspace
   xml_lines <- c(xml_lines, ' </Workspace>')
-
+  
   return(paste(xml_lines, collapse = "\n"))
 }
 
@@ -2158,7 +2188,7 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
   for (pop_id in names(child_populations)) {
     population <- child_populations[[pop_id]]
     
-
+    
     if(population$name == "Ungated") 
       next()
     
@@ -2211,7 +2241,7 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                            sprintf('%s    <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Hairline" userDefined="1">',
                                    indent)
             )
-
+            
             # yRatio is a display hint for histogram-style (1-D) gates. It should only
             # be emitted when the rectangle gate has a single dimension.
             is_1d_rect <- length(gate_def$dimensions) == 1L
@@ -2235,9 +2265,9 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                 )
               }
             }
-
+            
             xml_lines <- c(xml_lines, sprintf('%s    </gating:RectangleGate>', indent))
-
+            
           } else if (gate_def$type == "polygon") {
             xml_lines <- c(xml_lines,
                            sprintf('%s    <gating:PolygonGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Hairline" userDefined="1">', 
@@ -2509,7 +2539,7 @@ emit_transform_xml <- function(type, channel, transform_obj, atr_tr, data_range,
            return(character(0))
          }
   )
-
+  
   sprintf('%s<transforms:%s %s >\n%s  <data-type:parameter data-type:name="%s"/>\n%s</transforms:%s >',
           indent, xml_encode(type), xml_encode(param_str), indent,
           xml_encode(channel), indent, xml_encode(type))
@@ -2543,11 +2573,11 @@ derive_cytometer_attrs <- function(fcs_keywords) {
     homepage = "workspaces-and-samples/flowjo-and-your-cytometer/ws-instrumentation/",
     icon = "generic.png"
   )
-
+  
   if (is.null(fcs_keywords) || length(fcs_keywords) == 0) {
     return(attrs)
   }
-
+  
   cyt_val <- tryCatch(fcs_keywords[["$CYT"]], error = function(e) NULL) %||%
     tryCatch(fcs_keywords[["CREATOR"]], error = function(e) NULL) %||% ""
   if (!is.null(cyt_val) && nzchar(cyt_val)) {
@@ -2566,6 +2596,118 @@ derive_cytometer_attrs <- function(fcs_keywords) {
       attrs$widthBasis <- "-100"
     }
   }
-
+  
   attrs
 }
+
+#' Write FCS Files from a GatingSet to a Directory
+#'
+#' Copies (or re-exports) the FCS files backing a GatingSet to \code{target_dir}.
+#' When the original file is accessible on disk it is copied verbatim so that
+#' all acquisition keywords are preserved exactly.  If the original cannot be
+#' found, the flowFrame is extracted from the GatingSet with inverse transforms
+#' applied and written as a new FCS file.
+#'
+#' @param gating_set GatingSet object.
+#' @param target_dir Destination directory (must already exist).
+#' @param overwrite Logical. \code{FALSE} (default) stops if any destination
+#'   file already exists; \code{TRUE} replaces existing files after a warning.
+#' @return Invisible character vector of file paths written successfully.
+#' @keywords internal
+write_fcs_files_to_dir <- function(gating_set, target_dir, overwrite = FALSE) {
+  
+  sample_names <- flowWorkspace::sampleNames(gating_set)
+  
+  fcs_info <- lapply(sample_names, function(sn) {
+    gh  <- gating_set[[sn]]
+    kw  <- tryCatch(flowCore::keyword(gh), error = function(e) list())
+    
+    # $FIL is the authoritative FCS filename keyword – use it for the
+    # destination basename, matching what extract_samples_from_gatingset_v10
+    # does.  Fall back to FILENAME (full path) and finally to the sample name.
+    fil_kw        <- kw[["$FIL"]]      %||% NA_character_
+    filename_kw   <- kw[["FILENAME"]]  %||% NA_character_
+    
+    orig_basename <- if (!is.na(fil_kw) && nzchar(fil_kw)) {
+      basename(fil_kw)
+    } else if (!is.na(filename_kw) && nzchar(filename_kw)) {
+      basename(filename_kw)
+    } else {
+      paste0(sn, ".fcs")          # sn is already "foo.fcs" from sampleNames
+    }
+    
+    # The original file path (for verbatim copy, if it exists)
+    orig_path <- if (!is.na(filename_kw) && nzchar(filename_kw)) {
+      filename_kw
+    } else {
+      NA_character_
+    }
+    
+    list(
+      sample_name   = sn,
+      orig_path     = orig_path,
+      orig_basename = orig_basename,
+      dest          = file.path(target_dir, orig_basename)
+    )
+  })
+  
+  dest_paths    <- vapply(fcs_info, `[[`, character(1), "dest")
+  already_exist <- dest_paths[
+    file.exists(dest_paths) &
+      !mapply(function(orig, dest) {
+        !is.na(orig) && file.exists(orig) &&
+          normalizePath(orig) == normalizePath(dest)
+      }, vapply(fcs_info, `[[`, character(1), "orig_path"), dest_paths)
+  ]
+  
+  if (length(already_exist) > 0L && !overwrite) {
+    stop(
+      length(already_exist), " FCS file(s) already exist in '", target_dir, "'.\n",
+      "  Set overwrite = TRUE to replace them, or choose a different fcs_root.\n",
+      "  Conflicting file(s): ", paste(basename(already_exist), collapse = ", ")
+    )
+  }
+  if (length(already_exist) > 0L) {
+    warning(
+      length(already_exist), " existing FCS file(s) will be overwritten in: ",
+      target_dir
+    )
+  }
+  
+  written <- character(0)
+  for (info in fcs_info) {
+    tryCatch({
+      if (!is.na(info$orig_path) && file.exists(info$orig_path)) {
+        # Skip verbatim copy when the file is already in the right place
+        if (normalizePath(info$orig_path) != normalizePath(info$dest)) {
+          file.copy(info$orig_path, info$dest, overwrite = TRUE)
+          message("  Copied  FCS: ", info$orig_basename)
+        } else {
+          message("  Skipped FCS (already in place): ", info$orig_basename)
+        }
+      } else {
+        gh <- gating_set[[info$sample_name]]
+        fr <- flowWorkspace::gh_pop_get_data(gh, "root")
+        inv_trans <- flowWorkspace::gh_get_transformations(gh, inverse = TRUE)
+        if (length(inv_trans) > 0L) {
+          valid_channels <- intersect(names(inv_trans), flowCore::colnames(fr))
+          if (length(valid_channels) > 0L) {
+            tl <- flowCore::transformList(valid_channels, inv_trans[valid_channels])
+            fr <- flowCore::transform(fr, tl)
+          }
+        }
+        flowCore::write.FCS(fr, filename = info$dest)
+        message("  Exported FCS: ", info$orig_basename)
+      }
+      written <- c(written, info$dest)
+    }, error = function(e) {
+      warning("Failed to write FCS for sample '", info$sample_name, "': ", e$message)
+    })
+  }
+  
+  message("Wrote ", length(written), " / ", length(fcs_info),
+          " FCS file(s) to: ", target_dir)
+  invisible(written)
+}
+
+

@@ -25,6 +25,51 @@
 #' @importFrom flowWorkspace gs_pop_add gs_get_pop_paths gs_pop_get_gate recompute markernames
 NULL
 
+#' Sanitize Population Name for flowWorkspace
+#'
+#' flowWorkspace uses '/' as the path separator in population paths.  Population
+#' names imported from FlowJo may contain '/' (e.g. "CD45, l/d subset"), which
+#' causes flowWorkspace to rewrite them inconsistently.  This helper normalizes
+#' such names consistently before nodes are added to a GatingSet.
+#'
+#' @param name Character vector or list of population names.
+#' @return Sanitized name of the same structure as the input.
+#' @keywords internal
+sanitize_population_name <- function(name) {
+  sanitize_one <- function(x) {
+    if (is.character(x)) {
+      gsub("/", ":", x, fixed = TRUE)
+    } else {
+      x
+    }
+  }
+
+  if (is.list(name)) {
+    lapply(name, sanitize_one)
+  } else {
+    sanitize_one(name)
+  }
+}
+
+#' Sanitize Path While Preserving flowWorkspace Separator
+#'
+#' Population paths use '/' as the separator, but individual population names may
+#' contain '/' which must be replaced by ':'.  This helper sanitizes only the
+#' name components, leaving the path separator '/' intact.
+#'
+#' @param path Character vector of path strings (e.g. "Ungated/Lymphocytes/CD45, l/d subset").
+#' @return Path strings with name-level '/' replaced by ':'.
+#' @keywords internal
+sanitize_path_with_separator <- function(path) {
+  if (is.null(path)) return(NULL)
+  # Split on the path separator, sanitize each component, then rejoin.
+  vapply(path, function(p) {
+    parts <- strsplit(p, "/", fixed = TRUE)[[1]]
+    parts <- sanitize_population_name(parts)
+    paste(parts, collapse = "/")
+  }, character(1))
+}
+
 #' Add Populations to GatingSet
 #'
 #' Adds population nodes and gates to GatingSet based on gating trees
@@ -383,11 +428,17 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
   } else {
     "Unnamed"
   }
+  # flowWorkspace uses '/' as the path separator, so population names containing
+  # '/' get rewritten inconsistently.  Sanitize once here so parent/child paths
+  # built later match the node names actually created in the GatingSet.
+  node_name <- sanitize_population_name(node_name)
   if (.pkgenv$verbose) message(node$type)
   # browser()
-  # Skip root node (already exists)
-  if (.pkgenv$verbose) message("parent: ", paste(parent, collapse = " : "),"\n")
-  if (parent[1] == "root" && (node_name[1] == "root" || node_name[1] == "Ungated")) {
+  # Skip root node (already exists).  The incoming parent may be a sanitized
+  # path (with '/' as path separator) or the literal string 'root'.
+  parent_sanitized <- if (identical(parent, "root")) parent else sanitize_path_with_separator(parent)
+  if (.pkgenv$verbose) message("parent: ", paste(parent_sanitized, collapse = " : "),"\n")
+  if (parent_sanitized[1] == "root" && (node_name[1] == "root" || node_name[1] == "Ungated")) {
     if (!is.null(node$children)) {
       for (child in node$children) {
         add_population_node(
@@ -537,7 +588,13 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
     # Recursively add children
     if (!is.null(node$children)) {
       for (child in node$children) {
-        child_parent <- paste0(parent, "/", node_name)
+        # Use the path stored in the tree when available; otherwise build it
+        # consistently from sanitized names.
+        child_parent <- if (!is.null(child$parent) && is.character(child$parent)) {
+          sanitize_population_name(child$parent)
+        } else {
+          paste0(parent, "/", node_name)
+        }
         add_population_node(
           gh = gh,
           node = child,
@@ -627,13 +684,19 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
       # Recursively add children
       if (!is.null(node$children)) {
         for (child in node$children) {
-          parent = sub("^[^/]+/", "", child$parent)
+          # child$parent is a full path built from sanitized names with '/' as the
+          # flowWorkspace separator.  Strip the leading "Ungated/" (or root) prefix
+          # so we get the parent path relative to the root of the GatingSet.
+          child_parent <- sub("^[^/]+/", "", child$parent)
+          # The result is already sanitized; call sanitize_population_name only to
+          # handle any stray name-level '/' that might remain.
+          child_parent <- sanitize_path_with_separator(child_parent)
           add_population_node(
             gh = gh,
             node = child,
             gates = gates,
             sample_uuid = sample_uuid,
-            parent = parent,
+            parent = child_parent,
             strip_comp_prefix = strip_comp_prefix,
             verbose = verbose,
             deferred = deferred

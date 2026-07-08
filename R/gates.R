@@ -218,6 +218,23 @@ display_to_raw <- function(display_coords, transform_spec, gate_resolution = NUL
     raw_coords <- trans_obj$inverse(display_coords)
     return(raw_coords)
 
+  } else if (trans_type == "Log") {
+
+    # FlowJo Log transform: display coords are log-scaled.
+    # Inverse: raw = 10^(display * numberDecades / vectorLength + decadesOffset - 1) - shift
+    decades_offset <- transform_spec$decadesOffset %||% 1
+    number_decades <- transform_spec$numberDecades %||% 4
+    shift          <- transform_spec$shift         %||% 0
+    vector_length  <- gate_resolution %||% transform_spec$vectorLength %||% 256
+
+    if (is.null(vector_length) || length(vector_length) == 0 || vector_length == 0) {
+      warning("Log transform has invalid vectorLength (", vector_length, "). Using 256.")
+      vector_length <- 256
+    }
+
+    raw_coords <- 10^(display_coords * number_decades / vector_length + decades_offset - 1) - shift
+    return(raw_coords)
+
   } else {
     warning("Unsupported transform type: ", trans_type, ". Returning coordinates as-is.")
     return(display_coords)
@@ -380,9 +397,9 @@ convert_ellipse_gate <- function(gate, pop_name, extend_val, extend_to, correct_
     a_display <- abs(diff(x_display)) / 2  # semi-major axis
     b_display <- abs(diff(y_display)) / 2  # semi-minor axis
     
-    # Get rotation angle
+    # Get rotation angle. FlowJo stores rotationAngle in degrees.
     angle <- gate$rotationAngle %||% 0
-    angle_rad <- angle * pi / 270
+    angle_rad <- angle * pi / 180
     
     # Build covariance matrix in display space
     cos_a <- cos(angle_rad)
