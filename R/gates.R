@@ -228,8 +228,6 @@ display_to_raw <- function(display_coords, transform_spec, gate_resolution = NUL
 
   } else if (trans_type == "Log") {
 
-    # FlowJo Log transform: display coords are log-scaled.
-    # Inverse: raw = 10^(display * numberDecades / vectorLength + decadesOffset - 1) - shift
     decades_offset <- transform_spec$decadesOffset %||% 1
     number_decades <- transform_spec$numberDecades %||% 4
     shift          <- transform_spec$shift         %||% 0
@@ -240,6 +238,18 @@ display_to_raw <- function(display_coords, transform_spec, gate_resolution = NUL
       vector_length <- 256
     }
 
+    if (isTRUE(use_transformed_coords)) {
+      # Data will be in transformed (display) space, but the scale applied to the
+      # data may differ from the gate's native gateResolution. Rescale the gate
+      # display coordinates to the transformation's vectorLength so they line up.
+      target_scale <- transform_spec$vectorLength %||% 256
+      source_scale <- gate_resolution %||% target_scale
+      scale_factor <- target_scale / source_scale
+      return(display_coords * scale_factor)
+    }
+
+    # FlowJo Log transform: display coords are log-scaled.
+    # Inverse: raw = 10^(display * numberDecades / vectorLength + decadesOffset - 1) - shift
     raw_coords <- 10^(display_coords * number_decades / vector_length + decades_offset - 1) - shift
     return(raw_coords)
 

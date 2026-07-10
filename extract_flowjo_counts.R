@@ -69,7 +69,8 @@ get_counts_from_gs <- function(gs, test_name, flowjo_path) {
   do.call(rbind, rows)
 }
 devtools::load_all()
-fj_path = flowjo_files[13]
+set_verbose(T)
+fj_path = flowjo_files[7]
 # Process every .flowjo file ---------------------------------------------------
 all_counts <- lapply(flowjo_files, function(fj_path) {
   test_name <- basename(dirname(fj_path))
@@ -117,11 +118,10 @@ all_counts <- lapply(flowjo_files, function(fj_path) {
 
   get_counts_from_gs(gs, test_name, fj_path)
 })
-testthat::set_max_fails(Inf)
-devtools::test()
+
 # Combine and write output -----------------------------------------------------
 all_counts <- do.call(rbind, all_counts)
-
+all_counts
 if (is.null(all_counts) || nrow(all_counts) == 0) {
   stop("No counts extracted.")
 }

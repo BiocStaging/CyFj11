@@ -1,7 +1,7 @@
 Package: CyFj11
 Type: Package
 Title: Parse and Extract Data from FlowJo v11 Workspace Files
-Version: 0.9.3
+Version: 0.99.0
 Authors@R: person("Bernd", "Jagla", email = "bernd.jagla@pasteur.fr", role = c("aut", "cre"))
 Description: Provides functions to parse FlowJo v11 workspace files (.flowjo) and extract gating information, populations, and associated FCS files. Includes utilities for exporting data to FlowJo v10 workspace format. The package enables bidirectional data flow between FlowJo and R/Bioconductor, facilitating reproducible analysis workflows.
 License: MIT + file LICENSE
