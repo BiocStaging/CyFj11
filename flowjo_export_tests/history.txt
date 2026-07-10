@@ -1,0 +1,1000 @@
+   47  23/03/26 15:06:09 cd CyFl11/
+   48  23/03/26 15:06:13 l
+   49  23/03/26 15:06:59 pwd
+   50  23/03/26 15:08:38 cd .sanpshot
+   51  23/03/26 15:08:44 cd .snapshot
+   52  23/03/26 15:08:46 l
+   53  23/03/26 15:09:33 find . -name population_plot_mi_slurm.sh
+   54  23/03/26 15:09:45 l
+   55  23/03/26 15:09:48 l *
+   56  23/03/26 15:09:57 l */*/population_plot_mi_slurm.sh
+   57  23/03/26 15:10:19 cp snap-projects_2026-02-19_22_00_00_UTC/export_approaches ..
+   58  23/03/26 15:10:37 cp -r snap-projects_2026-02-19_22_00_00_UTC/export_approaches ..
+   59  23/03/26 15:18:56 l /pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/
+   60  23/03/26 15:18:59 l /pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/analysis/MIV3.01.30.26
+   61  23/03/26 15:19:40 find  /pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/ -name MIV3.01.30.26
+   62  23/03/26 15:33:20 cd anal
+   63  23/03/26 15:33:22 l
+   64  23/03/26 15:33:24 pwd
+   65  23/03/26 15:33:27 cd ..
+   66  23/03/26 15:33:28 pwd
+   67  23/03/26 15:33:29 l
+   68  23/03/26 15:33:32 pwd
+   69  23/03/26 15:33:37 cd ..
+   70  23/03/26 15:33:43 find  /pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/ -name MIV3.01.30.26
+   71  23/03/26 15:40:02 cd analysis/
+   72  23/03/26 15:40:09 cd ./snapshot
+   73  23/03/26 15:40:16 cd .snapshot
+   74  23/03/26 15:40:18 l
+   75  23/03/26 15:40:33 l */MIV3.01.30.26
+   76  23/03/26 15:43:29 cp -R snap-projects_2026-03-22_21_00_00_UTC/MIV3.01.30.26 ..
+   77  23/03/26 15:43:39 pwd
+   78  23/03/26 15:43:44 l ..
+   79  23/03/26 15:44:54 pwd
+   80  23/03/26 15:45:29 cd /pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/analysis/
+   81  23/03/26 15:45:34 cd .snapshot
+   82  23/03/26 15:45:35 l
+   83  23/03/26 15:45:48 l ..
+   84  23/03/26 15:46:00 pwd
+   85  23/03/26 15:46:09 l */MIV3.01.30.26
+   86  23/03/26 15:46:28 pwd
+   87  23/03/26 15:46:54 cd /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/
+   88  23/03/26 15:46:55 l
+   89  23/03/26 15:47:00 l MIV3.01.30.26/
+   90  23/03/26 15:47:05 pwd
+   91  23/03/26 15:47:09 myquota 
+   92  23/03/26 15:49:21 l /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/Innate/Flowjo
+   93  23/03/26 15:49:46 l /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/Innate/Flowjo/*.pdf
+   94  23/03/26 15:59:54 rm /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/Innate/Flowjo/*.pdf
+   95  23/03/26 16:00:02 l /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/Innate/Flowjo/
+   96  23/03/26 16:00:11 l /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/Innate/Flowjo/*.csv
+   97  23/03/26 16:00:19 rm /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/Innate/Flowjo/*.csv
+   98  23/03/26 16:00:25 l /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/*/Flowjo/*.csv
+   99  23/03/26 16:00:34 rm /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/*/Flowjo/*.csv
+  100  23/03/26 16:00:43 l /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/*/Flowjo/*.pdf
+  101  23/03/26 16:00:51 rm /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/*/Flowjo/*.pdf
+  102  23/03/26 16:00:59 l /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/*/Flowjo/
+  103  23/03/26 17:04:30 pwd
+  104  23/03/26 17:04:32 l
+  105  23/03/26 17:04:36 l /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/*/Flowjo/
+  106  23/03/26 17:04:54 l /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/Innate/Flowjo/
+  107  23/03/26 17:05:00 cd /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/MIV3.01.30.26/Analysis/Innate/Flowjo/
+  108  23/03/26 17:05:13 cd .snapshot
+  109  23/03/26 17:05:14 l
+  110  23/03/26 17:05:16 l *
+  111  23/03/26 17:05:25 l */*.pdf
+  112  23/03/26 17:07:48 l
+  113  23/03/26 17:07:56 l big_catalog_2026-03-23_15_40_05_UTC
+  114  23/03/26 17:07:59 l
+  115  23/03/26 17:43:57 pwd
+  116  23/03/26 17:44:18 cd /pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFl11/
+  117  23/03/26 17:44:19 l
+  118  23/03/26 17:55:11 pwd
+  119  23/03/26 17:55:17 cd export_approaches/
+  120  23/03/26 17:55:22 cd .snapshot
+  121  23/03/26 17:55:23 l
+  122  23/03/26 17:55:30 cd ..
+  123  23/03/26 17:55:33 pwd
+  124  23/03/26 17:55:36 l
+  125  23/03/26 17:55:38 cd ..
+  126  23/03/26 17:55:39 ls
+  127  23/03/26 17:55:41 cd ..
+  128  23/03/26 17:55:46 cd .snapshot
+  129  23/03/26 17:55:47 ls
+  130  23/03/26 17:55:49 l
+  131  23/03/26 17:55:53 l *
+  132  23/03/26 17:56:11 l */CyFl11/export_approaches
+  133  23/03/26 17:56:29 l */CyFl11/export_approaches/population_plot_mi.R
+  134  23/03/26 17:56:40 more snap-projects_2026-02-19_22_00_00_UTC/CyFl11/export_approaches/population_plot_mi.R
+  135  23/03/26 18:02:08 l /pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/MIV3/3.6.2025/Analysis/
+  136  23/03/26 18:02:17 l /pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/MIV3/3.6.2025/Analysis/Innate/Flowjo/
+  137  23/03/26 18:02:38 pwd
+  138  23/03/26 18:02:41 cd ..
+  139  23/03/26 18:02:45 pwd
+  140  23/03/26 18:02:49 cd CyFl11/
+  141  23/03/26 18:02:50 l
+  142  23/03/26 18:03:31 l export_approaches/population_plot_mi_slurm.sh
+  143  23/03/26 18:03:40 sbatch export_approaches/population_plot_mi_slurm.sh
+  144  23/03/26 18:03:43 squeue -ubernd
+  145  23/03/26 18:04:07 l
+  146  23/03/26 19:38:59 squeue -ubernd
+  147  24/03/26 15:32:43 history
+  148  24/03/26 15:33:04 reportseff   --format=jobid%12,jobname%20,state,elapsed,cpueff,reqmem,memeff 14377266
+  149  24/03/26 15:33:13 reportseff   --format=jobid%12,jobname%20,state,elapsed,cpueff,reqmem,memeff 
+  150  24/03/26 15:35:55 reportseff   --format=jobid%12,jobname%20,state,elapsed,cpueff,reqmem,memeff --since=now-24hours
+  151  24/03/26 15:42:10 pwd
+  152  24/03/26 15:42:17 sbatch --array=1,40,88,251 --mem=64G
+  153  24/03/26 15:43:16 sbatch --array=1,40,88,251 --mem=64G export_approaches/population_plot_mi_slurm.sh
+  154  24/03/26 15:43:25 squeue -u bernd
+  155  24/03/26 17:11:22 scancel 32759430
+  156  24/03/26 17:11:26 squeue -u bernd
+  157  24/03/26 17:11:29 history
+  158  24/03/26 17:11:45 sbatch export_approaches/population_plot_mi_slurm.sh
+  159  24/03/26 17:11:48 squeue -u bernd
+  160  25/03/26 10:19:00 sbatch export_approaches/population_plot_mi_slurm.sh
+  161  25/03/26 10:19:02 squeue -u bernd
+  162  25/03/26 15:51:58 pwd
+  163  25/03/26 15:52:02 cd ..
+  164  25/03/26 15:52:04 cd analysis/
+  165  25/03/26 15:52:05 l
+  166  25/03/26 15:52:14 cd MIV3.01.30.26/
+  167  25/03/26 15:52:20 pwd
+  168  25/03/26 16:24:10 l /pasteur/helix/projects/
+  169  25/03/26 16:24:29 ls -l /pasteur/helix/projects/
+  170  31/03/26 13:28:28 pwd
+  171  13/04/26 21:38:03 history > history.0.txt
+  172  13/04/26 21:38:14 exit
+  173  12/04/26 11:15:50 cd /pasteur/helix/projects/scBiomarkers/programs/
+  174  12/04/26 11:15:51 l
+  175  12/04/26 11:16:54 pwd
+  176  12/04/26 11:16:58 l /pasteur/appa/homes/bernd/.mamba/envs/singleronAccura/bin
+  177  12/04/26 11:18:15 ln -s `pwd`/nextflow-23.10.0 /pasteur/appa/homes/bernd/.mamba/envs/singleronAccura/bin/nextflow
+  178  12/04/26 11:24:03 module av nextflow
+  179  12/04/26 11:25:27 rm /pasteur/appa/homes/bernd/.mamba/envs/singleronAccura/bin/nextflow
+  180  12/04/26 11:30:39 history
+  181  12/04/26 11:36:12 pwd
+  182  12/04/26 11:36:18 cd ../bernd/.nextflow/
+  183  12/04/26 11:36:19 l
+  184  12/04/26 11:36:21 cd plugins/
+  185  12/04/26 11:36:22 l
+  186  12/04/26 11:36:31 curl -L -o nf-schema-2.6.1.zip   https://github.com/nextflow-io/nf-schema/releases/download/2.6.1/nf-schema-2.6.1.zip
+  187  12/04/26 11:36:34 l
+  188  12/04/26 11:36:43 curl -L -o nf-core-utils-0.4.0.zip   https://github.com/nf-core/plugins/releases/download/nf-core-utils-0.4.0/nf-core-utils-0.4.0.zip
+  189  12/04/26 11:36:48 curl -L -o nf-fgbio-1.0.0.zip   https://github.com/nf-core/plugins/releases/download/nf-fgbio-1.0.0/nf-fgbio-1.0.0.zip
+  190  12/04/26 11:37:53 l
+  191  12/04/26 11:38:00 # Unzip all
+  192  12/04/26 11:38:00 unzip nf-schema-2.6.1.zip
+  193  12/04/26 11:38:00 unzip nf-core-utils-0.4.0.zip
+  194  12/04/26 11:38:01 unzip nf-fgbio-1.0.0.zip
+  195  12/04/26 11:38:03 l
+  196  12/04/26 11:38:13 unzip nf-schema-2.6.1.zip 
+  197  12/04/26 11:38:35 more nf-schema-2.6.1.zip
+  198  12/04/26 11:39:36 curl -L -o nf-fgbio-1.0.0.zip   https://github.com/nf-core/plugins/releases/download/nf-fgbio-1.0.0/nf-fgbio-1.0.0.zip
+  199  12/04/26 11:42:13 curl -L -o nf-fgbio-1.0.0.zip   https://github.com/fulcrumgenomics/nf-fgbio/releases/download/1.0.0/nf-fgbio-1.0.0.zip
+  200  12/04/26 11:42:59 l
+  201  12/04/26 11:43:06 unzip nf-fgbio-1.0.0.zip 
+  202  12/04/26 11:43:16 l
+  203  12/04/26 11:43:45 rm -r lib
+  204  12/04/26 11:43:50 rm -r classes/
+  205  12/04/26 11:43:55 rm -r META-INF/
+  206  12/04/26 11:44:58 unzip nf-fgbio-1.0.0.zip mkdir nf-fgbio-1.0.0
+  207  12/04/26 11:45:05 mkdir nf-fgbio-1.0.0
+  208  12/04/26 11:45:07 cd nf-fgbio-1.0.0
+  209  12/04/26 11:45:14 unzip ../nf-fgbio-1.0.0.zip 
+  210  12/04/26 11:45:49 l
+  211  12/04/26 11:45:50 cd ..
+  212  12/04/26 11:45:52 l
+  213  12/04/26 11:45:56 l nf-prov-1.2.2
+  214  12/04/26 11:46:11 mv nf-fgbio-1.0.0.zip nf-fgbio-1.0.0
+  215  12/04/26 11:46:12 l
+  216  12/04/26 11:48:08 curl -L https://registry.nextflow.io/api/v1/plugins/nf-schema/2.6.1/download/nf-schema-2.6.1.zip
+  217  12/04/26 11:48:21 curl -L https://registry.nextflow.io/api/v1/plugins/nf-schema/2.6.1/download/nf-schema-2.6.1.zip -o nf-schema-2.6.1.zip
+  218  12/04/26 11:49:42 wget https://registry.nextflow.io/api/v1/plugins/nf-schema/2.6.1/download/nf-schema-2.6.1.zip
+  219  12/04/26 11:49:45 l
+  220  12/04/26 11:50:27 mkdirwget https://registry.nextflow.io/api/v1/plugins/nf-core-utils/0.4.0/download/nf-core-utils-0.4.0.zip
+  221  12/04/26 11:50:30 wget https://registry.nextflow.io/api/v1/plugins/nf-core-utils/0.4.0/download/nf-core-utils-0.4.0.zip
+  222  12/04/26 11:50:32 l
+  223  12/04/26 11:50:55 unzip nf-core-utils-0.4.0.zip.1
+  224  12/04/26 11:50:57 l
+  225  12/04/26 11:51:08 rm -r lib classes
+  226  12/04/26 11:51:09 l
+  227  12/04/26 11:51:56 rm nf-core-utils-0.4.0.zip 
+  228  12/04/26 11:51:58 l
+  229  12/04/26 11:52:08 mkdir nf-schema-2.6.1
+  230  12/04/26 11:52:21 mkdir nf-core-utils-0.4.0.zip
+  231  12/04/26 11:52:24 l
+  232  12/04/26 11:52:27 mkdir nf-core-utils-0.4.0
+  233  12/04/26 11:52:35 rmdir nf-core-utils-0.4.0.zip
+  234  12/04/26 11:52:56 l
+  235  12/04/26 11:53:09 mv nf-schema-2.6.1.zip nf-schema-2.6.1
+  236  12/04/26 11:53:13 cd nf-schema-2.6.1
+  237  12/04/26 11:53:19 unzip nf-schema-2.6.1.zip 
+  238  12/04/26 11:53:22 l
+  239  12/04/26 11:53:24 cd ..
+  240  12/04/26 11:53:25 l
+  241  12/04/26 11:53:45 mv  nf-schema-2.6.1.zip.1 nf-core-utils-0.4.0/nf-core-utils-0.4.0.zip
+  242  12/04/26 11:53:49 c nf-core-utils-0.4.0
+  243  12/04/26 11:53:53 cd nf-core-utils-0.4.0
+  244  12/04/26 11:53:56 unzip nf-core-utils-0.4.0.zip 
+  245  12/04/26 11:54:32 l
+  246  12/04/26 11:54:34 cd ..
+  247  12/04/26 11:54:35 l
+  248  12/04/26 11:54:43 rm nf-core-utils-0.4.0.zip.1
+  249  12/04/26 11:54:46 l
+  250  12/04/26 12:08:46 pwd
+  251  12/04/26 12:09:00 ls *
+  252  12/04/26 12:11:17 cd /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/plugins
+  253  12/04/26 12:11:17 # Clean up nf-core-utils (likely missing META-INF)
+  254  12/04/26 12:11:17 cd nf-core-utils-0.4.0 && unzip -o nf-core-utils-0.4.0.zip && cd ..
+  255  12/04/26 12:11:18 cd nf-fgbio-1.0.0 && unzip -o nf-fgbio-1.0.0.zip && cd ..
+  256  12/04/26 12:11:19 cd nf-schema-2.6.1 && unzip -o nf-schema-2.6.1.zip && cd ..
+  257  12/04/26 12:11:20 # Remove zip files from inside directories (confuses plugin loader)
+  258  12/04/26 12:11:20 rm -f nf-core-utils-0.4.0/*.zip nf-fgbio-1.0.0/*.zip nf-schema-2.6.1/*.zip
+  259  12/04/26 12:11:20 # Verify structure
+  260  12/04/26 12:11:20 ls nf-core-utils-0.4.0/META-INF/
+  261  12/04/26 12:12:16 ls nf-fgbio-1.0.0/META-INF/
+  262  12/04/26 12:12:58 cd /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/plugins
+  263  12/04/26 12:12:58 # Clean up and properly extract nf-core-utils
+  264  12/04/26 12:12:58 cd nf-core-utils-0.4.0
+  265  12/04/26 12:12:58 unzip -o nf-core-utils-0.4.0.zip
+  266  12/04/26 12:12:58 # Move contents up if they were nested
+  267  12/04/26 12:12:58 if [ -d "nf-core-utils-0.4.0" ]; then mv nf-core-utils-0.4.0/* .; rmdir nf-core-utils-0.4.0; fi
+  268  12/04/26 12:12:58 cd ..
+  269  12/04/26 12:12:58 # Clean up and properly extract nf-fgbio  
+  270  12/04/26 12:12:58 cd nf-fgbio-1.0.0
+  271  12/04/26 12:12:58 unzip -o nf-fgbio-1.0.0.zip
+  272  12/04/26 12:12:58 if [ -d "nf-fgbio-1.0.0" ]; then mv nf-fgbio-1.0.0/* .; rmdir nf-fgbio-1.0.0; fi
+  273  12/04/26 12:12:58 cd ..
+  274  12/04/26 12:12:58 # Remove zip files (they confuse the plugin loader)
+  275  12/04/26 12:12:58 rm -f */*.zip
+  276  12/04/26 12:12:58 # Verify structure
+  277  12/04/26 12:12:58 ls nf-core-utils-0.4.0/META-INF/
+  278  12/04/26 12:12:58 ls nf-core-utils-0.4.0/classes/
+  279  12/04/26 12:12:59 ls nf-fgbio-1.0.0/META-INF/
+  280  12/04/26 12:14:21 wget https://registry.nextflow.io/api/v1/plugins/nf-core-utils/0.4.0/download/nf-core-utils-0.4.0.zip
+  281  12/04/26 12:14:25 l
+  282  12/04/26 12:14:41 l nf-core-utils-0.4.0
+  283  12/04/26 12:14:53 cp nf-core-utils-0.4.0.zip nf-core-utils-0.4.0
+  284  12/04/26 12:14:59 cd nf-core-utils-0.4.0
+  285  12/04/26 12:15:00 l
+  286  12/04/26 12:15:12 unzip nf-core-utils-0.4.0.zip
+  287  12/04/26 12:15:37 l
+  288  12/04/26 12:15:44 l classes/
+  289  12/04/26 12:17:43 mv classes/META-INF ./
+  290  12/04/26 12:17:43 mv classes/lib ./ 2>/dev/null || true
+  291  12/04/26 12:22:45 pwd
+  292  12/04/26 12:22:49 cd ..
+  293  12/04/26 12:22:50 l
+  294  12/04/26 12:22:56 wget https://registry.nextflow.io/api/v1/plugins/nf-core-utils/0.3.1/download/nf-core-utils-0.3.1.zip
+  295  12/04/26 12:22:58 l
+  296  12/04/26 12:23:21 mkdir nf-core-utils-0.3.1
+  297  12/04/26 12:23:35 mv nf-core-utils-0.3.1.zip nf-core-utils-0.3.1
+  298  12/04/26 12:23:39 cd nf-core-utils-0.3.1
+  299  12/04/26 12:23:48 unzip nf-core-utils-0.3.1.zip 
+  300  12/04/26 12:23:51 l
+  301  12/04/26 12:50:17 pwd
+  302  12/04/26 12:50:23 cd https://github.com/nextflow-io/nextflow/releases/download/v25.10.4/nextflow
+  303  12/04/26 12:50:33 cd /pasteur/helix/projects/scBiomarkers/programs/
+  304  12/04/26 12:50:43 wget https://github.com/nextflow-io/nextflow/releases/download/v25.10.4/nextflow
+  305  12/04/26 12:50:56 l
+  306  12/04/26 12:51:24 chmod +x nextflow
+  307  12/04/26 12:51:25 l
+  308  12/04/26 12:51:30 ./nextflow -v
+  309  12/04/26 12:52:14 module load graalvm/ce-java17-22.3.1
+  310  12/04/26 12:52:15 ./nextflow -v
+  311  12/04/26 12:52:37 l
+  312  12/04/26 12:53:06 ./nextflow info
+  313  12/04/26 12:53:30 nextflow self-update
+  314  12/04/26 12:53:36 ./nextflow self-update
+  315  12/04/26 12:54:11 echo $HOME
+  316  12/04/26 12:54:20 echo $PATH
+  317  12/04/26 13:15:39 pwd
+  318  12/04/26 13:15:57 wget https://github.com/nf-core/demo/archive/refs/tags/1.0.0.tar.gz   -O demo-1.0.0.tar.gz
+  319  12/04/26 13:16:00 l
+  320  12/04/26 13:16:09 tar xvfz demo-1.0.0.tar.gz 
+  321  12/04/26 13:16:21 mv demo-1.0.0 nf-core-demo
+  322  12/04/26 13:16:38 rm demo-1.0.0.tar.gz
+  323  12/04/26 13:16:44 ls -la nf-core-demo/
+  324  12/04/26 13:18:12 cd /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/plugins
+  325  12/04/26 13:18:13 l
+  326  12/04/26 13:18:28 cd  nf-core-utils-0.4.0
+  327  12/04/26 13:18:29 l
+  328  12/04/26 13:18:36 unzip nf-core-utils-0.4.0.zip 
+  329  12/04/26 13:18:43 l
+  330  12/04/26 13:32:57 pwd
+  331  12/04/26 13:33:08 cd ../../../
+  332  12/04/26 13:33:09 l
+  333  12/04/26 13:33:10 pwd
+  334  12/04/26 13:33:25 vi maestro.config
+  335  12/04/26 13:33:46 find . -name "*.config"
+  336  12/04/26 13:34:39 l
+  337  12/04/26 13:34:48 diff maestro.config .nextflow/maestro.config 
+  338  12/04/26 13:37:48 rm maestro.config 
+  339  12/04/26 13:37:53 vi maestro.config
+  340  12/04/26 13:38:11 l .nextflow/config
+  341  12/04/26 13:38:13 l
+  342  12/04/26 13:38:19 l .nextflow/
+  343  12/04/26 13:38:45 cp maestro.config .nextflow/config
+  344  12/04/26 13:39:19 l /pasteur/helix/projects/scBiomarkers/programs/sarek/conf/
+  345  12/04/26 13:39:27 cp maestro.config /pasteur/helix/projects/scBiomarkers/programs/sarek/conf/maestro.config
+  346  12/04/26 13:39:40 nextflow run nf-core/demo -profile normal,test --outdir test
+  347  12/04/26 13:44:47 cd /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/plugins/
+  348  12/04/26 13:44:48 l
+  349  12/04/26 13:44:53 pwd
+  350  12/04/26 13:45:05 wget https://github.com/nextflow-io/nf-schema/releases/download/2.6.1/nf-schema-2.6.1.zip
+  351  12/04/26 13:45:05 wget https://github.com/nf-core/plugins/releases/download/nf-core-utils-0.4.0/nf-core-utils-0.4.0.zip
+  352  12/04/26 13:45:06 wget https://github.com/nf-core/plugins/releases/download/nf-fgbio-1.0.0/nf-fgbio-1.0.0.zip
+  353  12/04/26 13:45:06 unzip -q *.zip
+  354  12/04/26 13:45:10 l
+  355  12/04/26 13:45:28 history |grep wget
+  356  12/04/26 13:45:40 wget https://registry.nextflow.io/api/v1/plugins/nf-core-utils/0.4.0/download/nf-core-utils-0.4.0.zip
+  357  12/04/26 13:45:42 l
+  358  12/04/26 13:46:02 wget https://registry.nextflow.io/api/v1/plugins/nf-schema/2.6.1/download/nf-schema-2.6.1.zip
+  359  12/04/26 13:46:36 history |grep wget |grep fgbio
+  360  12/04/26 13:46:43 wget https://github.com/nf-core/plugins/releases/download/nf-fgbio-1.0.0/nf-fgbio-1.0.0.zip
+  361  12/04/26 13:47:05 wget https://registry.nextflow.io/api/v1/plugins/nf-fgbio/1.0.1/download/nf-fgbio-1.0.1.zip
+  362  12/04/26 13:47:54 l
+  363  12/04/26 13:48:01 unzip *.zip
+  364  12/04/26 13:48:17 unzip nf-fgbio-1.0.1.zip
+  365  12/04/26 13:48:44 echo $NXF_OFFLINE
+  366  12/04/26 13:49:10 l
+  367  12/04/26 13:49:16 rm -r lib
+  368  12/04/26 13:49:20 rm -r classes/
+  369  12/04/26 13:49:23 l
+  370  12/04/26 13:49:29 unzip -q *.zip
+  371  12/04/26 13:49:40 l
+  372  12/04/26 13:50:21 unzip -q nf-fgbio-1.0.1.zip
+  373  12/04/26 13:50:24 l
+  374  12/04/26 13:51:41 rm -rf nf-core-utils-0.4.0 nf-fgbio-1.0.1 nf-schema-2.6.1
+  375  12/04/26 13:51:44 l
+  376  12/04/26 13:51:58 # Extract each creating the directory automatically
+  377  12/04/26 13:51:58 for zip in *.zip; do   dir="${zip%.zip}";   mkdir "$dir";   unzip -q "$zip" -d "$dir/";      if [ -d "$dir/$dir" ]; then     mv "$dir/$dir"/* "$dir/";     rmdir "$dir/$dir";   fi; done
+  378  12/04/26 13:52:41 l
+  379  12/04/26 14:20:50 pwd
+  380  12/04/26 14:20:51 l
+  381  12/04/26 14:20:52 cd ..
+  382  12/04/26 14:20:53 l
+  383  12/04/26 14:20:56 vi maestro.config 
+  384  12/04/26 14:28:33 pwd
+  385  12/04/26 14:28:53 vi /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/maestro.config
+  386  13/04/26 12:59:22 pwd
+  387  13/04/26 12:59:34 squeue -u bernd
+  388  13/04/26 15:54:34 pwd
+  389  13/04/26 15:54:38 cd ..
+  390  13/04/26 15:54:39 l
+  391  13/04/26 15:54:53 cd ../projects/
+  392  13/04/26 15:54:53 l
+  393  13/04/26 15:55:05 cd singleronAccuraScope/
+  394  13/04/26 15:55:06 l
+  395  13/04/26 15:55:08 cd humanMonocytes/
+  396  13/04/26 15:55:10 l
+  397  13/04/26 15:55:25 more analyze_undertermined.py 
+  398  13/04/26 15:55:56  l
+  399  13/04/26 15:55:57 [wd
+  400  13/04/26 15:55:59 pwd
+  401  13/04/26 15:56:03 l
+  402  13/04/26 15:56:16 rm ' '
+  403  13/04/26 15:56:21 rmdir ' '
+  404  13/04/26 15:56:41 cd ' '
+  405  13/04/26 15:56:42 l
+  406  13/04/26 15:57:00 l .git/config 
+  407  13/04/26 15:57:05 cat .git/config 
+  408  13/04/26 15:57:20 cd ..
+  409  13/04/26 15:57:25 rm -r ' '
+  410  13/04/26 15:57:33 rm -rf ' '
+  411  13/04/26 15:58:34 l
+  412  13/04/26 15:58:43 l analysis/
+  413  13/04/26 15:58:46 l analysis/outputs/
+  414  13/04/26 15:59:03 rm nf-schema-2.5.1.zip 
+  415  13/04/26 15:59:45 cp nextflow_environment_report_20260413_0922.txt ..
+  416  13/04/26 15:59:46 pwd
+  417  13/04/26 21:38:45 history > history.6.txt
+  418  13/04/26 21:38:47 exit
+  419  12/04/26 10:23:44 pwd
+  420  12/04/26 10:25:19 cd /pasteur/helix/projects/scBiomarkers/projects/singleronAccuraScope/
+  421  12/04/26 10:25:21 cd humanMonocytes/
+  422  12/04/26 10:25:22 l
+  423  12/04/26 10:27:28 module load bcl2fastq cellranger
+  424  12/04/26 10:27:28 module load graalvm/ce-java23-23.0.1 nextflow
+  425  12/04/26 10:27:28 module load Python/3.10.13
+  426  12/04/26 11:13:10 cd /pasteur/helix/projects/scBiomarkers/projects/singleronAccuraScope/humanMonocytes
+  427  12/04/26 11:13:10 PROJECT_PATH=/pasteur/helix/projects/scBiomarkers/projects/singleronAccuraScope/humanMonocytes/
+  428  12/04/26 11:13:10 SAMPLE_SHEET_PATH=${PROJECT_PATH}/singleIndexSampleSheet.csv
+  429  12/04/26 11:13:10 OUTPUT_DIR=${PROJECT_PATH}/analysis/outputs
+  430  12/04/26 11:13:10 FLOWCELL_DIR=${PROJECT_PATH}/260204_VH00505_553_AAH7YYTM5
+  431  12/04/26 11:13:10 INTEROP_DIR=./stats
+  432  12/04/26 11:13:10 RNA_DIR=hs_mono_RNA
+  433  12/04/26 11:13:10 DNA_DIR=hs_mono_DNA
+  434  12/04/26 11:14:03 export NXF_SINGULARITY_CACHEDIR=/pasteur/helix/projects/scBiomarkers/bernd/rapsodi/singularity/cache
+  435  12/04/26 11:14:03 export NXF_HOME=/pasteur/helix/projects/scBiomarkers/bernd/.nextflow
+  436  12/04/26 11:14:03 export NXF_PLUGINS_DIR=/pasteur/helix/projects/scBiomarkers/bernd/.nextflow/plugins
+  437  12/04/26 11:14:03 module load STAR/2.7.11a bcl2fastq/2.20.0  cellranger/9.0.0 graalvm/ce-java23-23.0.1 nextflow/24.10.3 apptainer/1.4.1
+  438  12/04/26 11:14:12 export PATH=$HOME/bin:$PATH 
+  439  12/04/26 11:14:12 export MAMBA_ROOT_PREFIX=$HOME/.mamba  
+  440  12/04/26 11:14:12 eval "$(micromamba shell hook -s posix)"
+  441  12/04/26 11:14:18 micromamba activate singleronAccura
+  442  12/04/26 11:16:36 echo $PATH
+  443  12/04/26 11:18:22 nextflow -v
+  444  12/04/26 11:19:18 module list
+  445  12/04/26 11:19:25 module av java
+  446  12/04/26 11:19:36 module av graalvm
+  447  12/04/26 11:20:47 # Should show 24.10.3 and Java 17 or 21
+  448  12/04/26 11:20:47 module unload graalvm/ce-java23-23.0.1
+  449  12/04/26 11:20:47 module load graalvm/ce-java17-22.3.1
+  450  12/04/26 11:20:48 echo "Java: $(java -version 2>&1 | head -1)"
+  451  12/04/26 11:20:58 echo "Nextflow: $(nextflow -v)"
+  452  12/04/26 11:21:25 nextflow -v
+  453  12/04/26 11:22:19 pwd
+  454  12/04/26 11:22:29 # Clean corrupted work from the failed 25.10.4 attempts
+  455  12/04/26 11:22:29 nextflow clean -f
+  456  12/04/26 11:22:30 # Run sarek (without -resume for clean start)
+  457  12/04/26 11:22:30 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -profile singularity   -bg
+  458  12/04/26 11:24:58 module load nextflow
+  459  12/04/26 11:25:02 nextflow -v
+  460  12/04/26 11:25:38 module list
+  461  12/04/26 11:25:49 module load nextflow
+  462  12/04/26 11:25:51 module list
+  463  12/04/26 11:25:58 nextflow -v
+  464  12/04/26 11:26:08 which nextflow
+  465  12/04/26 11:26:15 whereis nextflow
+  466  12/04/26 11:26:34 /opt/gensoft/exe/nextflow/24.10.3/scripts/nextflow -v
+  467  12/04/26 11:26:40 nextflow -v
+  468  12/04/26 11:32:03 hash -r
+  469  12/04/26 11:32:07 nextflow -v
+  470  12/04/26 11:32:16 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -profile singularity   -bg
+  471  12/04/26 11:33:07 export NXF_SINGULARITY_CACHEDIR=/pasteur/helix/projects/scBiomarkers/bernd/rapsodi/singularity/cache
+  472  12/04/26 11:33:07 export NXF_HOME=/pasteur/helix/projects/scBiomarkers/bernd/.nextflow
+  473  12/04/26 11:33:07 export NXF_PLUGINS_DIR=/pasteur/helix/projects/scBiomarkers/bernd/.nextflow/plugins
+  474  12/04/26 11:33:07 .
+  475  12/04/26 11:33:13 export PATH=$HOME/bin:$PATH 
+  476  12/04/26 11:33:13 export MAMBA_ROOT_PREFIX=$HOME/.mamba  
+  477  12/04/26 11:33:13 eval "$(micromamba shell hook -s posix)"
+  478  12/04/26 11:33:25 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -profile singularity   -bg
+  479  12/04/26 11:33:37 setenv
+  480  12/04/26 11:33:39 set
+  481  12/04/26 11:33:53 set |grep -i nxf
+  482  12/04/26 11:34:31 l /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/plugins
+  483  12/04/26 11:35:07 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -profile singularity   -bg
+  484  12/04/26 11:55:06 more .nextflow.log
+  485  12/04/26 12:17:55 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -profile singularity   -bg
+  486  12/04/26 12:47:45 nextflow info
+  487  12/04/26 12:51:47 module list
+  488  12/04/26 12:52:01 module unload nextflow
+  489  12/04/26 12:54:52 echo $PATH
+  490  12/04/26 12:55:07 l /pasteur/appa/homes/bernd/.mamba/envs/singleronAccura/bin
+  491  12/04/26 12:55:28 ln -s /pasteur/helix/projects/scBiomarkers/programs/nextflow /pasteur/appa/homes/bernd/.mamba/envs/singleronAccura/bin/nextflow
+  492  12/04/26 12:55:32 which  nextflow
+  493  12/04/26 12:55:39 nextflow info
+  494  12/04/26 12:56:44 pip
+  495  12/04/26 12:56:54 pip install --upgrade nf-core
+  496  12/04/26 12:59:48 nextflow run nf-core/demo -profile test,singularity --outdir testnextflow
+  497  12/04/26 13:13:14 pwd
+  498  12/04/26 13:13:59 l /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/
+  499  12/04/26 13:17:09 nextflow run /pasteur/helix/projects/scBiomarkers/programs/nf-core-demo   -profile test,singularity   --outdir /pasteur/helix/projects/scBiomarkers/bernd/demo_test   -bg
+  500  12/04/26 13:17:52 set |grep -i nxf
+  501  12/04/26 13:18:48 nextflow run /pasteur/helix/projects/scBiomarkers/programs/nf-core-demo   -profile test,singularity   --outdir /pasteur/helix/projects/scBiomarkers/bernd/demo_test   -bg
+  502  12/04/26 13:21:22 # On cluster
+  503  12/04/26 13:21:22 ls /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/plugins/
+  504  12/04/26 13:21:22 # Should see: nf-validation-1.1.3, nf-schema-2.6.1, etc.
+  505  12/04/26 13:21:22 # Check each has META-INF at top level
+  506  12/04/26 13:21:22 ls /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/plugins/*/META-INF/
+  507  12/04/26 13:21:59 module list
+  508  12/04/26 13:22:15 nextflow run /pasteur/helix/projects/scBiomarkers/programs/nf-core-demo   -profile test,singularity   --outdir /pasteur/helix/projects/scBiomarkers/bernd/demo_test   -bg
+  509  12/04/26 13:23:48 nextflow run /pasteur/helix/projects/scBiomarkers/programs/nf-core-demo   -profile test,apptainer   --outdir /pasteur/helix/projects/scBiomarkers/bernd/demo_test   -bg
+  510  12/04/26 13:24:21 l $NXF_HOME/config 
+  511  12/04/26 13:24:33 l $HOME/.nextflow/config
+  512  12/04/26 13:26:41 l /pasteur/appa/scratch/bernd/
+  513  12/04/26 13:27:11 mkdir /pasteur/appa/scratch/bernd/singularitycache
+  514  12/04/26 13:27:28 l /pasteur/helix/projects/scBiomarkers/bernd/.nextflow
+  515  12/04/26 13:28:18 echo $APPASCRATCH
+  516  12/04/26 13:28:46 echo $NXF_OFFLINE
+  517  12/04/26 13:28:54 export NXF_EXECUTOR=slurm
+  518  12/04/26 13:28:54 export NXF_OPTS="-Xms500M -Xmx4G"
+  519  12/04/26 13:28:54 export NXF_SINGULARITY_CACHEDIR=/pasteur/appa/scratch/bernd/singularitycache
+  520  12/04/26 13:28:54 export NXF_HOME=/pasteur/helix/projects/scBiomarkers/bernd/.nextflow
+  521  12/04/26 13:28:54 export NXF_PLUGINS_DIR=/pasteur/helix/projects/scBiomarkers/bernd/.nextflow/plugins
+  522  12/04/26 13:28:54 export NXF_OFFLINE=true
+  523  12/04/26 13:28:54 export NXF_EXECUTOR=slurm
+  524  12/04/26 13:28:54 export NXF_OPTS="-Xms500M -Xmx4G"
+  525  12/04/26 13:28:54 export NXF_SINGULARITY_CACHEDIR="$APPASCRATCH/$USER/work/nxf_singularity_cache"
+  526  12/04/26 13:28:54 export NXF_WORK="$APPASCRATCH/$USER/work/"
+  527  12/04/26 13:29:19 module load apptainer
+  528  12/04/26 13:29:34 module list
+  529  12/04/26 13:30:26 nextflow run /pasteur/helix/projects/scBiomarkers/programs/nf-core-demo   -profile maestro   --outdir /pasteur/helix/projects/scBiomarkers/bernd/demo_test   -bg
+  530  12/04/26 13:31:32 unset HTTP_PROXY https_proxy http_proxy HTTPS_PROXY
+  531  12/04/26 13:31:40 echo $NXF_EXECUTOR 
+  532  12/04/26 13:31:47 nextflow run  nf-core/demo -profile maestro --input /pasteur/appa/scratch/input.csv --outdir testflow
+  533  12/04/26 13:39:44 nextflow run nf-core/demo -profile normal,test --outdir test
+  534  12/04/26 13:39:58 export NXF_EXECUTOR=slurm
+  535  12/04/26 13:39:58 export NXF_OPTS="-Xms500M -Xmx4G"
+  536  12/04/26 13:39:58 export NXF_SINGULARITY_CACHEDIR=/pasteur/appa/scratch/bernd/singularitycache
+  537  12/04/26 13:39:58 export NXF_HOME=/pasteur/helix/projects/scBiomarkers/bernd/.nextflow
+  538  12/04/26 13:39:58 export NXF_PLUGINS_DIR=/pasteur/helix/projects/scBiomarkers/bernd/.nextflow/plugins
+  539  12/04/26 13:39:58 export NXF_OFFLINE=true
+  540  12/04/26 13:39:58 export NXF_EXECUTOR=slurm
+  541  12/04/26 13:39:58 export NXF_OPTS="-Xms500M -Xmx4G"
+  542  12/04/26 13:39:58 export NXF_SINGULARITY_CACHEDIR="$APPASCRATCH/$USER/work/nxf_singularity_cache"
+  543  12/04/26 13:39:58 export NXF_WORK="$APPASCRATCH/$USER/work/"
+  544  12/04/26 13:40:02 nextflow run nf-core/demo -profile normal,test --outdir test
+  545  12/04/26 13:41:05 # 1. WHICH NEXTFLOW IS ACTUALLY RUNNING
+  546  12/04/26 13:41:05 which nextflow
+  547  12/04/26 13:41:05 nextflow -v
+  548  12/04/26 13:41:05 readlink -f $(which nextflow)
+  549  12/04/26 13:41:05 # 2. JAVA VERSION
+  550  12/04/26 13:41:05 java -version 2>&1 | head -3
+  551  12/04/26 13:41:05 echo "JAVA_HOME=$JAVA_HOME"
+  552  12/04/26 13:41:05 # 3. MODULES CURRENTLY LOADED
+  553  12/04/26 13:41:05 module list 2>&1 | grep -E "nextflow|apptainer|singularity|graalvm"
+  554  12/04/26 13:41:06 # 4. CRITICAL ENVIRONMENT VARIABLES
+  555  12/04/26 13:41:06 echo "NXF_HOME=$NXF_HOME"
+  556  12/04/26 13:41:06 echo "NXF_PLUGINS_DIR=$NXF_PLUGINS_DIR"
+  557  12/04/26 13:41:06 echo "NXF_EXECUTOR=$NXF_EXECUTOR"
+  558  12/04/26 13:41:06 echo "NXF_OFFLINE=$NXF_OFFLINE"
+  559  12/04/26 13:41:06 # 5. PROXY SETTINGS (should be UNSET for Nextflow)
+  560  12/04/26 13:41:06 echo "HTTP_PROXY=$HTTP_PROXY"
+  561  12/04/26 13:41:06 echo "http_proxy=$http_proxy"
+  562  12/04/26 13:41:06 echo "HTTPS_PROXY=$HTTPS_PROXY"
+  563  12/04/26 13:41:06 # 6. PLUGIN DIRECTORY CONTENTS
+  564  12/04/26 13:41:06 ls -la $NXF_PLUGINS_DIR/ 2>/dev/null || ls -la ~/.nextflow/plugins/ 2>/dev/null || echo "No plugins found"
+  565  12/04/26 13:41:06 # 7. CONFIG FILES PRESENT
+  566  12/04/26 13:41:06 ls -la ~/.nextflow/config 2>/dev/null || echo "No ~/.nextflow/config"
+  567  12/04/26 13:41:06 ls -la ~/.nextflow/maestro.config 2>/dev/null || echo "No ~/.nextflow/maestro.config"
+  568  12/04/26 13:41:06 # 8. SAREK VERSION
+  569  12/04/26 13:41:06 head -20 /pasteur/helix/projects/scBiomarkers/programs/sarek/nextflow.config | grep -E "name|version|manifest"
+  570  12/04/26 13:41:06 cd /pasteur/helix/projects/scBiomarkers/programs/sarek && git describe --tags 2>/dev/null || git log --oneline -1
+  571  12/04/26 13:41:06 # 9. TEST IF APPTAINER WORKS
+  572  12/04/26 13:41:06 apptainer --version 2>/dev/null || singularity --version 2>/dev/null || echo "No container runtime"
+  573  12/04/26 13:41:06 # 10. NETWORK CONNECTIVITY (for plugin downloads)
+  574  12/04/26 13:41:13 curl -I https://github.com/nf-core/demo 2>&1 | head -5
+  575  12/04/26 13:42:03 unset NXF_OFFLINE
+  576  12/04/26 13:42:07 export NXF_OFFLINE=false
+  577  12/04/26 13:42:32 cd /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/plugins
+  578  12/04/26 13:42:32 # Remove old versions and corrupted structures
+  579  12/04/26 13:42:32 rm -rf nf-core-utils-0.3.1  # Old version
+  580  12/04/26 13:42:32 rm -rf nf-core-utils-0.4.0  # Will re-download cleanly
+  581  12/04/26 13:42:32 rm -rf nf-schema-2.5.1      # Old version
+  582  12/04/26 13:42:33 rm -rf nf-validation-1.1.3  # Old version (replaced by nf-schema)
+  583  12/04/26 13:42:33 # Keep only these (or remove all and let them re-download):
+  584  12/04/26 13:42:34 rm -rf *  # Nuclear option: start fresh
+  585  12/04/26 13:42:54 l ~/.nextflow
+  586  12/04/26 13:43:11 mkdir -p ~/.nextflow
+  587  12/04/26 13:43:11 cat > ~/.nextflow/config << 'EOF'
+  588  14/04/26 14:40:32 params {
+  589  14/04/26 14:40:32     config_profile_description = 'Institut Pasteur Maestro cluster profile'
+  590  14/04/26 14:40:32     config_profile_url         = 'https://research.pasteur.fr/en/equipment/maestro-compute-cluster/'
+  591  14/04/26 14:40:32     config_profile_contact     = 'ask-hpc@pasteur.fr'
+  592  14/04/26 14:40:32 }
+  593  14/04/26 14:40:32 singularity {
+  594  14/04/26 14:40:32     enabled    = true
+  595  14/04/26 14:40:32     autoMounts = true
+  596  14/04/26 14:40:32     runOptions = '--home $HOME:/home/$USER --bind /pasteur'
+  597  14/04/26 14:40:32     envWhitelist = 'SLURM_JOB_ID, SLURM_JOB_NODELIST, SLURM_TASKS_PER_NODE'
+  598  14/04/26 14:40:32 }
+  599  14/04/26 14:40:32 process {
+  600  14/04/26 14:40:32     withLabel:download {
+  601  14/04/26 14:40:32         executor = 'local'
+  602  14/04/26 14:40:32     }
+  603  14/04/26 14:40:32 }
+  604  14/04/26 14:40:32 profiles {
+  605  14/04/26 14:40:32     maestro {
+  606  14/04/26 14:40:32         process {
+  607  14/04/26 14:40:32             executor       = 'slurm'
+  608  14/04/26 14:40:32             scratch        = false
+  609  14/04/26 14:40:32             queue          = 'common'
+  610  14/04/26 14:40:32             queueSize      = 20
+  611  14/04/26 14:40:32             clusterOptions = '--qos=normal'
+  612  14/04/26 14:40:32             resourceLimits = [
+  613  14/04/26 14:40:32                 memory: 500.GB,
+  614  14/04/26 14:40:32                 cpus: 96,
+  615  14/04/26 14:40:32                 time: 24.h
+  616  14/04/26 14:40:32             ]
+  617  14/04/26 14:40:32         }
+  618  14/04/26 14:40:32         params {
+  619  14/04/26 14:40:32             max_memory = 500.GB
+  620  14/04/26 14:40:32             max_cpus   = 96
+  621  14/04/26 14:40:32             max_time   = 24.h
+  622  14/04/26 14:40:32         }
+  623  14/04/26 14:40:32     }
+  624  14/04/26 14:40:32     long {
+  625  14/04/26 14:40:32         process {
+  626  14/04/26 14:40:32             executor       = 'slurm'
+  627  14/04/26 14:40:32             scratch        = false
+  628  14/04/26 14:40:32             queue          = 'long'
+  629  14/04/26 14:40:32             queueSize      = 20
+  630  14/04/26 14:40:32             clusterOptions = '--qos=long -p long'
+  631  14/04/26 14:40:32             resourceLimits = [
+  632  14/04/26 14:40:32                 memory: 500.GB,
+  633  14/04/26 14:40:32                 cpus: 5,
+  634  14/04/26 14:40:32                 time: 8760.h
+  635  14/04/26 14:40:32             ]
+  636  14/04/26 14:40:32         }
+  637  14/04/26 14:40:32         params {
+  638  14/04/26 14:40:32             max_memory = 500.GB
+  639  14/04/26 14:40:32             max_cpus   = 5
+  640  14/04/26 14:40:32             max_time   = 8760.h
+  641  14/04/26 14:40:32         }
+  642  14/04/26 14:40:32     }
+  643  14/04/26 14:40:32 }
+  644  14/04/26 14:40:32 EOF
+  645  12/04/26 13:43:19 # Unset offline first!
+  646  12/04/26 13:43:19 unset NXF_OFFLINE
+  647  12/04/26 13:43:19 export NXF_OFFLINE=false
+  648  12/04/26 13:43:19 # Clean work from failed attempts
+  649  12/04/26 13:43:19 nextflow clean -f
+  650  12/04/26 13:43:20 # Run sarek (plugins will download automatically now that network works)
+  651  12/04/26 13:43:20 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -profile maestro   -bg
+  652  12/04/26 13:43:32 pwd
+  653  12/04/26 13:43:56 cd ../../../projects/singleronAccuraScope/humanMonocytes/
+  654  12/04/26 13:43:59 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -profile maestro   -bg
+  655  12/04/26 13:52:59 3
+  656  12/04/26 13:54:46 (singleronAccura) bash-4.4$ N E X T F L O W  ~  version 25.10.4
+  657  12/04/26 13:54:46 Unknown configuration profile: 'maestro'
+  658  12/04/26 13:54:57 export NXF_OFFLINE=‘true’
+  659  12/04/26 13:55:07 export NXF_OFFLINE=‘='true'
+  660  12/04/26 13:55:17 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -profile maestro   -bg
+  661  12/04/26 13:55:40 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -c /pasteur/helix/projects/scBiomarkers/.nextflow/maestro.config   -profile maestro   -bg
+  662  12/04/26 13:56:08 l /pasteur/helix/projects/scBiomarkers/.nextflow/maestro.config
+  663  12/04/26 13:56:18 l /pasteur/helix/projects/scBiomarkers/.nextflow/
+  664  12/04/26 13:56:24 l /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/
+  665  12/04/26 13:56:41 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -c /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/maestro.config   -profile maestro   -bg
+  666  12/04/26 13:57:04 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -c /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/maestro.config   -bg
+  667  12/04/26 14:35:51 more .nextflow.log
+  668  12/04/26 14:37:50  l
+  669  12/04/26 14:37:57 l .nextflow
+  670  12/04/26 14:38:13 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -c /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/maestro.config   -bg
+  671  12/04/26 14:41:03 find . -name .command.run
+  672  12/04/26 14:41:24 more ./work/08/b46f4d61bf6f2dbbc0ce32673bfec9/.command.run
+  673  12/04/26 14:42:40 more .nextflow.log
+  674  12/04/26 14:43:54 l /pasteur/appa/scratch/bernd/work/8c/627df329072de584d58597fc3eefde
+  675  12/04/26 14:44:06 more  /pasteur/appa/scratch/bernd/work/8c/627df329072de584d58597fc3eefde/.command.err 
+  676  12/04/26 14:44:52 pwd
+  677  12/04/26 14:45:07 cat /pasteur/appa/scratch/bernd/work/8c/627df329072de584d58597fc3eefde/*
+  678  12/04/26 14:45:21  l
+  679  12/04/26 14:45:27 less /pasteur/appa/scratch/bernd/work/8c/627df329072de584d58597fc3eefde/*
+  680  12/04/26 14:45:37 less /pasteur/appa/scratch/bernd/work/8c/627df329072de584d58597fc3eefde/.*
+  681  12/04/26 14:45:53 more /pasteur/appa/scratch/bernd/work/8c/627df329072de584d58597fc3eefde/.*
+  682  12/04/26 14:48:00 sbatch /pasteur/appa/scratch/bernd/work/8c/627df329072de584d58597fc3eefde/.command.run 
+  683  12/04/26 14:48:05 squeue -ubernd
+  684  12/04/26 14:48:18 l
+  685  12/04/26 14:48:38 l /pasteur/appa/scratch/bernd/work/8c/627df329072de584d58597fc3eefde
+  686  12/04/26 14:48:50 more /pasteur/appa/scratch/bernd/work/8c/627df329072de584d58597fc3eefde/.*
+  687  12/04/26 14:51:36 grep -B5 -A5 "time limit is invalid" .nextflow.log | tail -20
+  688  12/04/26 14:51:54 l /pasteur/appa/scratch/bernd/work/b2/13b94cc272d8db52016292c650c1ea
+  689  12/04/26 14:52:07 less /pasteur/appa/scratch/bernd/work/b2/13b94cc272d8db52016292c650c1ea/.command.*
+  690  12/04/26 14:53:52 nextflow run /pasteur/helix/projects/scBiomarkers/programs/sarek   -params-file params.dna.yaml   -c /pasteur/helix/projects/scBiomarkers/bernd/.nextflow/maestro.config   -bg -profile long
+  691  12/04/26 15:02:39 squeue -ubernd
+  692  13/04/26 09:20:04 pwd
+  693  13/04/26 09:20:12 vi capture.conf.sh
+  694  13/04/26 09:20:22 bash capture.conf.sh 
+  695  13/04/26 09:22:36 bash capture.conf.sh > nextflow_environment_report_$(date +%Y%m%d_%H%M).txt
+  696  13/04/26 09:27:33 vi readme.md
+  697  13/04/26 10:01:49 which split_accura
+  698  13/04/26 10:06:07 l
+  699  13/04/26 10:14:51 split_accura   --fq1 ${OUTPUT_DIR}/hs_mono_RNA/rna_S2_L001_R1_001.fastq/gz   --fq2 ${OUTPUT_DIR}/hs_mono_RNA/rna_S2_L001_R2_001.fastq/gz   --well_name well_name_red.tsv   --library_type rna
+  700  13/04/26 10:15:21 split_accura   --fq1 ${OUTPUT_DIR}/hs_mono_RNA/rna_S2_L001_R1_001.fastq.gz   --fq2 ${OUTPUT_DIR}/hs_mono_RNA/rna_S2_L001_R2_001.fastq.gz   --well_name well_name_red.tsv   --library_type rna
+  701  13/04/26 10:16:00 srun --cpus-per-task=18 --mem=128000  -p utechcb   split_accura       --fq1 ${OUTPUT_DIR}/hs_mono_RNA/rna_S2_L001_R1_001.fastq.gz       --fq2 ${OUTPUT_DIR}/hs_mono_RNA/rna_S2_L001_R2_001.fastq.gz       --well_name well_name_red.tsv       --library_type rna
+  702  13/04/26 10:16:21 srun --cpus-per-task=18 --mem=64000  -p utechcb   split_accura       --fq1 ${OUTPUT_DIR}/hs_mono_RNA/rna_S2_L001_R1_001.fastq.gz       --fq2 ${OUTPUT_DIR}/hs_mono_RNA/rna_S2_L001_R2_001.fastq.gz       --well_name well_name_red.tsv       --library_type rna
+  703  13/04/26 11:02:07 nextflow run nf-core/rnaseq   -params-file params.yaml -profile singularity -bg -resume
+  704  13/04/26 15:44:16 squeue -ubernd
+  705  13/04/26 15:44:45 pwd
+  706  13/04/26 15:44:54 find . -name "*.sh"
+  707  13/04/26 15:48:22 find . -name "*.py"
+  708  13/04/26 15:48:44 ./NextFlow/bin/nextflow -v
+  709  13/04/26 15:48:55 which nextflow
+  710  13/04/26 15:49:00 nextflow -v
+  711  13/04/26 15:49:09 rm -r NextFlow
+  712  13/04/26 15:53:58 l
+  713  13/04/26 15:54:08 cd 260204_VH00505_553_AAH7YYTM5
+  714  13/04/26 15:54:09 l
+  715  13/04/26 15:54:16 cd ..
+  716  13/04/26 15:54:28 pwd
+  717  13/04/26 21:39:00 history > history.5.txt
+  718  13/04/26 21:39:12 exit
+  719  31/03/26 13:28:41 cd /pasteur/helix/projects/scBiomarkers/
+  720  31/03/26 13:28:44 cd projects/
+  721  31/03/26 13:28:45 l
+  722  31/03/26 13:28:53 cd ../bernd/
+  723  31/03/26 13:28:53 l
+  724  31/03/26 13:29:17 cd ..
+  725  31/03/26 13:29:19 cd projects/
+  726  31/03/26 13:29:20 l
+  727  31/03/26 13:29:28 l laura.piel/
+  728  31/03/26 13:29:36 cd ..
+  729  31/03/26 13:29:39 cd bernd/computerTransfer/
+  730  31/03/26 13:29:40 l
+  731  31/03/26 13:29:44 cd Downloads/
+  732  31/03/26 13:29:45 l
+  733  31/03/26 13:29:53 l *.tar*
+  734  03/04/26 09:39:12 pwd
+  735  03/04/26 09:39:17 cd ../..
+  736  03/04/26 09:39:24 cd cytometry/
+  737  03/04/26 09:39:24 l
+  738  03/04/26 09:39:53 cd ..
+  739  03/04/26 09:39:54 l
+  740  03/04/26 09:40:00 cd cytometry/
+  741  03/04/26 09:40:01 l
+  742  03/04/26 09:40:05 cd analysis/
+  743  03/04/26 09:40:06 l
+  744  03/04/26 09:40:17 cd MIV3.01.30.26/
+  745  03/04/26 09:40:18 l
+  746  03/04/26 09:41:12 l Analysis/
+  747  03/04/26 09:42:39 chgrp -R cifs-CBUtechsZeus .
+  748  12/04/26 00:58:13 pwd
+  749  12/04/26 10:08:54 hostname
+  750  12/04/26 10:23:29 pwd
+  751  13/04/26 12:59:47 l
+  752  13/04/26 15:44:11 pwd
+  753  13/04/26 21:39:40 (singleronAccura) bash-4.4$ pwd
+  754  13/04/26 21:39:40 /pasteur/helix/projects/scBiomarkers/projects/singleronAccuraScope/humanMonocytes
+  755  13/04/26 21:39:40 (singleronAccura) bash-4.4$ history > history.5.txt
+  756  13/04/26 21:39:47 l
+  757  13/04/26 21:40:05 mv history.0.txt history.4.txt
+  758  13/04/26 21:40:11 pwd
+  759  13/04/26 21:40:37 exit
+  760  16/03/26 16:15:47 cd /pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/
+  761  16/03/26 16:15:47 l
+  762  16/03/26 16:15:51 cd analysis/
+  763  16/03/26 16:15:51 l
+  764  16/03/26 16:16:02 du -sh MIV3.01.30.26
+  765  16/03/26 16:20:00 l  MIV3.01.30.26
+  766  16/03/26 16:20:07 l  MIV3.01.30.26/Analysis/
+  767  16/03/26 16:20:14 l  MIV3.01.30.26/Analysis/Adaptive/
+  768  16/03/26 16:20:23 l  MIV3.01.30.26/Analysis/Adaptive/FlowjoR/
+  769  16/03/26 16:20:34 l  MIV3.01.30.26/
+  770  16/03/26 16:47:39 pwd
+  771  16/03/26 16:47:41 l
+  772  16/03/26 16:47:50 pwd
+  773  16/03/26 16:48:55 l  MIV3.01.30.26
+  774  17/03/26 15:23:27 l
+  775  17/03/26 15:23:56 l /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis
+  776  17/03/26 15:24:10 mv MIV3.01.30.26 /pasteur/helix/projects/scBiomarkers/bernd/cytometry/analysis/
+  777  23/03/26 14:18:45 [wd
+  778  23/03/26 14:18:48 pwd
+  779  23/03/26 14:30:02 l
+  780  23/03/26 14:30:15 ls -d */s*/
+  781  23/03/26 14:30:25 ls -d */*/s*/
+  782  23/03/26 14:30:48 pwd
+  783  23/03/26 14:30:50 cd ..
+  784  23/03/26 14:30:51 l
+  785  23/03/26 14:30:59 cd ..
+  786  23/03/26 14:31:00 l
+  787  23/03/26 14:31:04 l 2share/
+  788  23/03/26 14:31:10 ls -d */s*/
+  789  23/03/26 14:31:13 ls -d */*/s*/
+  790  23/03/26 14:31:50 ls -d */*/*slu*/ 
+  791  23/03/26 14:31:54 ls -d */*slu*/ 
+  792  23/03/26 14:32:30 find . -type d -name '*slur*' ! -name '.'
+  793  23/03/26 15:04:54 find . -name population_plot_mi_slurm.sh
+  794  23/03/26 16:12:53 pwd
+  795  23/03/26 16:13:13 cd /pasteur/helix/projects/scBiomarkers/bernd/computerTransfer/
+  796  23/03/26 16:13:14 l
+  797  23/03/26 16:13:27 du -sh programs
+  798  23/03/26 17:04:21 pwd
+  799  13/04/26 21:40:52 history > history.5.txt
+  800  13/04/26 21:41:02 history > history.3.txt
+  801  13/04/26 21:41:18 rm history.5.txt
+  802  13/04/26 21:41:20 exit
+  803  10/03/26 16:53:04 cd /pasteur/helix/projects/BioIT/OLink/src
+  804  10/03/26 16:53:05 l
+  805  10/03/26 16:53:14 module av R
+  806  10/03/26 16:53:27 module load R/4.5.0
+  807  10/03/26 16:53:34 R_install_packages OlinkAnalyze
+  808  10/03/26 17:00:37 R_install_packages arrow
+  809  10/03/26 17:01:23 history
+  810  10/03/26 17:01:55 R_install_packages arrow
+  811  10/03/26 17:12:00 module load gcc/9.2.0 libxml2 libiconv freetype fontconfig harfbuzz fribidi curl libwebp
+  812  10/03/26 17:12:02 R_install_packages arrow
+  813  10/03/26 17:12:52 R_install_packages devtools 
+  814  10/03/26 17:13:23 R_install_packages arrow
+  815  10/03/26 17:14:20 module list
+  816  10/03/26 17:18:56 Hi, 
+  817  10/03/26 17:18:57 I am running into a problem when trying to install arrow:
+  818  10/03/26 17:18:57 (didn't find anything useful here: https://docs.pasteur.fr/spaces/FAQA/pages/74090380/How+to+install+R+packages+in+user+or+shared+directory)
+  819  14/04/26 14:40:32 I guess I am not using the correct C++? (see module list at the end)
+  820  14/04/26 14:40:32 ```
+  821  14/04/26 14:40:32 bash-4.4$ R_install_packages arrow
+  822  14/04/26 14:40:32 [1] "installing packages: arrow to /pasteur/appa/homes/bernd/R/x86_64-pc-linux-gnu-library/4.5"
+  823  14/04/26 14:40:32 trying URL 'http://cran.r-project.org/src/contrib/arrow_23.0.1.1.tar.gz'
+  824  14/04/26 14:40:32 Content type 'application/x-gzip' length 4365382 bytes (4.2 MB)
+  825  14/04/26 14:40:32 ==================================================
+  826  14/04/26 14:40:32 downloaded 4.2 MB
+  827  14/04/26 14:40:32 * installing *source* package 'arrow' ...
+  828  14/04/26 14:40:32 ** this is package 'arrow' version '23.0.1.1'
+  829  14/04/26 14:40:32 ** package 'arrow' successfully unpacked and MD5 sums checked
+  830  14/04/26 14:40:32 ** using staged installation
+  831  14/04/26 14:40:32 *** pkg-config found.
+  832  14/04/26 14:40:32 *** Found local C++ source: 'tools/cpp'
+  833  14/04/26 14:40:32 *** Building libarrow from source
+  834  14/04/26 14:40:32     For build options and troubleshooting, see the install guide:
+  835  14/04/26 14:40:32     https://arrow.apache.org/docs/r/articles/install.html
+  836  14/04/26 14:40:32 **** cmake 3.31.2
+  837  14/04/26 14:40:32 **** arrow
+  838  14/04/26 14:40:32 **** Error building Arrow C++.
+  839  14/04/26 14:40:32 **** Printing contents of build log because the build failed while ARROW_R_DEV was set to FALSE
+  840  14/04/26 14:40:32 ++ pwd
+  841  14/04/26 14:40:32 + : /pasteur/appa/scratch/bernd/Rtmp/RtmpxMWpIT/R.INSTALL166d0b2c99d419/arrow
+  842  14/04/26 14:40:32 + : tools/cpp
+  843  14/04/26 14:40:32 + : /pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f1473a00d9
+  844  14/04/26 14:40:32 + : libarrow/arrow-23.0.1
+  845  14/04/26 14:40:32 + : /pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f15d06b27d/cmake-3.31.2-linux-x86_64/bin/cmake
+  846  14/04/26 14:40:32 ++ cd tools/cpp
+  847  14/04/26 14:40:32 ++ pwd
+  848  14/04/26 14:40:32 + SOURCE_DIR=/pasteur/appa/scratch/bernd/Rtmp/RtmpxMWpIT/R.INSTALL166d0b2c99d419/arrow/tools/cpp
+  849  14/04/26 14:40:32 ++ mkdir -p libarrow/arrow-23.0.1
+  850  14/04/26 14:40:32 ++ cd libarrow/arrow-23.0.1
+  851  14/04/26 14:40:32 ++ pwd
+  852  14/04/26 14:40:32 + DEST_DIR=/pasteur/appa/scratch/bernd/Rtmp/RtmpxMWpIT/R.INSTALL166d0b2c99d419/arrow/libarrow/arrow-23.0.1
+  853  14/04/26 14:40:32 + '[' 2 = '' ']'
+  854  14/04/26 14:40:32 + '[' '' '!=' '' ']'
+  855  14/04/26 14:40:32 + '[' '' = false ']'
+  856  14/04/26 14:40:32 + ARROW_DEFAULT_PARAM=OFF
+  857  14/04/26 14:40:32 + case "$CXX" in
+  858  14/04/26 14:40:32 + mkdir -p /pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f1473a00d9
+  859  14/04/26 14:40:32 + pushd /pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f1473a00d9
+  860  14/04/26 14:40:32 /pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f1473a00d9 /pasteur/appa/scratch/bernd/Rtmp/RtmpxMWpIT/R.INSTALL166d0b2c99d419/arrow
+  861  14/04/26 14:40:32 + /pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f15d06b27d/cmake-3.31.2-linux-x86_64/bin/cmake -DARROW_BOOST_USE_SHARED=OFF -DARROW_SNAPPY_USE_SHARED=OFF -DARROW_BUILD_TESTS=OFF -DARROW_BUILD_SHARED=OFF -DARROW_BUILD_STATIC=ON -DARROW_ACERO=ON -DARROW_COMPUTE=ON -DARROW_CSV=ON -DARROW_DATASET=ON -DARROW_DEPENDENCY_SOURCE=AUTO -DAWSSDK_SOURCE= -DBoost_SOURCE= -Dlz4_SOURCE= -DARROW_FILESYSTEM=ON -DARROW_GCS=OFF -DARROW_JEMALLOC=OFF -DARROW_MIMALLOC=ON -DARROW_JSON=ON -DARROW_PARQUET=ON -DARROW_S3=OFF -DARROW_WITH_BROTLI=OFF -DARROW_WITH_BZ2=OFF -DARROW_WITH_LZ4=ON -DARROW_WITH_RE2=ON -DARROW_WITH_SNAPPY=ON -DARROW_WITH_UTF8PROC=ON -DARROW_WITH_ZLIB=OFF -DARROW_WITH_ZSTD=OFF -DARROW_VERBOSE_THIRDPARTY_BUILD=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_FIND_DEBUG_MODE=OFF -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_PREFIX=/pasteur/appa/scratch/bernd/Rtmp/RtmpxMWpIT/R.INSTALL166d0b2c99d419/arrow/libarrow/arrow-23.0.1 -DCMAKE_EXPORT_NO_PACKAGE_REGISTRY=ON -DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON -DCMAKE_UNITY_BUILD=OFF -DOPENSSL_ROOT_DIR=/usr -Dre2_SOURCE=BUNDLED -Dabsl_SOURCE=BUNDLED -Dxsimd_SOURCE= -Dzstd_SOURCE= -G 'Unix Makefiles' /pasteur/appa/scratch/bernd/Rtmp/RtmpxMWpIT/R.INSTALL166d0b2c99d419/arrow/tools/cpp
+  862  14/04/26 14:40:32 -- Building using CMake version: 3.31.2
+  863  14/04/26 14:40:32 -- The C compiler identification is GNU 9.2.0
+  864  14/04/26 14:40:32 -- The CXX compiler identification is unknown
+  865  14/04/26 14:40:32 -- Detecting C compiler ABI info
+  866  14/04/26 14:40:32 -- Detecting C compiler ABI info - done
+  867  14/04/26 14:40:32 -- Check for working C compiler: /opt/gensoft/exe/gcc/9.2.0/bin/gcc - skipped
+  868  14/04/26 14:40:32 -- Detecting C compile features
+  869  14/04/26 14:40:32 -- Detecting C compile features - done
+  870  14/04/26 14:40:32 -- Detecting CXX compiler ABI info
+  871  14/04/26 14:40:32 -- Detecting CXX compiler ABI info - failed
+  872  14/04/26 14:40:32 -- Check for working CXX compiler: /opt/gensoft/exe/gcc/9.2.0/bin/g++
+  873  14/04/26 14:40:32 -- Check for working CXX compiler: /opt/gensoft/exe/gcc/9.2.0/bin/g++ - broken
+  874  14/04/26 14:40:32 CMake Error at /pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f15d06b27d/cmake-3.31.2-linux-x86_64/share/cmake-3.31/Modules/CMakeTestCXXCompiler.cmake:73 (message):
+  875  14/04/26 14:40:32   The C++ compiler
+  876  14/04/26 14:40:32     "/opt/gensoft/exe/gcc/9.2.0/bin/g++"
+  877  14/04/26 14:40:32   is not able to compile a simple test program.
+  878  14/04/26 14:40:32   It fails with the following output:
+  879  14/04/26 14:40:32     Change Dir: '/pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f1473a00d9/CMakeFiles/CMakeScratch/TryCompile-K5Xw7j'
+  880  14/04/26 14:40:32     Run Build Command(s): /pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f15d06b27d/cmake-3.31.2-linux-x86_64/bin/cmake -E env VERBOSE=1 /bin/gmake -f Makefile cmTC_d79bf/fast
+  881  14/04/26 14:40:32     make  -f CMakeFiles/cmTC_d79bf.dir/build.make CMakeFiles/cmTC_d79bf.dir/build
+  882  14/04/26 14:40:32     make[1]: Entering directory '/pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f1473a00d9/CMakeFiles/CMakeScratch/TryCompile-K5Xw7j'
+  883  14/04/26 14:40:32     Building CXX object CMakeFiles/cmTC_d79bf.dir/testCXXCompiler.cxx.o
+  884  14/04/26 14:40:32     /opt/gensoft/exe/gcc/9.2.0/bin/g++  -std=gnu++20   -g -O2  -o CMakeFiles/cmTC_d79bf.dir/testCXXCompiler.cxx.o -c /pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f1473a00d9/CMakeFiles/CMakeScratch/TryCompile-K5Xw7j/testCXXCompiler.cxx
+  885  14/04/26 14:40:32     g++: error: unrecognized command line option '-std=gnu++20'; did you mean '-std=gnu++2a'?
+  886  14/04/26 14:40:32     make[1]: *** [CMakeFiles/cmTC_d79bf.dir/build.make:81: CMakeFiles/cmTC_d79bf.dir/testCXXCompiler.cxx.o] Error 1
+  887  14/04/26 14:40:32     make[1]: Leaving directory '/pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f1473a00d9/CMakeFiles/CMakeScratch/TryCompile-K5Xw7j'
+  888  14/04/26 14:40:32     gmake: *** [Makefile:133: cmTC_d79bf/fast] Error 2
+  889  14/04/26 14:40:32   CMake will not be able to correctly generate this project.
+  890  14/04/26 14:40:32 Call Stack (most recent call first):
+  891  14/04/26 14:40:32   CMakeLists.txt:120 (project)
+  892  14/04/26 14:40:32 -- Configuring incomplete, errors occurred!
+  893  14/04/26 14:40:32 **** Complete build log may still be present at /pasteur/appa/scratch/bernd/Rtmp/RtmpFPPldo/file1671f149968658.log
+  894  14/04/26 14:40:32 *** Failed to find Arrow C++ libraries.
+  895  14/04/26 14:40:32 ------------------------- NOTE ---------------------------
+  896  14/04/26 14:40:32 There was an issue preparing the Arrow C++ libraries.
+  897  14/04/26 14:40:32 See https://arrow.apache.org/docs/r/articles/install.html
+  898  14/04/26 14:40:32 ----------------------------------------------------------
+  899  14/04/26 14:40:32 Test compile error: g++: error: unrecognized command line option '-std=gnu++20'; did you mean '-std=gnu++2a'?
+  900  14/04/26 14:40:32 Failing compile command: /opt/gensoft/exe/gcc/9.2.0/bin/g++ -E -I/opt/gensoft/lib/harfbuzz/2.6.7/include/harfbuzz -I/opt/gensoft/lib/harfbuzz/2.6.7/include -I/opt/gensoft/lib/expat/2.4.1/include -I/opt/gensoft/lib/glib/2.58.3/include -I/opt/gensoft/lib/freetype/2.10.1/include/freetype2 -I/opt/gensoft/lib/freetype/2.10.1/include -I/opt/gensoft/lib/fontconfig/2.13.91/include -I/opt/gensoft/lib/pixman/0.38.4/include -I/opt/gensoft/lib/pango/1.42.4/include -I/opt/gensoft/lib/cairo/1.16.0/include -I/opt/gensoft/lib/libjpeg-turbo/2.0.4/include -I/opt/gensoft/lib/libtiff/4.1.0/include -I/opt/gensoft/lib/libpng/1.6.37/include -I/opt/gensoft/lib/xorg-libs/1.1/include -I/opt/gensoft/lib/tk/8.6.10/include -I/opt/gensoft/lib/tcl/8.6.10/include -I/opt/gensoft/exe/curl/7.68.0/include -I/opt/gensoft/lib/pcre2/10.34/include -I/opt/gensoft/lib/pcre/8.43/include -I/opt/gensoft/lib/xz/5.2.5/include -I/opt/gensoft/lib/zlib/1.2.11/include -I/opt/gensoft/lib/bzip2/1.0.6/include -I/opt/gensoft/lib/OpenBLAS/0.3.29/include -I/opt/gensoft/exe/gcc/12.3.0/include  -g -O2 -std=gnu++20 -xc++ -
+  901  14/04/26 14:40:32 PKG_CFLAGS=
+  902  14/04/26 14:40:32 PKG_LIBS=
+  903  14/04/26 14:40:32 ERROR: configuration failed for package 'arrow'
+  904  14/04/26 14:40:32 * removing '/pasteur/appa/homes/bernd/R/x86_64-pc-linux-gnu-library/4.5/arrow'
+  905  14/04/26 14:40:32 Warning: simpleWarning in install.packages(args, lib = user_lib, repos = repo): installation of package 'arrow' had non-zero exit status
+  906  14/04/26 14:40:32 bash-4.4$ module list
+  907  14/04/26 14:40:32 Currently Loaded Modulefiles:
+  908  14/04/26 14:40:32  1) R/4.5.0   2) gcc/9.2.0(default)   3) libxml2/2.9.10   4) libiconv/1.16   5) freetype/2.10.1   6) fontconfig/2.13.91   7) harfbuzz/2.6.7   8) fribidi/1.0.12   9) curl/7.68.0  10) libwebp/1.1.0
+  909  14/04/26 14:40:32 Key:
+  910  14/04/26 14:40:32 (symbolic-version)
+  911  14/04/26 14:40:32 bash-4.4$
+  912  10/03/26 17:19:11 module unload gcc
+  913  10/03/26 17:19:16 module av gcc
+  914  10/03/26 17:19:28 module load gcc/12.3.0
+  915  10/03/26 17:19:33 R_install_packages arrow
+  916  10/03/26 17:21:17 module list
+  917  11/03/26 18:44:29 pwd
+  918  13/04/26 21:41:55 history > history.2.txt
+  919  13/04/26 21:42:05 exit
+  920  03/03/26 13:16:53 cd /pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/analysis/MIv1/p01/
+  921  03/03/26 13:16:55 l
+  922  03/03/26 13:17:04 l _data
+  923  03/03/26 13:17:09 l _data/FCS/
+  924  03/03/26 13:17:52 l ../FCS_by_Week/
+  925  03/03/26 13:17:53 pwd
+  926  03/03/26 13:18:05 l
+  927  03/03/26 13:18:07 cd ..
+  928  03/03/26 13:18:08 l
+  929  03/03/26 13:18:12 l FCS_by_Week/
+  930  03/03/26 13:18:22 l FCS_by_Week/week_03/
+  931  03/03/26 13:18:35 l FCS_by_Week/week_03/panel1/
+  932  03/03/26 13:18:51 l FCS_by_Week/week*/panel1/
+  933  03/03/26 13:19:11 l FCS_by_Week/week*/panel1/d*.fcs
+  934  03/03/26 13:19:38 l FCS_by_Week/week*/panel1/d*.fcs|wc
+  935  03/03/26 13:29:40 pwd
+  936  03/03/26 13:29:43 cd p01/
+  937  03/03/26 13:29:46 l
+  938  03/03/26 13:29:53 mkdir allData
+  939  03/03/26 13:30:00 cd allData/
+  940  03/03/26 13:30:11 mkdir -p _data/FCS
+  941  03/03/26 13:33:47 l FCS_by_Week/week*/panel1/d*.fcs
+  942  03/03/26 13:33:54 l ../FCS_by_Week/week*/panel1/d*.fcs
+  943  03/03/26 13:33:56 pwd
+  944  03/03/26 13:34:04 l ../../FCS_by_Week/week*/panel1/d*.fcs
+  945  03/03/26 13:34:35 l ../../FCS_by_Week/week*/panel1/d*.fcs 
+  946  03/03/26 13:34:37 pwd
+  947  03/03/26 14:10:48 l
+  948  03/03/26 14:10:56 l _data/FCS/
+  949  03/03/26 14:11:09 l
+  950  03/03/26 14:11:11 l ..
+  951  03/03/26 14:11:21 l ../_data/
+  952  03/03/26 14:11:39 cat ../_data/FCS/channel_rename.csv 
+  953  03/03/26 14:12:08 cat ../_data/channel_rename.csv 
+  954  03/03/26 14:14:50 pwd
+  955  03/03/26 14:15:00 cat _data/FCS/channel_rename.csv 
+  956  03/03/26 14:38:41 l /pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/analysis/MIv1/p01//allData_data/FCS/channel_rename/
+  957  10/03/26 16:52:40 l /pasteur/helix/projects/LabExMI/USERS/bernd/cytometry/analysis/MIv1/p01//allData_data/FCS/channel_r
+  958  16/03/26 16:15:18 pwd
+  959  13/04/26 21:42:20 history > history.1.txt
+  960  13/04/26 21:42:58 exit
+  961  13/04/26 14:26:17 pwd
+  962  13/04/26 14:26:31 cd /pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFl11/
+  963  13/04/26 14:26:45 l ~/.ssh
+  964  13/04/26 14:27:22 cat ~/.ssh/id_ed25519_gitlab.pub
+  965  13/04/26 14:28:12 pwd
+  966  13/04/26 14:28:40 git push github main
+  967  13/04/26 21:43:07 history
+  968  13/04/26 21:43:15 history > history.8.txt
+  969  13/04/26 21:43:17 pwd
+  970  13/04/26 21:43:25 exit
+  971  13/04/26 21:44:05 echo "â â âââ"
+  972  13/04/26 21:44:14 exit
+  973  13/04/26 21:45:50 echo "â â âââ"
+  974  13/04/26 21:46:28 exit
+  975  14/04/26 14:40:36 squeue -ubernd
+  976  14/04/26 15:26:35 pwd
+  977  14/04/26 15:26:55 cd /pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFl11/
+  978  14/04/26 15:26:56 l
+  979  14/04/26 15:27:05 cd flowjo_export_tests/test02
+  980  14/04/26 15:27:06 l
+  981  14/04/26 15:27:15 diff test02_export.*
+  982  14/04/26 15:40:58 pwd
+  983  14/04/26 15:41:01 pip install xmldiff
+  984  14/04/26 15:41:08 xmldiff
+  985  14/04/26 15:41:13 module av xml
+  986  14/04/26 15:41:20 pip3 install xmldiff
+  987  14/04/26 15:42:31 module load apptainer
+  988  14/04/26 15:42:47 export PATH=$HOME/bin:$PATH 
+  989  14/04/26 15:42:47 export MAMBA_ROOT_PREFIX=$HOME/.mamba  
+  990  14/04/26 15:42:47 eval "$(micromamba shell hook -s posix)"
+  991  14/04/26 15:43:28 micromamba create -y -n cyfj11 -c conda-forge -c bioconda python=3.11 biopython numpy matplotlib pandas
+  992  14/04/26 15:44:47 micromamba activate cyfj11
+  993  14/04/26 15:44:53 pip install xmldiff
+  994  14/04/26 15:44:59 l
+  995  14/04/26 15:45:14 xmldiff test02_export.org.wsp test02_export.wsp 
+  996  14/04/26 15:46:29 history
+  997  14/04/26 15:59:22 pwd
+  998  14/04/26 15:59:24 l
+  999  14/04/26 15:59:35 more test02_export.org.11
+ 1000  14/04/26 15:59:40 l test02_export.org.11
+ 1001  14/04/26 15:59:48 l test02_export.org.11/platform-42537aa5-71c5-4f72-aadf-0a46a93fcbc4/
+ 1002  14/04/26 16:38:49 l
+ 1003  14/04/26 16:38:59 module av R
+ 1004  14/04/26 16:39:34 module load R/4.4.0
+ 1005  14/04/26 16:39:41 Rscript create_minimal_fj11.R 
+ 1006  14/04/26 16:43:21 squeue -ubernd
+ 1007  14/04/26 16:48:11 Rscript create_minimal_fj11_with_gate.R 
+ 1008  14/04/26 16:53:48 l
+ 1009  14/04/26 16:58:45  Rscript create_fj10_compatible.R
+ 1010  14/04/26 17:30:39 Rscript create_fj10_with_graph.R
+ 1011  14/04/26 19:32:25 Rscript create_fj10_complete.R
+ 1012  15/04/26 12:21:26 l
+ 1013  15/04/26 12:21:38 diff test02_fixed_mac_fj11.wsp test02_fixed_mac_fj11_v6.wsp
+ 1014  15/04/26 12:44:38 l
+ 1015  15/04/26 12:44:57 xmldiff test02_fixed_mac_fj11_v6.wsp test02_fixed_mac_fj11.wsp
+ 1016  15/04/26 14:38:05 l
+ 1017  15/04/26 14:38:09 pwd
+ 1018  15/04/26 14:38:18 cd /pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFl11/flowjo_export_tests/test02
+ 1019  15/04/26 14:38:20 l
+ 1020  15/04/26 15:13:35 pwd
+ 1021  15/04/26 15:13:37 cd ..
+ 1022  15/04/26 15:13:45 grep -R "/pasteur/appa/scratch/bernd/Rtmp/RtmpnCeAD3/fileb819b1649e6b5" *
+ 1023  15/04/26 15:13:56 grep -R "/pasteur/appa/scratch/bernd/Rtmp/" *
+ 1024  15/04/26 15:15:55 grep -R "/Volum" *
+ 1025  15/04/26 15:44:27 pwd
+ 1026  15/04/26 15:44:32 cd test02/
+ 1027  15/04/26 15:44:33 l
+ 1028  15/04/26 15:44:45 xmldiff test02_export.llm.wsp  test02_export.wsp
+ 1029  15/04/26 15:50:10 l
+ 1030  15/04/26 15:50:13 cd ..
+ 1031  15/04/26 15:50:14 l
+ 1032  15/04/26 15:50:16 bash update_paths.sh
+ 1033  15/04/26 15:52:00 cp test02/test02_export.wsp test02/test02_export.llm.wsp 
+ 1034  15/04/26 15:53:39 l
+ 1035  15/04/26 15:54:00 xmldiff test02/test02_export.wsp test02/test02_export.llm.wsp 
+ 1036  15/04/26 16:22:25 bash update_paths.sh
+ 1037  15/04/26 16:33:46 cp test02/test02_export.wsp test02/test02_export.llm.wsp 
+ 1038  15/04/26 16:33:48 xmldiff test02/test02_export.wsp test02/test02_export.llm.wsp 
+ 1039  15/04/26 16:37:21 bash update_paths.sh
+ 1040  15/04/26 16:37:24 cp test02/test02_export.wsp test02/test02_export.llm.wsp 
+ 1041  15/04/26 16:37:48 xmldiff test02/test02_export.wsp test02/test02_export.llm.wsp 
+ 1042  15/04/26 16:45:10 history |grep cyfj11
+ 1043  15/04/26 16:45:55 module list
+ 1044  15/04/26 16:48:20 l
+ 1045  15/04/26 16:48:34 find . -name "*history*"
+ 1046  15/04/26 16:48:42 history > history.txt

@@ -1,0 +1,12 @@
+Comparison,N,Exact,Within ≤0.3%,Max |diff|,Mean |%diff|
+"Export FJ10 | synthetic, all gates",35,28 (80%),7 (20%),14.00 cells,0.0222%
+Export FJ10 | synthetic core (excl. arcsinh+bool) ★,20,14 (70%),6 (30%),14.00 cells,0.0243%
+Export FJ10 | arcsinh gates only,5,4 (80%),1 (20%),8.70 cells,0.0583%
+Export FJ10 | boolean gates only,10,10 (100%),0 (0%),0.00 cells,0.0000%
+Export FJ10 | real-world test14,15,4 (27%),11 (73%),10.00 cells,0.0571%
+──────────────────────────────────────────────,,,,,
+"Import R    | synthetic, all gates",27,24 (89%),1 (4%),73.00 cells,0.0647%
+Import R    | synthetic core (excl. arcsinh+bool) ★,18,15 (83%),1 (6%),73.00 cells,0.0970%
+Import R    | arcsinh gates only,2,2 (100%),0 (0%),0.00 cells,0.0000%
+Import R    | boolean gates only,7,7 (100%),0 (0%),0.00 cells,0.0000%
+Import R    | real-world test14,15,1 (7%),7 (47%),90.00 cells,1.7195%

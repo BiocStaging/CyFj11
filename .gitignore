@@ -12,7 +12,6 @@
 man
 lib
 ..Rcheck
-flowjo_export_tests
 data/*
 docs
 /Meta/

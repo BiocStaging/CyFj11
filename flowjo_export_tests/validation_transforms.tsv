@@ -1,0 +1,64 @@
+# CyFj11 FlowJo Export Validation — Transformation Checks
+#
+# Instructions:
+#   For each row, open the corresponding testNN_export.wsp in FlowJo 10 and FlowJo 11.
+#   Check the axis appearance in any plot showing that channel.
+#   To verify parameters: right-click the axis → Edit → check the transform settings.
+#
+# What to look for per transform type:
+#   biexponential  axis shows slightly negative region left of zero, then expands log-like
+#                  FlowJo 10: called "Biexponential"; FlowJo 11: "Biexponential" or "Logicle"
+#                  Parameters to check: pos=4.5, neg=0, widthBasis=-10, maxRange=262144
+#
+#   log            axis shows standard log scale (no negative region)
+#                  FlowJo 10: called "Log"; decades should be ~5-6
+#                  Parameters to check: decades=6 (offset=1 shifts bottom decade by 1)
+#                  !! Expected roundtrip drift: gate position may shift slightly after export/import
+#
+#   arcsinh        axis similar to biexponential; negative values shown
+#                  FlowJo 10: may appear as "Arcsinh" or re-interpreted as Biexponential
+#                  FlowJo 11: "Arcsinh" or "Logicle"
+#                  Parameters to check: T=262144, M=4.5 (WSP encodes M=4 — see note), A=0
+#
+# !! NOTE on arcsinh M parameter:
+#   R exports M=4 in the WSP XML (fasinh W parameter), but the intended value is M=4.5.
+#   This is a known minor discrepancy. Record what FlowJo actually shows.
+#
+# Columns:
+#   test          test directory
+#   channel       fluorescence channel name
+#   transform     transform type exported by CyFj11
+#   exported_params  parameter values in the WSP file
+#   fj10_axis_ok  does the axis scale look correct in FlowJo 10?  Y / N / ?
+#   fj11_axis_ok  does the axis scale look correct in FlowJo 11?  Y / N / ?
+#   fj10_type_shown   what transform type does FlowJo 10 report for this channel?  <-- FILL IN
+#   fj11_type_shown   what transform type does FlowJo 11 report for this channel?  <-- FILL IN
+#   fj10_params   key params as shown in FlowJo 10 edit dialog  <-- FILL IN (e.g. "pos=4.5 neg=0 w=-10")
+#   fj11_params   key params as shown in FlowJo 11 edit dialog  <-- FILL IN
+#   notes         discrepancies, warnings, unexpected behaviour
+#
+test	channel	transform	exported_params	fj10_axis_ok	fj11_axis_ok	fj10_type_shown	fj11_type_shown	fj10_params	fj11_params	notes
+#
+# ── TEST 06: Biexponential ────────────────────────────────────────────────────
+test06	FITC-A	biexponential	pos=4.5 neg=0 widthBasis=-10 channelRange=4096 maxRange=262144
+#
+# ── TEST 07: Log ──────────────────────────────────────────────────────────────
+# Gate on PE-A spans raw values ~251–63096. Expect small count difference after roundtrip.
+test07	PE-A	log	decades=6 offset=1
+#
+# ── TEST 08: Arcsinh ──────────────────────────────────────────────────────────
+test08	APC-A	arcsinh	T=262144 M=4.5(intended)/4(WSP) A=0
+#
+# ── TEST 11: Biexponential + Arcsinh ─────────────────────────────────────────
+test11	FITC-A	biexponential	pos=4.5 neg=0 widthBasis=-10 channelRange=4096 maxRange=262144
+test11	APC-A	arcsinh	T=262144 M=4.5(intended)/4(WSP) A=0
+#
+# ── TEST 12: Biexponential + Log ─────────────────────────────────────────────
+# PE_hi gate may show roundtrip drift — record both R count and FlowJo count in validation_counts.tsv
+test12	FITC-A	biexponential	pos=4.5 neg=0 widthBasis=-10 channelRange=4096 maxRange=262144
+test12	PE-A	log	decades=6 offset=1
+#
+# ── TEST 13: Arcsinh × 3 channels ────────────────────────────────────────────
+test13	FITC-A	arcsinh	T=262144 M=4.5(intended)/4(WSP) A=0
+test13	PE-A	arcsinh	T=262144 M=4.5(intended)/4(WSP) A=0
+test13	APC-A	arcsinh	T=262144 M=4.5(intended)/4(WSP) A=0

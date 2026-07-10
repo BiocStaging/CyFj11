@@ -23,7 +23,6 @@ coverage.html
 docs
 file.*.wsp
 FJ10.wsp
-flowjo_export_tests
 inst/dev
 lib
 manuscript/

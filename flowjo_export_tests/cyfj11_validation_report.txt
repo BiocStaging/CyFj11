@@ -1,0 +1,369 @@
+══════════════════════════════════════════════════════════════════════ 
+  CyFj11 Validation Statistics
+  2026-07-10 09:47:26
+  Input : manuscript/validation_counts 2.xlsx  (sheet: 1)
+══════════════════════════════════════════════════════════════════════ 
+Reading: manuscript/validation_counts 2.xlsx   sheet: 1 
+  Raw sheet: 105 rows × 13 cols
+  Header row at xlsx row 24
+  Columns: test | gate_name | hierarchy | gate_type | channels | r_count | fj10_count | fj11_count | fl11_remake | read_fj11 | fj10_r_diff | fj11_r_diff | notes
+  Data rows extracted: 50
+  test14 rows labelled: 15
+
+Final dataset: 50 rows across 14 tests (test01, test02, test03, test04, test05, test06, test07, test08, test09, test10, test11, test12, test13, test14)
+  export_valid = 50  |  import_valid = 42
+  arcsinh = 5  |  boolean = 10  |  real-world = 15
+
+══════════════════════════════════════════════════════════════════════
+  DATA QUALITY FLAGS
+══════════════════════════════════════════════════════════════════════
+
+  ⚠  fj10_r_diff ≠ fj10_count − r_count  (17 rows):
+   test       gate_name r_count fj10_count fj10_r_diff computed
+ test04        singlets    7555       7569         -14       14
+ test05   ellipse_cells    7301       7314         -13       13
+ test11        singlets    9478       9474           4       -4
+ test12 scatter_ellipse    9803       9797           6       -6
+ test13            live    9939       9940          -1        1
+ test13    FITC_PE_gate    2983       2992          -9        9
+ test14     Lymphocytes   19212      19203           9       -9
+ test14        Singlets   18689      18680           9       -9
+ test14       Singlets2   18573      18563          10      -10
+ test14          Nk1_1+     923        922           1       -1
+ test14      NK T cells     535        534           1       -1
+ test14          NK1_1-   17458      17449           9       -9
+ test14         B cells    2459       2460          -1        1
+ test14         T cells   10745      10747          -2        2
+ test14      Ab T cells    9188       9190          -2        2
+ test14     CD4 T cells    7480       7485          -5        5
+ test14     CD8 T cells    1407       1404           3       -3
+
+══════════════════════════════════════════════════════════════════════
+  A. EXPORT  r_count  vs  fj10_count
+══════════════════════════════════════════════════════════════════════
+   export_flowjo10_workspace() → opened in FlowJo v10
+
+  ── A1  All gates, all tests 
+
+  ── A2  Synthetic (01–13), all gates 
+
+  ── A3  Synthetic core — excl. arcsinh + boolean  ★ PRIMARY 
+
+  ── A4  Arcsinh gates only (synthetic) 
+
+  ── A5  Boolean gates only (synthetic) 
+
+  ── A6  Real-world test14 
+
+  [Exp-All                         ] All gates, all tests  (n = 50)
+    Exact                  :  32 / 50  ( 64.0%)
+    Within 0 < d ≤ 0.3%  :  18 / 50  ( 36.0%)
+    Max  |diff|            : 14.00 cells
+    Mean   |%diff|        : 0.0327%
+    Median |%diff|        : 0.0000%
+
+  [Exp-Syn-All                     ] Synthetic all  (n = 35)
+    Exact                  :  28 / 35  ( 80.0%)
+    Within 0 < d ≤ 0.3%  :   7 / 35  ( 20.0%)
+    Max  |diff|            : 14.00 cells
+    Mean   |%diff|        : 0.0222%
+    Median |%diff|        : 0.0000%
+
+  [Exp-Core ★                    ] Synthetic core  (n = 20)
+    Exact                  :  14 / 20  ( 70.0%)
+    Within 0 < d ≤ 0.3%  :   6 / 20  ( 30.0%)
+    Max  |diff|            : 14.00 cells
+    Mean   |%diff|        : 0.0243%
+    Median |%diff|        : 0.0000%
+
+  [Exp-Arcsinh                     ] Arcsinh (synthetic)  (n = 5)
+    Exact                  :   4 / 5  ( 80.0%)
+    Within 0 < d ≤ 0.3%  :   1 / 5  ( 20.0%)
+    Max  |diff|            : 8.70 cells
+    Mean   |%diff|        : 0.0583%
+    Median |%diff|        : 0.0000%
+
+  [Exp-Boolean                     ] Boolean (synthetic)  (n = 10)
+    Exact                  :  10 / 10  (100.0%)
+    Within 0 < d ≤ 0.3%  :   0 / 10  (  0.0%)
+    Max  |diff|            : 0.00 cells
+    Mean   |%diff|        : 0.0000%
+    Median |%diff|        : 0.0000%
+
+  [Exp-Test14                      ] Real-world test14  (n = 15)
+    Exact                  :   4 / 15  ( 26.7%)
+    Within 0 < d ≤ 0.3%  :  11 / 15  ( 73.3%)
+    Max  |diff|            : 10.00 cells
+    Mean   |%diff|        : 0.0571%
+    Median |%diff|        : 0.0468%
+
+══════════════════════════════════════════════════════════════════════
+  B. IMPORT  fl11_remake  vs  read_fj11
+══════════════════════════════════════════════════════════════════════
+   fj11_to_gatingset() reads .flowjo → R
+   Ground truth = count displayed in FlowJo v11 (fl11_remake)
+
+  ── B1  All gates, all tests 
+
+  ── B2  Synthetic (01–13), all gates 
+
+  ── B3  Synthetic core — excl. arcsinh + boolean  ★ PRIMARY 
+
+  ── B4  Arcsinh gates only (synthetic) 
+
+  ── B5  Boolean gates only (synthetic) 
+
+  ── B6  Real-world test14 
+
+  [Imp-All                         ] All gates, all tests  (n = 42)
+    Exact                  :  25 / 42  ( 59.5%)
+    Within 0 < d ≤ 0.3%  :   8 / 42  ( 19.0%)
+    Max  |diff|            : 90.00 cells
+    Mean   |%diff|        : 0.6557%
+    Median |%diff|        : 0.0000%
+
+  [Imp-Syn-All                     ] Synthetic all  (n = 27)
+    Exact                  :  24 / 27  ( 88.9%)
+    Within 0 < d ≤ 0.3%  :   1 / 27  (  3.7%)
+    Max  |diff|            : 73.00 cells
+    Mean   |%diff|        : 0.0647%
+    Median |%diff|        : 0.0000%
+
+  [Imp-Core ★                    ] Synthetic core  (n = 18)
+    Exact                  :  15 / 18  ( 83.3%)
+    Within 0 < d ≤ 0.3%  :   1 / 18  (  5.6%)
+    Max  |diff|            : 73.00 cells
+    Mean   |%diff|        : 0.0970%
+    Median |%diff|        : 0.0000%
+
+  [Imp-Arcsinh                     ] Arcsinh (synthetic)  (n = 2)
+    Exact                  :   2 / 2  (100.0%)
+    Within 0 < d ≤ 0.3%  :   0 / 2  (  0.0%)
+    Max  |diff|            : 0.00 cells
+    Mean   |%diff|        : 0.0000%
+    Median |%diff|        : 0.0000%
+
+  [Imp-Boolean                     ] Boolean (synthetic)  (n = 7)
+    Exact                  :   7 / 7  (100.0%)
+    Within 0 < d ≤ 0.3%  :   0 / 7  (  0.0%)
+    Max  |diff|            : 0.00 cells
+    Mean   |%diff|        : 0.0000%
+    Median |%diff|        : 0.0000%
+
+  [Imp-Test14                      ] Real-world test14  (n = 15)
+    Exact                  :   1 / 15  (  6.7%)
+    Within 0 < d ≤ 0.3%  :   7 / 15  ( 46.7%)
+    Max  |diff|            : 90.00 cells
+    Mean   |%diff|        : 1.7195%
+    Median |%diff|        : 0.2770%
+
+══════════════════════════════════════════════════════════════════════
+  C. ACCEPTANCE  (threshold: mean |%%diff| ≤ 0.5%%)
+══════════════════════════════════════════════════════════════════════
+
+  Export:
+    Export core    : mean |%diff|                                 ✓ PASS  (0.0243% vs ≤ 0.50%)
+    Export arcsinh : mean |%diff|                                 ✓ PASS  (0.0583% vs ≤ 0.50%)
+    Export boolean : mean |%diff|                                 ✓ PASS  (0.0000% vs ≤ 0.50%)
+    Export test14  : mean |%diff|                                 ✓ PASS  (0.0571% vs ≤ 0.50%)
+
+  Import:
+    Import core    : mean |%diff|                                 ✓ PASS  (0.0970% vs ≤ 0.50%)
+    Import arcsinh : mean |%diff|                                 ✓ PASS  (0.0000% vs ≤ 0.50%)
+    Import boolean : mean |%diff|                                 ✓ PASS  (0.0000% vs ≤ 0.50%)
+    Import test14  : mean |%diff|                                 ✗ FAIL  (1.7195% vs ≤ 0.50%)
+
+══════════════════════════════════════════════════════════════════════
+  D. MANUSCRIPT TABLE 2  (copy-paste ready)
+══════════════════════════════════════════════════════════════════════
+  ★ = primary comparison; arcsinh and boolean excluded — see text
+
+                                          Comparison  N     Exact Within ≤0.3%
+                  Export FJ10 | synthetic, all gates 35  28 (80%)      7 (20%)
+ Export FJ10 | synthetic core (excl. arcsinh+bool) ★ 20  14 (70%)      6 (30%)
+                    Export FJ10 | arcsinh gates only  5   4 (80%)      1 (20%)
+                    Export FJ10 | boolean gates only 10 10 (100%)       0 (0%)
+                     Export FJ10 | real-world test14 15   4 (27%)     11 (73%)
+      ──────────────────────────────────────────────                          
+                  Import R    | synthetic, all gates 27  24 (89%)       1 (4%)
+ Import R    | synthetic core (excl. arcsinh+bool) ★ 18  15 (83%)       1 (6%)
+                    Import R    | arcsinh gates only  2  2 (100%)       0 (0%)
+                    Import R    | boolean gates only  7  7 (100%)       0 (0%)
+                     Import R    | real-world test14 15    1 (7%)      7 (47%)
+  Max |diff| Mean |%diff|
+ 14.00 cells      0.0222%
+ 14.00 cells      0.0243%
+  8.70 cells      0.0583%
+  0.00 cells      0.0000%
+ 10.00 cells      0.0571%
+                         
+ 73.00 cells      0.0647%
+ 73.00 cells      0.0970%
+  0.00 cells      0.0000%
+  0.00 cells      0.0000%
+ 90.00 cells      1.7195%
+
+══════════════════════════════════════════════════════════════════════
+  E. PER-GATE DETAIL
+══════════════════════════════════════════════════════════════════════
+   test       gate_name gate_type   category r_count fj10_count exp_diff
+ test01      All Events    (root)       core    5000       5000        0
+ test02      FSC_filter    rect1D       core    4776       4776        0
+ test03           cells    rect2D       core    4631       4631        0
+ test04        singlets      poly       core    7555       7569      -14
+ test05   ellipse_cells   ellipse       core    7301       7314      -13
+ test06        FITC_pos    rect1D       core    2403       2403        0
+ test07          PE_pos    rect1D       core    3198       3198        0
+ test08         APC_pos    rect1D    arcsinh    1606       1606        0
+ test09           cells    rect2D       core    9441       9441        0
+ test09        singlets    rect2D       core    8800       8800        0
+ test10        FSC_gate    rect1D       core    7554       7554        0
+ test10        SSC_gate    rect1D       core    7392       7392        0
+ test10            both  bool:AND    boolean    6979       6979        0
+ test10         bothNOT  bool:NOT    boolean    1021       1021        0
+ test10          bothOR   bool:OR    boolean    7967       7967        0
+ test11         APC_pos    rect1D    arcsinh    1930       1930        0
+ test11        FITC_pos    rect1D       core    2897       2897        0
+ test11           cells    rect2D       core    9696       9696        0
+ test11      double_pos  bool:AND    boolean    1928       1928        0
+ test11      either_pos   bool:OR    boolean    2899       2899        0
+ test11        singlets      poly       core    9478       9474        4
+ test12         FITC_hi    rect1D       core    2934       2934        0
+ test12           PE_hi    rect1D       core    3831       3831        0
+ test12           cells    rect2D       core    9765       9765        0
+ test12       double_hi  bool:AND    boolean    2879       2879        0
+ test12       either_hi   bool:OR    boolean    3886       3886        0
+ test12         neither  bool:NOT    boolean    5879       5879        0
+ test12 scatter_ellipse   ellipse       core    9803       9797        6
+ test13         APC_pos    rect1D    arcsinh    1888       1888        0
+ test13    FITC_PE_gate   ellipse    arcsinh    2983       2992       -9
+ test13        FITC_pos    rect1D    arcsinh    2838       2838        0
+ test13      double_pos  bool:AND    boolean    1887       1887        0
+ test13            live      poly       core    9939       9940       -1
+ test13      not_double  bool:NOT    boolean    7583       7583        0
+ test13        singlets    rect2D       core    9470       9470        0
+ test14      Ab T cells   Polygon real-world    9188       9190       -2
+ test14         B cells Rectangle real-world    2459       2460       -1
+ test14     CD4 T cells Rectangle real-world    7480       7485       -5
+ test14     CD8 T cells Rectangle real-world    1407       1404        3
+ test14      DN T cells Rectangle real-world     266        266        0
+ test14      DP T cells Rectangle real-world       6          6        0
+ test14      Gd T cells   Polygon real-world    1470       1470        0
+ test14     Lymphocytes      Poly real-world   19212      19203        9
+ test14      NK T cells Rectangle real-world     535        534        1
+ test14        NK cells Rectangle real-world     312        312        0
+ test14          NK1_1- Rectangle real-world   17458      17449        9
+ test14          Nk1_1+ Rectangle real-world     923        922        1
+ test14        Singlets Rectangle real-world   18689      18680        9
+ test14       Singlets2 Rectangle real-world   18573      18563       10
+ test14         T cells Rectangle real-world   10745      10747       -2
+     exp_res exp_pct fl11_remake read_fj11 imp_diff imp_res imp_pct
+   0.0000000   0.000        5000      5000        0       0   0.000
+   0.0000000   0.000        4776      4776        0       0   0.000
+   0.0000000   0.000        4631      4631        0       0   0.000
+ -14.0000000   0.185        7506      7555      -49      49   0.653
+ -13.0000000   0.178        7290      7217       73     -73   1.001
+   0.0000000   0.000        2396      2396        0       0   0.000
+   0.0000000   0.000        3198      3198        0       0   0.000
+   0.0000000   0.000        1599      1599        0       0   0.000
+   0.0000000   0.000        9441      9441        0       0   0.000
+   0.0000000   0.000        8800      8800        0       0   0.000
+   0.0000000   0.000        7558      7558        0       0   0.000
+   0.0000000   0.000        7392      7392        0       0   0.000
+   0.0000000   0.000        6983      6983        0       0   0.000
+   0.0000000   0.000        1017      1017        0       0   0.000
+   0.0000000   0.000        7967      7967        0       0   0.000
+   0.0000000   0.000        1930      1930        0       0   0.000
+   0.0000000   0.000        2897      2897        0       0   0.000
+   0.0000000   0.000        9696      9696        0       0   0.000
+   0.0000000   0.000        1928      1928        0       0   0.000
+   0.0000000   0.000        2899      2899        0       0   0.000
+   4.0000000   0.042        9478      9478        0       0   0.000
+   0.0000000   0.000        2934      2934        0       0   0.000
+   0.0000000   0.000        3831      3831        0       0   0.000
+   0.0000000   0.000        9765      9765        0       0   0.000
+   0.0000000   0.000        2879      2879        0       0   0.000
+   0.0000000   0.000        3886      3886        0       0   0.000
+   0.0000000   0.000        5934        NA       NA      NA      NA
+   6.0000000   0.061        9768      9759        9      -9   0.092
+   0.0000000   0.000          NA        NA       NA      NA      NA
+  -8.6998692   0.292          NA        NA       NA      NA      NA
+   0.0000000   0.000          NA        NA       NA      NA      NA
+   0.0000000   0.000          NA        NA       NA      NA      NA
+  -1.0000000   0.010          NA        NA       NA      NA      NA
+   0.0000000   0.000          NA        NA       NA      NA      NA
+   0.9528122   0.010          NA        NA       NA      NA      NA
+  -2.0000000   0.022        9195      9182       13     -13   0.141
+  -1.0000000   0.041        2461      2452        9      -9   0.366
+  -5.0000000   0.067        7482      7469       13     -13   0.174
+   3.0000000   0.213        1412      1413       -1       1   0.071
+   0.0000000   0.000         265       264        1      -1   0.377
+   0.0000000   0.000           6         7       -1       1  16.667
+   0.0000000   0.000        1470      1470        0       0   0.000
+   9.0000000   0.047       19132     19079       53     -53   0.277
+   1.0000000   0.187         536       552      -16      16   2.985
+   0.0000000   0.000         310       314       -4       4   1.290
+   9.0000000   0.052       17448     17358       90     -90   0.516
+   1.0000000   0.108         918       940      -22      22   2.397
+   9.0000000   0.048       18594     18545       49     -49   0.264
+  10.0000000   0.054       18466     18418       48     -48   0.260
+  -2.0000000   0.019       10746     10747       -1       1   0.009
+ fj11r_re_diff
+             0
+             0
+             0
+           -49
+            73
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+             0
+            NA
+             9
+            NA
+            NA
+            NA
+            NA
+            NA
+            NA
+            NA
+            13
+             9
+            13
+            -1
+             1
+            -1
+             0
+            53
+           -16
+            -4
+            90
+           -22
+            49
+            48
+            -1
+
+══════════════════════════════════════════════════════════════════════
+  F. OUTPUT FILES
+══════════════════════════════════════════════════════════════════════
+  manuscript/comparison.table.generated.md
+  cyfj11_validation_summary.csv
+  cyfj11_validation_detail.csv
+  cyfj11_validation_report.txt
