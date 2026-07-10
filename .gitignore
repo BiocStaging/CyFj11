@@ -20,3 +20,22 @@ slurm_output/
 .rooignore
 plans/
 inst/dev
+
+# Derived manuscript outputs (source is .md)
+manuscript/~$*.docx
+manuscript/Appendix_A.docx
+manuscript/Appendix_B.docx
+manuscript/Appendix_C.docx
+manuscript/comparison.table.generated.docx
+manuscript/CyFj11.docx
+manuscript/CyFj11.v1.docx
+manuscript/CyFj11.v2.docx
+manuscript/CyFj11.v3.docx
+manuscript/naCyFj11.v3.docx
+manuscript/naCyFj11.v3.pdf
+manuscript/Appendix_A.html
+manuscript/Appendix_B.html
+manuscript/Appendix_C.html
+manuscript/comparison.table.2.html
+manuscript/comparison.table.generated.html
+manuscript/comparison.table.html
