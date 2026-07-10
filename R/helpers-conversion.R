@@ -832,53 +832,14 @@ create_gatingset_from_cytoset <- function(cytoset,
   
   for (i in seq_len(min(length(sample_uuids), actual_sample_count))) {
     sample_uuid <- sample_uuids[i][[1]]
-    
-    cat("Processing sample", i, "of", actual_sample_count, "\n")
-    
+
+    if (.pkgenv$verbose) cat("Processing sample", i, "of", actual_sample_count, "\n")
+
     # Extract single cytoframe
     cf <- cytoset[[i]]
-    
-    
-    for (i in seq_len(min(length(sample_uuids), actual_sample_count))) {
-      sample_uuid <- sample_uuids[[i]]
-      
-      cat("=== Sample", i, "===\n")
-      cat("UUID:", sample_uuid, "\n")
-      cat("Compensation found:", !is.null(compensations[[sample_uuid]]), "\n")
-      cat("Keys in comp_list:", paste(names(compensations), collapse=", "), "\n")
-      cat("Colnames before comp:", paste(colnames(cytoset[[i]]), collapse=", "), "\n")
-      
-      if (!is.null(compensations[[sample_uuid]])) {
-        cat("Spillover matrix:\n")
-        print(compensations[[sample_uuid]])
-      }
-    }
+
     # Apply compensation (if available)
     if (!is.null(compensations[[sample_uuid]])) {
-        cat("=== COMPENSATION DIAGNOSTIC ===\n")
-        cat("sample_uuid class:", class(sample_uuid), "\n")
-        cat("sample_uuid value:", sample_uuid, "\n")
-        cat("comp keys:", paste(names(compensations), collapse="\n  "), "\n")
-        cat("comp found:", !is.null(compensations[[sample_uuid]]), "\n")
-        
-        # Safe extraction:
-        sample_uuid_str <- as.character(unlist(sample_uuids[i][[1]]))
-        cat("sample_uuid_str:", sample_uuid_str, "\n")
-        cat("comp found (str):", !is.null(compensations[[sample_uuid_str]]), "\n")
-        
-        sample_uuid <- sample_uuids[[i]]
-        
-        cat("=== Sample", i, "===\n")
-        cat("UUID:", sample_uuid, "\n")
-        cat("Compensation found:", !is.null(compensations[[sample_uuid]]), "\n")
-        cat("Keys in comp_list:", paste(names(compensations), collapse=", "), "\n")
-        cat("Colnames before comp:", paste(colnames(cytoset[[i]]), collapse=", "), "\n")
-        
-        if (!is.null(compensations[[sample_uuid]])) {
-          cat("Spillover matrix:\n")
-          print(compensations[[sample_uuid]])
-        }
-      
       # Map compensation channel names to cytoframe parameter names
       # This handles cases where flowCore sanitizes names (e.g., "/" -> "_")
       comp_mapped <- map_compensation_names(
@@ -937,7 +898,7 @@ create_gatingset_from_cytoset <- function(cytoset,
   }
   
   # Combine GatingHierarchy objects into a GatingSet
-  cat("Combining", length(gsList), "GatingHierarchy objects into GatingSet...\n")
+  if (.pkgenv$verbose) cat("Combining", length(gsList), "GatingHierarchy objects into GatingSet...\n")
   # this will permanately transformt the data and loose transformation information
   gs = merge_list_to_gs(gsList)
   
@@ -977,13 +938,6 @@ create_gatingset_from_cytoset <- function(cytoset,
         warning("Failed to set pData: ", e$message)
       })
     }
-  }
-  
-  # Verify transformations were applied
-  cat("\n=== Verification ===\n")
-  for (i in seq_len(actual_sample_count)) {
-    trans_check <- gh_get_transformations(gsList[[i]])
-    cat(sprintf("Sample %d: %d transformations applied\n", i, length(trans_check)))
   }
   
   # Add gates and populations

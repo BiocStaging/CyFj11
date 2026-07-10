@@ -142,13 +142,14 @@ adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) 
   # Get parameters from the gate
   gate_params <- flowCore::parameters(gate_obj)
 
-  # If the hierarchy has no stored transformations (e.g. because we keep the
-  # cytoframe raw and skip permanent transforms), fall back to the actual
-  # flowFrame column names so that "Comp-" prefixed gate parameters can still
-  # be mapped to the compensated/raw parameter names.
-  if (length(gh_param_names) == 0) {
-    gh_param_names <- colnames(flowWorkspace::gh_pop_get_data(gh, "root"))
-  }
+  # Linear transforms are filtered out before applying permanent transforms,
+  # so gh_get_transformations() only returns channels with non-linear transforms.
+  # Always include all flowFrame column names so that linear/scatter parameters
+  # (e.g. FSC-A) are available for matching gate parameters.
+  gh_param_names <- unique(c(
+    gh_param_names,
+    colnames(flowWorkspace::gh_pop_get_data(gh, "root"))
+  ))
 
   # Map gate parameter names to GatingSet parameter names
   # Gate params may have "Comp-" prefix or different sanitization
