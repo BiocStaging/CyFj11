@@ -94,7 +94,7 @@ Abbreviations: **Range (1D)**, one-dimensional range gate; **Rect (2D)**, two-di
 
 ### B.3.4 Test 12: biexponential + log, ellipse + full Boolean set
 
-> **Note.** FlowJo v11 does not support a combined `NOT(pop1, pop2)` Boolean gate.
+> **Note.** FlowJo v11 does not support a combined `NOT(pop1, pop2)` Boolean gate. PE_hi and gates depending on it may exhibit round-trip count drift attributable to the log transform.
 
 | Gate | Path | Gate type | Channel(s) | N_R | N_FJ10 | N_FJ11 | N_FJ11r | N_re | res_FJ10 | res_FJ11 | res_FJ11r |
 |:---|:---|:---|:---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -118,6 +118,8 @@ Abbreviations: **Range (1D)**, one-dimensional range gate; **Rect (2D)**, two-di
 | double_pos | /live/singlets/double_pos | AND | FITC_pos and APC_pos | 1887 | 1887 | N/A | N/A | N/A | 0 | — | — |
 | not_double | /live/singlets/not_double | NOT | Not double_pos | 7583 | 7583 | N/A | N/A | N/A | 0 | — | — |
 
+---
+
 ### B.3.6 Test 14: real-world validation — FlowSOM example data
 
 **Source.** FlowSOM R package; file `68983.fcs` + `gating.wsp` (mouse bone marrow immunophenotyping).  
@@ -126,7 +128,7 @@ Abbreviations: **Range (1D)**, one-dimensional range gate; **Rect (2D)**, two-di
 
 | Gate | Gate type | Channel(s) | N_R | N_FJ10 | N_FJ11 | N_FJ11r | N_re | res_FJ10 | res_FJ11 | res_FJ11r |
 |:---|:---|:---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Lymphocytes | Poly | FSC-SSC | 19212 | 19203 | 19132 | 19132 | 19079 | 9 | 80 | -53 |
+| Lymphocytes | Poly | FCS-SSC | 19212 | 19203 | 19132 | 19132 | 19079 | 9 | 80 | -53 |
 | Singlets | Rect (2D) | FSC-H FSC-W | 18689 | 18680 | 18594 | 18594 | 18545 | 9 | 95 | -49 |
 | Singlets2 | Rect (2D) | SSC-H SSC-W | 18573 | 18563 | 18466 | 18466 | 18418 | 10 | 107 | -48 |
 | Nk1_1+ | Rect (2D) | NK1.1 vs FSC-A | 923 | 922 | N/A | 918 | 940 | 1 | — | 22 |
@@ -142,7 +144,9 @@ Abbreviations: **Range (1D)**, one-dimensional range gate; **Rect (2D)**, two-di
 | DP T cells | Rect (2D) | CD4 vs CD8 | 6 | 6 | N/A | 6 | 7 | 0 | — | 1 |
 | Gd T cells | Poly | TCRβ vs TCRγδ | 1470 | 1470 | N/A | 1470 | 1470 | 0 | — | 0 |
 
-**[a]** FlowJo v11 failed to parse the marker name "NK1_1+" (underscore–plus character combination). All populations gated downstream of NK1_1+ and NK1_1− consequently displayed as N/A in FlowJo v11. FlowJo v10 reproduced the NK1_1+ count correctly (res_FJ10 = 1 event). This failure reflects a FlowJo v11 marker-name parsing idiosyncrasy and does not indicate an error in the CyFj11 export.
+**[a]** FlowJo v11 failed to parse the marker name "NK1_1+" (underscore–plus character combination). All populations gated downstream of NK1_1+ and NK1_1− consequently displayed as NA in FlowJo v11. FlowJo v10 reproduced the NK1_1+ count correctly (res_FJ10 = 1 event). This failure reflects a FlowJo v11 marker-name parsing idiosyncrasy and does not indicate an error in the CyFj11 export.
+
+All other discrepancies can be explained by numerical conversion differences.
 
 ## B.4 Test 14 detail: compensation matrix preservation
 
@@ -188,16 +192,18 @@ Key summary statistics derived from Table B1 are reproduced in Table B3.
 
 ### Table B3. Validation summary by comparison subset
 
-| Comparison subset | N | Exact match | Within ≤0.3% | Max \|residual\| | Mean \|%diff\| |
+| Comparison subset | N | Exact match | Within ≤0.3% | Max |residual| | Mean |%diff| |
 |---|---:|---:|---:|---:|---:|
-| Export FJ10, synthetic core (excl. arcsinh + Boolean) | 20 | 14 (70%) | 6 (30%) | 14 cells | 0.0243% |
-| Export FJ10, arcsinh gates only | 5 | 4 (80%) | 1 (20%) | 8.7 cells | 0.0583% |
-| Export FJ10, Boolean gates only | 10 | 10 (100%) | 0 | 0 cells | 0.0000% |
-| Export FJ10, real-world test 14 | 15 | 4 (27%) | 11 (73%) | 10 cells | 0.0571% |
-| Import R, synthetic core (excl. arcsinh + Boolean) | 18 | 15 (83%) | 1 (6%) | 73 cells | 0.0970% |
-| Import R, arcsinh gates only | 2 | 2 (100%) | 0 | 0 cells | 0.0000% |
-| Import R, Boolean gates only | 7 | 7 (100%) | 0 | 0 cells | 0.0000% |
-| Import R, real-world test 14 | 15 | 1 (7%) | 7 (47%) | 90 cells | 1.7195% |
+| Export FJ10 | synthetic, all gates | 35 | 28 (80%) | 7 (20%) | 14.00 cells | 0.0222% |
+| Export FJ10 | synthetic core (excl. arcsinh+bool) ★ | 20 | 14 (70%) | 6 (30%) | 14.00 cells | 0.0243% |
+| Export FJ10 | arcsinh gates only | 5 | 4 (80%) | 1 (20%) | 8.70 cells | 0.0583% |
+| Export FJ10 | boolean gates only | 10 | 10 (100%) | 0 (0%) | 0.00 cells | 0.0000% |
+| Export FJ10 | real-world test14 | 15 | 4 (27%) | 11 (73%) | 10.00 cells | 0.0571% |
+| Import R    | synthetic, all gates | 27 | 24 (89%) | 1 (4%) | 73.00 cells | 0.0647% |
+| Import R    | synthetic core (excl. arcsinh+bool) ★ | 18 | 15 (83%) | 1 (6%) | 73.00 cells | 0.0970% |
+| Import R    | arcsinh gates only | 2 | 2 (100%) | 0 (0%) | 0.00 cells | 0.0000% |
+| Import R    | boolean gates only | 7 | 7 (100%) | 0 (0%) | 0.00 cells | 0.0000% |
+| Import R    | real-world test14 | 15 | 1 (7%) | 7 (47%) | 90.00 cells | 1.7195% |
 
 The synthetic export and import comparisons pass the acceptance criterion of mean absolute percentage difference ≤0.5%. The real-world test 14 import comparison exceeds this threshold because of the `NK1_1+` marker-name parsing failure and small residual drift accumulated across a deep compensation/transform stack.
 

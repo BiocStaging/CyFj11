@@ -41,7 +41,7 @@ Standard FlowJo-equivalent parameters were used:
 | 11 | Mixed transforms + Boolean | 2D rect, 1D ranges, polygon, Boolean AND/OR | Biexponential (FITC-A), arcsinh (APC-A), linear | 2 | Mixed fluorescence transforms. |
 | 12 | Full Boolean set + ellipse | 2D rect, ellipse, ranges, Boolean AND/OR/NOT | Biexponential (FITC-A), log (PE-A), linear | 2 | Includes `NOT` gate and log drift case. |
 | 13 | Deep arcsinh hierarchy | Polygon, 2D rect, ellipse, ranges, Boolean AND/NOT | Arcsinh (FITC-A, PE-A, APC-A), linear | 3 | `live → {singlets, FITC_PE_gate} → {FITC_pos, APC_pos, double_pos, not_double}`. |
-| 14 | Real-world FlowSOM data | Polygon, rectangles | Linear (scatter), biexponential (fluorescence) | 3 | Public mouse bone-marrow dataset (`68983.fcs`); tests compensation matrix preservation. |
+| 14 | Real-world FlowSOM data | Polygon, rectangles | Linear (scatter), biexponential (fluorescence) | 3 | Public mouse bone-marrow dataset (`68983.fcs`); tests compensation matrix preservation. Populations downstream of the `NK1_1+` marker are unavailable in FlowJo v11 because the importer does not parse the underscore–plus character combination. |
 
 ## A.4 Source files
 

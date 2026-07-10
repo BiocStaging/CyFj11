@@ -1,6 +1,6 @@
 ══════════════════════════════════════════════════════════════════════ 
   CyFj11 Validation Statistics
-  2026-07-10 09:47:26
+  2026-07-10 17:08:43
   Input : manuscript/validation_counts 2.xlsx  (sheet: 1)
 ══════════════════════════════════════════════════════════════════════ 
 Reading: manuscript/validation_counts 2.xlsx   sheet: 1 
@@ -364,6 +364,6 @@ Final dataset: 50 rows across 14 tests (test01, test02, test03, test04, test05, 
   F. OUTPUT FILES
 ══════════════════════════════════════════════════════════════════════
   manuscript/comparison.table.generated.md
-  cyfj11_validation_summary.csv
-  cyfj11_validation_detail.csv
-  cyfj11_validation_report.txt
+  flowjo_export_tests/cyfj11_validation_summary.csv
+  flowjo_export_tests/cyfj11_validation_detail.csv
+  flowjo_export_tests/cyfj11_validation_report.txt
