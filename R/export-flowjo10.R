@@ -315,17 +315,29 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
     # Ensure SPILL is serialized in FCS flat format: n, names, values.
     # GatingSet keywords may store SPILL as a matrix even when the original
     # FCS header had a flat string, so normalize both forms.
+    # The FCS SPILL keyword must use the original (unprefixed) channel names;
+    # flowWorkspace may rename them to "Comp-..." after compensation is applied.
     sp <- keywords[["SPILL"]]
     if (is.matrix(sp)) {
       if (is.null(rownames(sp)) && !is.null(colnames(sp))) rownames(sp) <- colnames(sp)
       if (is.null(colnames(sp)) && !is.null(rownames(sp))) colnames(sp) <- rownames(sp)
-      flat_spill <- paste(c(ncol(sp), colnames(sp), as.vector(sp)), collapse = ",")
+      col_names <- sub("^Comp-", "", colnames(sp))
+      flat_spill <- paste(c(ncol(sp), col_names, as.vector(sp)), collapse = ",")
       keywords[["SPILL"]] <- flat_spill
     } else if (is.character(sp)) {
-      # Already a flat string (possibly a single element); keep as-is.
-      if (length(sp) > 1) {
-        keywords[["SPILL"]] <- paste(sp, collapse = ",")
+      # Already a flat string (possibly a single element). Strip any Comp- prefix
+      # from the channel names so it matches the original FCS parameters.
+      if (length(sp) == 1) {
+        parts <- strsplit(sp, ",")[[1]]
+        n <- suppressWarnings(as.integer(parts[1]))
+        if (!is.na(n) && length(parts) >= 1 + n) {
+          parts[2:(n + 1)] <- sub("^Comp-", "", parts[2:(n + 1)])
+          sp <- paste(parts, collapse = ",")
+        }
+      } else if (length(sp) > 1) {
+        sp <- paste(sp, collapse = ",")
       }
+      keywords[["SPILL"]] <- sp
     }
   }
 
@@ -341,32 +353,42 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
 #' @keywords internal
 build_spillover_matrix_xml <- function(spill_matrix, matrix_id, indent = "     ") {
   if (is.null(spill_matrix)) return(character(0))
-  
+
   param_names <- colnames(spill_matrix)
   if (is.null(param_names)) param_names <- rownames(spill_matrix)
-  
+
+  # FlowJo uses the prefix="Comp-" attribute to create compensated channels.
+  # The spilloverMatrix must therefore reference the ORIGINAL (unprefixed)
+  # parameter names; otherwise CytoML re-import fails with
+  # "compensation parameter 'Comp-FITC-A' not found in cytoframe parameters".
+  param_names <- sub("^Comp-", "", param_names)
+
   lines <- c(
     sprintf('%s<transforms:spilloverMatrix spectral="0" weightOptAlgorithmType="OLS" prefix="Comp-" name="Acquisition-defined" editable="0" matrixType="wizardDefined" color="#c0c0c0" version="FlowJo-10.10.1" status="FINALIZED" transforms:id="%s" suffix="" >',
             indent, xml_encode(matrix_id)),
     sprintf('%s  <data-type:parameters>', indent)
   )
-  
+
   for (p in param_names) {
     lines <- c(lines,
                sprintf('%s    <data-type:parameter data-type:name="%s" userProvidedCompInfix="Comp-%s" />',
                        indent, xml_encode(p), xml_encode(p)))
   }
-  
+
   lines <- c(lines,
              sprintf('%s  </data-type:parameters>', indent))
-  
+
   if (is.null(rownames(spill_matrix))) {
     rownames(spill_matrix) <- param_names
+  } else {
+    rownames(spill_matrix) <- sub("^Comp-", "", rownames(spill_matrix))
   }
   if (is.null(colnames(spill_matrix))) {
     colnames(spill_matrix) <- param_names
+  } else {
+    colnames(spill_matrix) <- sub("^Comp-", "", colnames(spill_matrix))
   }
-  
+
   for (p in param_names) {
     lines <- c(lines,
                sprintf('%s  <transforms:spillover data-type:parameter="%s" userProvidedCompInfix="Comp-%s" >',
@@ -380,7 +402,7 @@ build_spillover_matrix_xml <- function(spill_matrix, matrix_id, indent = "     "
     }
     lines <- c(lines, sprintf('%s  </transforms:spillover>', indent))
   }
-  
+
   lines <- c(lines, sprintf('%s</transforms:spilloverMatrix>', indent))
   lines
 }
