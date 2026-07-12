@@ -1,0 +1,203 @@
+---
+title: "Compensation and Round-Trip Workflow with CyFj11"
+output: BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Compensation and Round-Trip Workflow with CyFj11}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignettePackage{CyFj11}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+# Only evaluate data-dependent chunks when FlowSOM is available.
+has_flowsom <- requireNamespace("FlowSOM", quietly = TRUE)
+```
+
+```{r setup}
+library(CyFj11)
+library(flowCore)
+library(flowWorkspace)
+library(ggcyto)
+```
+
+## Introduction
+
+This vignette walks through a complete round-trip workflow using public example
+data from the Bioconductor `FlowSOM` package. The workflow demonstrates how to:
+
+1. Locate the public FlowSOM example FCS file and v10 workspace.
+2. Import the v10 workspace into a `GatingSet` with `CytoML`.
+3. Export the `GatingSet` back to a FlowJo v10 `.wsp` file with `CyFj11`.
+4. Re-import the exported workspace and compare population counts.
+5. Visualize the result with `ggcyto`.
+
+All data are taken unchanged from `FlowSOM`; no compensation matrix is modified.
+
+## Data availability
+
+The example data are bundled with the `FlowSOM` package. If it is not installed,
+you can install it from Bioconductor:
+
+```{r install-flowsom, eval=FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("FlowSOM")
+```
+
+Locate the files:
+
+```{r locate-flowsom, eval=has_flowsom}
+flowsom_fcs <- system.file("extdata", "68983.fcs", package = "FlowSOM")
+flowsom_wsp <- system.file("extdata", "gating.wsp", package = "FlowSOM")
+
+stopifnot(file.exists(flowsom_fcs), file.exists(flowsom_wsp))
+cat("FCS:", flowsom_fcs, "\n")
+cat("WSP:", flowsom_wsp, "\n")
+```
+
+Copy the FCS file into a clean temporary directory so the workspace can find it
+by its original name:
+
+```{r prepare-temp, eval=has_flowsom}
+test_dir <- tempfile("cyfj11_flowsom_")
+dir.create(test_dir, showWarnings = FALSE)
+file.copy(flowsom_fcs, file.path(test_dir, "68983.fcs"), overwrite = TRUE)
+cat("Working directory:", test_dir, "\n")
+```
+
+## Import the FlowSOM v10 workspace
+
+Use `CytoML` to read the FlowJo v10 XML workspace and build a `GatingSet`.
+
+```{r import-v10, eval=has_flowsom}
+library(CytoML)
+
+ws <- CytoML::open_flowjo_xml(flowsom_wsp)
+gs <- CytoML::flowjo_to_gatingset(
+  ws,
+  path                = test_dir,
+  name                = "All Samples",
+  subset              = "68983.fcs",
+  sample_names_from   = "sampleID"
+)
+
+cat("Samples:", length(gs), "\n")
+cat("Populations:\n")
+print(flowWorkspace::gs_get_pop_paths(gs))
+```
+
+Inspect the population counts:
+
+```{r counts-before, eval=has_flowsom}
+stats_before <- flowWorkspace::gs_pop_get_count_fast(gs)
+head(stats_before[, c("Population", "Count")])
+```
+
+## Export the GatingSet to FlowJo v10 with CyFj11
+
+Now export the same `GatingSet` to a new FlowJo v10 `.wsp` file using
+`CyFj11::export_flowjo10_workspace()`.
+
+```{r export-v10, eval=has_flowsom}
+export_path <- file.path(test_dir, "test14_export.wsp")
+CyFj11::export_flowjo10_workspace(gs[[1]], export_path)
+
+stopifnot(file.exists(export_path))
+cat("Exported workspace:", export_path, "\n")
+```
+
+## Re-import and validate
+
+Read the exported workspace back with `CytoML` and compare the population
+counts. They should match the original import.
+
+```{r reimport, eval=has_flowsom}
+ws2 <- CytoML::open_flowjo_xml(export_path)
+gs2 <- CytoML::flowjo_to_gatingset(
+  ws2,
+  path              = test_dir,
+  name              = "All Samples",
+  subset            = "68983.fcs",
+  sample_names_from = "sampleID"
+)
+
+stats_after <- flowWorkspace::gs_pop_get_count_fast(gs2)
+
+all_equal <- all(stats_before$Count == stats_after$Count)
+cat("Population counts identical:", all_equal, "\n")
+
+if (!all_equal) {
+  diff_idx <- which(stats_before$Count != stats_after$Count)
+  print(cbind(
+    Population = stats_before$Population[diff_idx],
+    Before     = stats_before$Count[diff_idx],
+    After      = stats_after$Count[diff_idx]
+  ))
+}
+```
+
+## Visualization
+
+Plot a gate from the imported `GatingSet`. Because the original FlowSOM
+workspace uses linear scaling, the default axes are appropriate here. For
+biexponential channels you may prefer `ggcyto_par_set(limits = "data")`.
+
+```{r plot, eval=has_flowsom, fig.width=7, fig.height=6}
+pops <- flowWorkspace::gs_get_pop_paths(gs)
+plot_pop <- if (length(pops) > 1) pops[2] else pops[1]
+
+ggcyto::autoplot(gs, plot_pop, bins = 128)
+```
+
+## Complete script
+
+```{r complete, eval=FALSE}
+library(CyFj11)
+library(flowCore)
+library(flowWorkspace)
+library(CytoML)
+library(ggcyto)
+
+# 1. Locate FlowSOM example data
+flowsom_fcs <- system.file("extdata", "68983.fcs", package = "FlowSOM")
+flowsom_wsp <- system.file("extdata", "gating.wsp", package = "FlowSOM")
+
+# 2. Prepare a temporary directory with the FCS file
+test_dir <- tempfile("cyfj11_flowsom_")
+dir.create(test_dir)
+file.copy(flowsom_fcs, file.path(test_dir, "68983.fcs"))
+
+# 3. Import the FlowJo v10 workspace
+ws  <- CytoML::open_flowjo_xml(flowsom_wsp)
+gs  <- CytoML::flowjo_to_gatingset(ws, path = test_dir, name = "All Samples",
+                                    subset = "68983.fcs",
+                                    sample_names_from = "sampleID")
+
+# 4. Export with CyFj11
+export_path <- file.path(test_dir, "test14_export.wsp")
+CyFj11::export_flowjo10_workspace(gs[[1]], export_path)
+
+# 5. Re-import and compare counts
+ws2 <- CytoML::open_flowjo_xml(export_path)
+gs2 <- CytoML::flowjo_to_gatingset(ws2, path = test_dir, name = "All Samples",
+                                    subset = "68983.fcs",
+                                    sample_names_from = "sampleID")
+all(flowWorkspace::gs_pop_get_count_fast(gs)$Count ==
+    flowWorkspace::gs_pop_get_count_fast(gs2)$Count)
+
+# 6. Plot
+pops <- flowWorkspace::gs_get_pop_paths(gs)
+ggcyto::autoplot(gs, pops[2], bins = 128)
+```
+
+## See also
+
+* `vignette("getting-started")` for the basic FlowJo v11 import workflow.
+* `?export_flowjo10_workspace` for details on exporting a `GatingSet` to FlowJo
+  v10 format.
+* `?fj11_to_gatingset` for importing FlowJo v11 workspaces.

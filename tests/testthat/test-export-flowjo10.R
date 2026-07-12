@@ -105,9 +105,9 @@ library(mockery)
 #   logtGml2 inverse(1) = 1000 * 10^0 = 1000  ← wrong oracle
 #   flowjo_log_trans(decade=1, offset=1)$inverse(1) = 10  ← correct (matches XML)
 .log_oracle <- function(gh, param_name, x) {
-  spec      <- get_transform_spec(gh, param_name)
+  spec      <- CyFj11:::get_transform_spec(gh, param_name)
   valid_log <- c("decade", "offset", "scale", "n", "equal.space")
-  tt        <- create_log_transform(spec = spec[names(spec) %in% valid_log])
+  tt        <- CyFj11:::create_log_transform(spec = spec[names(spec) %in% valid_log])
   tt$inverse(x)
 }
 
@@ -165,12 +165,13 @@ create_test_fcs <- function(n = 10000, seed = 123) {
     )
   )
   
+  fcs_basename <- basename(tempfile(pattern = "test_sample_", tmpdir = ".", fileext = ".fcs"))
   ff <- new("flowFrame",
             exprs = mat,
             parameters = params,
             description = list(
-              `$FIL` = sprintf("test_sample_%03d.fcs", seed),
-              FILENAME = sprintf("test_sample_%03d.fcs", seed),
+              `$FIL` = fcs_basename,
+              FILENAME = fcs_basename,
               `$TOT` = as.character(n),
               `$PAR` = as.character(ncol(mat))
             ))
@@ -350,18 +351,18 @@ test_that("convert_ellipsoid_to_flowjo10 handles invalid ellipsoid gate graceful
   skip_on_cran()
   skip_if_not_installed("flowWorkspace")
   skip_if_not_installed("flowCore")
-  
+
   library(flowWorkspace)
   library(flowCore)
-  
+
   # Test with NULL gate
-  result <- convert_ellipsoid_to_flowjo10(NULL, "invalid_gate", NULL)
+  result <- CyFj11:::convert_ellipsoid_to_flowjo10(NULL, "invalid_gate", NULL)
   expect_null(result)
-  
+
   # Test with gate with missing parameters
   # Create a minimal gate-like object without required fields
   invalid_gate <- structure(list(), class = "ellipsoidGate")
-  result <- convert_ellipsoid_to_flowjo10(invalid_gate, "invalid_gate", NULL)
+  result <- CyFj11:::convert_ellipsoid_to_flowjo10(invalid_gate, "invalid_gate", NULL)
   expect_null(result)
 })
 
@@ -391,7 +392,7 @@ test_that("convert_boolean_to_flowjo10 works with AND boolean gate", {
   bool_gate <- booleanFilter(`FSC_gate&SSC_gate`, filterId = "both")
   
   # Test conversion function directly
-  result <- convert_boolean_to_flowjo10(bool_gate, "both", gs[[1]])
+  result <- CyFj11:::convert_boolean_to_flowjo10(bool_gate, "both", gs[[1]])
   
   expect_type(result, "list")
   expect_equal(result$type, "boolean")
@@ -427,7 +428,7 @@ test_that("convert_boolean_to_flowjo10 works with OR boolean gate", {
   bool_gate <- booleanFilter(`FSC_gate|SSC_gate`, filterId = "either")
   
   # Test conversion function directly
-  result <- convert_boolean_to_flowjo10(bool_gate, "either", gs[[1]])
+  result <- CyFj11:::convert_boolean_to_flowjo10(bool_gate, "either", gs[[1]])
   
   expect_type(result, "list")
   expect_equal(result$type, "boolean")
@@ -460,7 +461,7 @@ test_that("convert_boolean_to_flowjo10 works with NOT boolean gate", {
   bool_gate <- booleanFilter(!`FSC_gate`, filterId = "not_FSC")
   
   # Test conversion function directly
-  result <- convert_boolean_to_flowjo10(gate = bool_gate, pop_name = "not_FSC", gh = gs[[1]])
+  result <- CyFj11:::convert_boolean_to_flowjo10(gate = bool_gate, pop_name = "not_FSC", gh = gs[[1]])
   
   expect_type(result, "list")
   expect_equal(result$type, "boolean")
@@ -478,13 +479,13 @@ test_that("convert_boolean_to_flowjo10 handles invalid boolean gate gracefully",
   library(flowCore)
   
   # Test with NULL gate
-  result <- convert_boolean_to_flowjo10(NULL, "invalid_gate", NULL)
+  result <- CyFj11:::convert_boolean_to_flowjo10(NULL, "invalid_gate", NULL)
   expect_null(result)
   
   # Test with gate with missing expression
   # Create a minimal gate-like object without required fields
   invalid_gate <- structure(list(), class = "booleanFilter")
-  result <- convert_boolean_to_flowjo10(invalid_gate, "invalid_gate", NULL)
+  result <- CyFj11:::convert_boolean_to_flowjo10(invalid_gate, "invalid_gate", NULL)
   expect_null(result)
 })
 
@@ -503,7 +504,7 @@ test_that("convert_boolean_to_flowjo10 handles complex boolean expressions", {
   attr(complex_expr, "expr") <- complex_expr
   
   # Test conversion function with complex expression
-  result <- convert_boolean_to_flowjo10(complex_expr, "complex_gate", NULL)
+  result <- CyFj11:::convert_boolean_to_flowjo10(complex_expr, "complex_gate", NULL)
   
   # Should still return a list even if parsing is imperfect
   expect_type(result, "list")
@@ -515,7 +516,7 @@ test_that("convert_boolean_to_flowjo10 handles complex boolean expressions", {
   class(complex_expr2) <- "booleanFilter"
   attr(complex_expr2, "expr") <- complex_expr2
   
-  result2 <- convert_boolean_to_flowjo10(complex_expr2, "complex_gate2", NULL)
+  result2 <- CyFj11:::convert_boolean_to_flowjo10(complex_expr2, "complex_gate2", NULL)
   expect_type(result2, "list")
   expect_equal(result2$type, "boolean")
   expect_false(is.null(result2$expression))
@@ -1839,18 +1840,18 @@ test_that("xml_encode properly escapes special characters", {
   skip_on_cran()
   
   # Test basic functionality
-  expect_equal(xml_encode(""), "")
-  expect_equal(xml_encode(NULL), "")
+  expect_equal(CyFj11:::xml_encode(""), "")
+  expect_equal(CyFj11:::xml_encode(NULL), "")
   
   # Test special character encoding
-  expect_equal(xml_encode("&"), "&")
-  expect_equal(xml_encode("<"), "<")
-  expect_equal(xml_encode(">"), ">")
-  expect_equal(xml_encode("\""), '"')
-  expect_equal(xml_encode("'"), "'")
+  expect_equal(CyFj11:::xml_encode("&"), "&")
+  expect_equal(CyFj11:::xml_encode("<"), "<")
+  expect_equal(CyFj11:::xml_encode(">"), ">")
+  expect_equal(CyFj11:::xml_encode("\""), '"')
+  expect_equal(CyFj11:::xml_encode("'"), "'")
   
   # Test mixed content
-  expect_equal(xml_encode("A&T Cells"), "A&T Cells")
+  expect_equal(CyFj11:::xml_encode("A&T Cells"), "A&T Cells")
 })
 
 test_that("get_display_range handles various scenarios", {
@@ -1867,13 +1868,13 @@ test_that("get_display_range handles various scenarios", {
   gs <- GatingSet(fs)
   
   # Test with valid parameter
-  range_result <- get_display_range(gs[[1]], "FSC-A")
+  range_result <- CyFj11:::get_display_range(gs[[1]], "FSC-A")
   expect_type(range_result, "double")
   expect_length(range_result, 2)
   expect_true(range_result[1] <= range_result[2])
   
   # Test with invalid parameter (should fall back to default)
-  range_result <- get_display_range(gs[[1]], "NONEXISTENT")
+  range_result <- CyFj11:::get_display_range(gs[[1]], "NONEXISTENT")
   expect_equal(range_result, c(0, 262144))
 })
 
@@ -2034,7 +2035,7 @@ test_that("create_log_transform inverse is correct for logtGml2 default paramete
   
   logt  <- logtGml2_trans()  # correctly-scoped oracle
   spec  <- list(decade = 4.5, offset = 1)  # canonical flowjo_log_trans repr
-  tt    <- create_log_transform(spec = spec)
+  tt    <- CyFj11:::create_log_transform(spec = spec)
   
   test_vals <- c(10, 100, 1000, 10000, 100000)
   for (v in test_vals) {
@@ -2049,7 +2050,7 @@ test_that("create_log_transform: flowJo_log spec round-trips correctly", {
   
   fj   <- flowjo_log_trans(decade = 4, offset = 1)
   spec <- list(decade = 4, offset = 1)
-  tt   <- create_log_transform(spec = spec)
+  tt   <- CyFj11:::create_log_transform(spec = spec)
   
   test_vals <- c(1, 10, 100, 1000, 10000)
   for (v in test_vals) {
@@ -2076,12 +2077,12 @@ test_that("using create_log_transform instead of gh_get_transformations avoids t
     gs, transformerList("FITC-A", logtGml2_trans())
   )
   
-  spec     <- get_transform_spec(gs[[1]], "FITC-A")
+  spec     <- CyFj11:::get_transform_spec(gs[[1]], "FITC-A")
   log_args <- c("decade", "offset", "scale", "n", "equal.space")
   log_spec <- spec[names(spec) %in% log_args]
   
   # Must not error (contrast with the broken gh_get_transformations closure)
-  tt <- create_log_transform(spec = log_spec)
+  tt <- CyFj11:::create_log_transform(spec = log_spec)
   expect_no_error(tt$inverse(1))
   expect_no_error(tt$inverse(c(0.25, 0.5, 0.75, 1.0)))
   expect_true(is.numeric(tt$inverse(1)))
@@ -2247,42 +2248,6 @@ test_that("export_flowjo10_workspace: log transform exported consistently across
   }
 })
 
-
-# ── stub-based tests ──────────────────────────────────────────────────────────
-
-
-test_that("convert_polygon_to_flowjo10: calls create_log_transform for Log type, not gh_get_transformations closure", {
-  skip_on_cran()
-  skip_if_not_installed("flowWorkspace")
-  skip_if_not_installed("flowCore")
-  
-  library(flowWorkspace)
-  library(flowCore)
-  library(mockery)
-  
-  ff <- create_test_fcs(n = 500, seed = 102)
-  gs <- GatingSet(flowSet(ff))
-  gs <- flowWorkspace::transform(
-    gs, transformerList(c("FITC-A", "PE-A"), logtGml2_trans())
-  )
-  
-  verts <- matrix(
-    c(1, 0.5, 2, 0.5, 2, 2, 1, 2), ncol = 2, byrow = TRUE,
-    dimnames = list(NULL, c("FITC-A", "PE-A"))
-  )
-  gate <- flowCore::polygonGate(filterId = "G", .gate = verts)
-  
-  # Both axes are Log → create_log_transform should be called twice
-  m_log <- mock(
-    list(transform = identity, inverse = identity),
-    list(transform = identity, inverse = identity)
-  )
-  stub(convert_polygon_to_flowjo10, "create_log_transform", m_log)
-  
-  convert_polygon_to_flowjo10(gate, "G", gh = gs[[1]])
-  
-  expect_called(m_log, 2)
-})
 
 # ── Rectangle gate — coordinate back-transformation accuracy ──────────────────
 
@@ -2473,88 +2438,6 @@ test_that("export_flowjo10_workspace: log transform exported consistently across
   }
 })
 
-
-# =============================================================================
-# stub tests — verify create_log_transform IS called for Log type
-# =============================================================================
-
-test_that("convert_polygon_to_flowjo10: create_log_transform called twice when both axes are Log", {
-  skip_on_cran()
-  skip_if_not_installed("flowWorkspace")
-  skip_if_not_installed("flowCore")
-  
-  library(flowWorkspace)
-  library(flowCore)
-  
-  ff <- create_test_fcs(n = 500, seed = 102)
-  gs <- GatingSet(flowSet(ff))
-  gs <- flowWorkspace::transform(
-    gs, transformerList(c("FITC-A", "PE-A"), logtGml2_trans())
-  )
-  
-  verts <- matrix(
-    c(1, 0.5, 2, 0.5, 2, 2, 1, 2), ncol = 2, byrow = TRUE,
-    dimnames = list(NULL, c("FITC-A", "PE-A"))
-  )
-  gate  <- polygonGate(filterId = "G", .gate = verts)
-  m_log <- mock(
-    list(transform = identity, inverse = identity),
-    list(transform = identity, inverse = identity)
-  )
-  stub(convert_polygon_to_flowjo10, "create_log_transform", m_log)
-  
-  convert_polygon_to_flowjo10(gate, "G", gh = gs[[1]])
-  
-  expect_called(m_log, 2)
-})
-
-test_that("convert_rectangle_to_flowjo10: create_log_transform NOT called for Linear transform", {
-  skip_on_cran()
-  skip_if_not_installed("flowWorkspace")
-  skip_if_not_installed("flowCore")
-  
-  library(flowWorkspace)
-  library(flowCore)
-  
-  ff <- create_test_fcs(n = 500, seed = 103)
-  gs <- GatingSet(flowSet(ff))   # no transform applied — PE-A is Linear
-  
-  gate  <- rectangleGate(filterId = "G", "PE-A" = c(500, 2000))
-  m_log <- mock()
-  stub(convert_rectangle_to_flowjo10, "create_log_transform", m_log)
-  
-  convert_rectangle_to_flowjo10(gate, "G", gh = gs[[1]])
-  
-  expect_called(m_log, 0)
-})
-
-test_that("convert_polygon_to_flowjo10: create_log_transform NOT called for Biex transform", {
-  skip_on_cran()
-  skip_if_not_installed("flowWorkspace")
-  skip_if_not_installed("flowCore")
-  
-  library(flowWorkspace)
-  library(flowCore)
-  
-  ff <- create_test_fcs(n = 500, seed = 104)
-  gs <- GatingSet(flowSet(ff))
-  gs <- flowWorkspace::transform(
-    gs, transformerList(c("FITC-A", "PE-A"), flowjo_biexp_trans())
-  )
-  
-  verts <- matrix(
-    c(0.2, 0.1, 0.5, 0.1, 0.5, 0.5, 0.2, 0.5),
-    ncol = 2, byrow = TRUE,
-    dimnames = list(NULL, c("FITC-A", "PE-A"))
-  )
-  gate  <- polygonGate(filterId = "G", .gate = verts)
-  m_log <- mock()
-  stub(convert_polygon_to_flowjo10, "create_log_transform", m_log)
-  
-  convert_polygon_to_flowjo10(gate, "G", gh = gs[[1]])
-  
-  expect_called(m_log, 0)
-})
 
 # =============================================================================
 # Smoke tests — file is produced and contains expected markers
@@ -3033,5 +2916,404 @@ test_that("export_flowjo10_workspace: log transform consistent across multiple s
     expect_true(any(grepl(sn, xml_content, fixed = TRUE)),
                 label = sprintf("sample '%s' in XML", sn))
   }
+})
+
+# ── Keyword preservation regression tests ────────────────────────────────
+
+test_that("export_flowjo10_workspace preserves $P*S stain keyword values verbatim", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+
+  # Build a flowFrame whose $P*S keywords contain "/" characters.  Some FCS files
+  # use slashes in stain names; FlowJo's XML may later rewrite them, but the
+  # exporter itself must not alter the value it receives from the GatingSet
+  # keywords.
+  n <- 1000
+  set.seed(42)
+  mat <- cbind(
+    FSC_A = rnorm(n, 100000, 20000),
+    FITC_A = rlnorm(n, 2, 0.8)
+  )
+  mat <- pmax(pmin(mat, 262144), 0)
+  colnames(mat) <- c("FSC-A", "FITC-A")
+
+  params <- new("AnnotatedDataFrame",
+    data = data.frame(
+      name = colnames(mat),
+      desc = c("FSC-A", "l/d"),
+      range = rep(262144, ncol(mat)),
+      minRange = rep(0, ncol(mat)),
+      maxRange = rep(262144, ncol(mat)),
+      row.names = colnames(mat),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  ff <- new("flowFrame",
+            exprs = mat,
+            parameters = params,
+            description = list(
+              `$FIL`   = "stain_test.fcs",
+              FILENAME  = "stain_test.fcs",
+              `$TOT`   = as.character(n),
+              `$PAR`   = as.character(ncol(mat)),
+              `$P1N`   = "FSC-A",
+              `$P1S`   = " ",
+              `$P2N`   = "FITC-A",
+              `$P2S`   = "l/d"
+            ))
+
+  gs <- GatingSet(flowSet(ff))
+
+  temp_file <- tempfile(fileext = ".wsp")
+  on.exit(unlink(temp_file))
+
+  expect_true(export_flowjo10_workspace(gs, temp_file))
+
+  doc <- read_xml(temp_file)
+  kw_nodes <- xml_find_all(doc, "//Keyword")
+  values <- setNames(xml_attr(kw_nodes, "value"), xml_attr(kw_nodes, "name"))
+
+  expect_equal(values[["$P2S"]], "l/d",
+               info = "$P2S stain keyword must keep '/' verbatim")
+})
+
+# ── Compensation / SPILL keyword regression tests ───────────────────────────
+
+create_comp_test_fcs <- function(n = 5000, seed = 200) {
+  library(flowCore)
+  set.seed(seed)
+  
+  mat <- matrix(
+    c(rnorm(n, 100000, 20000),
+      rnorm(n, 100000, 20000),
+      rnorm(n,  80000, 15000),
+      c(rlnorm(n * 0.7, 2, 0.8),  rlnorm(n * 0.3, 7, 0.5))[1:n],
+      c(rlnorm(n * 0.6, 2.5, 0.7), rlnorm(n * 0.4, 7.5, 0.6))[1:n]),
+    ncol = 5
+  )
+  colnames(mat) <- c("FSC-A", "FSC-H", "SSC-A", "FITC-A", "PE-A")
+  mat <- pmax(pmin(mat, 262144), 0)
+  
+  params <- new("AnnotatedDataFrame",
+                data = data.frame(
+                  name     = colnames(mat),
+                  desc     = colnames(mat),
+                  range    = rep(262144, ncol(mat)),
+                  minRange = rep(0,      ncol(mat)),
+                  maxRange = rep(262144, ncol(mat)),
+                  row.names = paste0("$P", seq_len(ncol(mat)))
+                )
+  )
+  
+  guid <- sprintf("comp_sample_%03d.fcs", seed)
+  
+  # ✅ Matrix with dimnames — colnames() works correctly
+  spill_mat <- matrix(
+    c(1.0, 0.05, 0.02, 1.0), nrow = 2, ncol = 2,
+    dimnames = list(c("FITC-A", "PE-A"), c("FITC-A", "PE-A"))
+  )
+  
+  ff <- new("flowFrame",
+            exprs      = mat,
+            parameters = params,
+            description = list(
+              `$FIL` = guid,
+              GUID  = guid,
+              `$TOT` = as.character(n),
+              `$PAR` = as.character(ncol(mat)),
+              SPILL = spill_mat    # ← matrix, not string
+            )
+  )
+  
+  # Round-trip for cytoframe backing
+  tmp <- tempfile(fileext = ".fcs")
+  write.FCS(ff, tmp)
+  ff_read <- read.FCS(tmp, transformation = FALSE)
+  unlink(tmp)
+  ff_read
+}
+
+
+test_that("export_flowjo10_workspace emits correct compensation matrix and SPILL keyword", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+
+  ff <- create_comp_test_fcs(n = 1000, seed = 201)
+  gs <- GatingSet(flowSet(ff))
+
+  temp_file <- tempfile(fileext = ".wsp")
+  on.exit(unlink(temp_file))
+
+  expect_true(export_flowjo10_workspace(gs, temp_file))
+
+  doc <- read_xml(temp_file)
+
+  # Workspace-level spillover matrix
+  ws_matrix <- xml_find_first(doc, "//*[local-name()='Matrices']/*[local-name()='spilloverMatrix']")
+  expect_false(is.na(ws_matrix), info = "workspace-level spillover matrix found")
+
+  matrix_id <- xml_attr(ws_matrix, "id")
+  expect_false(is.na(matrix_id), info = "workspace matrix has transforms:id")
+
+  # Sample-level spillover matrix
+  sample_matrix <- xml_find_first(doc, "//*[local-name()='Sample']/*[local-name()='spilloverMatrix']")
+  expect_false(is.na(sample_matrix), info = "sample-level spillover matrix found")
+
+  sample_matrix_id <- xml_attr(sample_matrix, "id")
+  expect_equal(sample_matrix_id, matrix_id, info = "sample matrix UUID matches workspace matrix UUID")
+
+  # MatrixID reference inside Cytometer/TransformStore
+  matrix_id_ref <- xml_find_first(doc, "//*[local-name()='MatrixID']")
+  expect_false(is.na(matrix_id_ref), info = "Cytometer MatrixID found")
+  expect_equal(xml_attr(matrix_id_ref, "matrixId"), matrix_id,
+               info = "Cytometer MatrixID references the matrix")
+
+  # SPILL keyword value
+  spill_kw <- xml_find_first(doc, "//Keyword[@name='SPILL']")
+  expect_false(is.na(spill_kw), info = "SPILL keyword found")
+
+  spill_value <- xml_attr(spill_kw, "value")
+  spill_parts <- strsplit(spill_value, ",")[[1]]
+  expect_equal(length(spill_parts), 1 + 2 + 4,
+               info = "SPILL keyword has 1 + n + n^2 values")
+  expect_equal(spill_parts[1], "2", info = "SPILL keyword starts with channel count")
+  expect_true(all(spill_parts[2:3] == c("FITC-A", "PE-A")),
+              info = "SPILL keyword channel header is correct")
+})
+
+test_that("export_flowjo10_workspace handles GatingSet without compensation", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+
+  ff <- create_test_fcs(n = 500, seed = 202)
+  gs <- GatingSet(flowSet(ff))
+
+  temp_file <- tempfile(fileext = ".wsp")
+  on.exit(unlink(temp_file))
+
+  expect_true(export_flowjo10_workspace(gs, temp_file))
+
+  xml_content <- readLines(temp_file)
+  expect_true(any(grepl("<Matrices/>", xml_content, fixed = TRUE)),
+              info = "Matrices section is empty for uncompensated data")
+  expect_false(any(grepl("spilloverMatrix", xml_content)),
+               info = "No spillover matrix emitted without compensation")
+})
+
+# ── FCS export / raw keyword regression tests ────────────────────────────────
+
+test_that("export_flowjo10_workspace references original raw FCS files by default", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+
+  raw_dir <- tempfile("raw_")
+  dir.create(raw_dir)
+  on.exit(unlink(raw_dir, recursive = TRUE))
+
+  # Write a raw FCS file into the directory that will become the WSP directory.
+  ff <- create_test_fcs(n = 500, seed = 300)
+  raw_fcs <- file.path(raw_dir, keyword(ff)[["$FIL"]])
+  write.FCS(ff, raw_fcs)
+
+  gs <- GatingSet(flowSet(ff))
+  sampleNames(gs) = keyword(ff)[["$FIL"]]
+  
+  out_wsp <- file.path(raw_dir, "export.wsp")
+  expect_true(export_flowjo10_workspace(gs, out_wsp))
+
+  # No new FCS file should have been written.
+  fcs_files <- list.files(raw_dir, pattern = "\\.fcs$", full.names = TRUE)
+  expect_length(fcs_files, 1)
+  expect_equal(basename(fcs_files[1]), basename(raw_fcs))
+
+  doc <- read_xml(out_wsp)
+  ds <- xml_find_first(doc, "//*[local-name()='DataSet']")
+  expect_false(is.na(ds))
+  expect_true(grepl(basename(raw_fcs), xml_attr(ds, "uri"), fixed = TRUE))
+
+  raw_kw <- keyword(flowCore::read.FCS(raw_fcs, transformation = FALSE))
+  kw_nodes <- xml_find_all(doc, "//Keyword")
+  kw_values <- setNames(xml_attr(kw_nodes, "value"), xml_attr(kw_nodes, "name"))
+  expect_equal(kw_values[["$P2N"]], raw_kw[["$P2N"]])
+})
+
+test_that("export_flowjo10_workspace writes FCS files to fcs_root", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+  
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+  
+  wsp_dir <- tempfile("wsp_")
+  fcs_dir <- tempfile("fcs_")
+  dir.create(wsp_dir)
+  dir.create(fcs_dir)
+  on.exit({
+    unlink(wsp_dir, recursive = TRUE)
+    unlink(fcs_dir, recursive = TRUE)
+  })
+  
+  ff  <- create_test_fcs(n = 500, seed = 42)
+  expected_fname <- keyword(ff)[["$FIL"]]          # e.g. "test_sample_042.fcs"
+  gs  <- GatingSet(flowSet(ff))
+  sampleNames(gs) <- expected_fname
+  
+  out_wsp <- file.path(wsp_dir, "export.wsp")
+  expect_true(export_flowjo10_workspace(gs, out_wsp, fcs_root = fcs_dir))
+  
+  # FCS file must appear in fcs_dir and carry the $FIL-derived name
+  fcs_files <- list.files(fcs_dir, pattern = "\\.fcs$", full.names = TRUE)
+  expect_length(fcs_files, 1L)
+  expect_equal(basename(fcs_files[[1]]), expected_fname)
+  
+  # DataSet URI must point into fcs_dir
+  doc <- read_xml(out_wsp)
+  ds  <- xml_find_first(doc, "//*[local-name()='DataSet']")
+  expect_false(is.na(ds))
+  uri <- xml_attr(ds, "uri")
+  expect_true(grepl(fcs_dir,         uri, fixed = TRUE))
+  expect_true(grepl(expected_fname,  uri, fixed = TRUE))
+  
+  # FILENAME keyword in WSP must also reference fcs_dir
+  kw_nodes  <- xml_find_all(doc, "//Keyword[@name='FILENAME']")
+  kw_values <- xml_attr(kw_nodes, "value")
+  expect_true(any(grepl(fcs_dir, kw_values, fixed = TRUE)))
+})
+
+
+test_that("export_flowjo10_workspace errors on pre-existing FCS when overwrite = FALSE", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  
+  library(flowWorkspace)
+  library(flowCore)
+  
+  wsp_dir <- tempfile("wsp_")
+  fcs_dir <- tempfile("fcs_")
+  dir.create(wsp_dir)
+  dir.create(fcs_dir)
+  on.exit({
+    unlink(wsp_dir, recursive = TRUE)
+    unlink(fcs_dir, recursive = TRUE)
+  })
+  
+  ff  <- create_test_fcs(n = 500, seed = 99)
+  expected_fname <- keyword(ff)[["$FIL"]]
+  gs  <- GatingSet(flowSet(ff))
+  sampleNames(gs) <- expected_fname
+  
+  # Pre-place the conflicting file
+  write.FCS(ff, file.path(fcs_dir, expected_fname))
+  
+  out_wsp <- file.path(wsp_dir, "export.wsp")
+  
+  expect_error(
+    export_flowjo10_workspace(gs, out_wsp, fcs_root = fcs_dir, overwrite = FALSE),
+    regexp = "already exist"
+  )
+  # WSP must NOT have been created
+  expect_false(file.exists(out_wsp))
+})
+
+
+test_that("export_flowjo10_workspace overwrites FCS files with overwrite = TRUE", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+  skip_if_not_installed("xml2")
+  
+  library(flowWorkspace)
+  library(flowCore)
+  library(xml2)
+  
+  wsp_dir <- tempfile("wsp_")
+  fcs_dir <- tempfile("fcs_")
+  dir.create(wsp_dir)
+  dir.create(fcs_dir)
+  on.exit({
+    unlink(wsp_dir, recursive = TRUE)
+    unlink(fcs_dir, recursive = TRUE)
+  })
+  
+  ff  <- create_test_fcs(n = 500, seed = 77)
+  expected_fname <- keyword(ff)[["$FIL"]]
+  gs  <- GatingSet(flowSet(ff))
+  sampleNames(gs) <- expected_fname
+  
+  existing_fcs <- file.path(fcs_dir, expected_fname)
+  write.FCS(ff, existing_fcs)
+  
+  out_wsp <- file.path(wsp_dir, "export.wsp")
+  
+  expect_warning(
+    result <- export_flowjo10_workspace(gs, out_wsp,
+                                        fcs_root  = fcs_dir,
+                                        overwrite = TRUE),
+    regexp = "overwritten"
+  )
+  expect_true(result)
+  expect_true(file.exists(out_wsp))
+  expect_true(file.exists(existing_fcs))
+  expect_gt(file.info(existing_fcs)$size, 0L)
+  
+  doc <- read_xml(out_wsp)
+  ds  <- xml_find_first(doc, "//*[local-name()='DataSet']")
+  uri <- xml_attr(ds, "uri")
+  expect_true(grepl(fcs_dir,        uri, fixed = TRUE))
+  expect_true(grepl(expected_fname, uri, fixed = TRUE))
+})
+
+
+
+
+test_that("export_flowjo10_workspace errors when explicit fcs_root is missing", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+
+  library(flowWorkspace)
+  library(flowCore)
+
+  temp_dir <- tempfile("missing_")
+  dir.create(temp_dir)
+  on.exit(unlink(temp_dir, recursive = TRUE))
+
+  ff <- create_test_fcs(n = 500, seed = 304)
+  gs <- GatingSet(flowSet(ff))
+
+  out_wsp <- file.path(temp_dir, "export.wsp")
+  expect_error(
+    export_flowjo10_workspace(gs, out_wsp, fcs_root = tempfile()),
+    "fcs_root directory does not exist"
+  )
 })
 

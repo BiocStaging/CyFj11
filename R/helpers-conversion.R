@@ -240,6 +240,10 @@ build_gating_tree <- function(sample_uuid, populations, populationDefinitions, r
     
     # Extract definition details safely
     node_name <- if (!is.null(pop_def$definition$name)) pop_def$definition$name else "Unnamed"
+    # flowWorkspace uses '/' as the path separator, so population names containing
+    # '/' get rewritten (e.g. "CD45, l/d subset" -> "CD45, l:d subset").  Sanitize
+    # names here so parent/child paths stay consistent.
+    node_name <- sanitize_population_name(node_name)
     
     node <- list(
       uuid = pop_uuid,
@@ -280,19 +284,13 @@ build_gating_tree <- function(sample_uuid, populations, populationDefinitions, r
       }
     }
     
-    # Build current path
-    node_name_str <- if (is.list(node$name) && length(node$name) > 0) {
-      node$name[[1]]
-    } else if (is.character(node$name)) {
-      node$name
-    } else {
-      "Unnamed"
-    }
-    
+    # Build current path.  Both parts are already sanitized, but keep the path
+    # separator as '/' (flowWorkspace convention) while ensuring no stray '/' from
+    # names leaks in.
     current_path <- if (is.null(parent_path)) {
-      node_name_str
+      node_name
     } else {
-      paste(parent_path, node_name_str, sep = "/")
+      paste(parent_path, node_name, sep = "/")
     }
     
     # Find children populations
@@ -429,7 +427,7 @@ identify_logical_gates <- function(populations, populationDefinitions) {
             combined_pops <- c(combined_pops, list(list(
               population_uuid = parent_pop$uuid,
               definition_uuid = parent_def$uuid,
-              name = unlist(parent_def$definition$name)
+              name = sanitize_population_name(unlist(parent_def$definition$name))
             )))
           }
         }
@@ -462,7 +460,7 @@ identify_logical_gates <- function(populations, populationDefinitions) {
     if (!is.null(gate_type) && gate_type %in% c("and", "or", "not")) {
       gate_name <- unlist(pop_def$definition$name)
       if (.pkgenv$verbose) message(sprintf("Found logical gate: %s (type: %s, uuid: %s)", 
-                      gate_name, gate_type, pop$uuid))
+                                           gate_name, gate_type, pop$uuid))
       
       # Find combined populations
       combined <- find_combined_populations(pop)
@@ -667,88 +665,120 @@ summarize_logical_gates <- function(tree) {
   }
 }
 
-# Move logical gates up one level in hierarchy
+# Move logical gates up to the nearest non-logical ancestor
+#
+# FlowJo v11 stores boolean (logical) populations as children of the populations
+# that appear in their definition.  In flowWorkspace, however, a boolean gate is
+# evaluated within its parent population.  This means a gate such as
+# "bothNOT = NOT both" must be attached at the same level as "both" (i.e. under
+# root) in order to count the complement of "both".  Keeping it as a child of
+# "both" would always yield zero events.
+#
+# This helper walks the raw tree and pulls every logical gate up until its
+# parent is a non-logical gate (or root).  Non-logical children are processed
+# recursively so that logical gates nested under logical gates are also moved
+# up to the correct level.
 move_logical_gates_up <- function(tree) {
   
-  # Recursive function to process each node
-  process_node <- function(node) {
+  # Recursive function to process each node.
+  # target_ancestor_name is the name of the nearest non-logical ancestor that
+  # logical descendants should be attached to.
+  process_node <- function(node, target_ancestor_name = NULL) {
     if (!is.list(node) || is.null(node$children) || length(node$children) == 0) {
       return(node)
     }
     
-    # Lists to hold children that stay vs gates to move up
-    children_to_keep <- list()
-    gates_from_grandchildren <- list()
+    node_is_logical <- !is.null(node$type) && node$type %in% c("and", "or", "not")
+    current_target <- if (!node_is_logical) unlist(node$name) else target_ancestor_name
     
-    # Process each child
+    children_to_keep <- list()
+    gates_to_move_up <- list()
+    
     for (child in node$children) {
       if (!is.list(child)) {
         children_to_keep <- c(children_to_keep, list(child))
         next
       }
       
-      # Check if this child is a logical gate
       is_logical_gate <- !is.null(child$type) && child$type %in% c("and", "or", "not")
       
       if (is_logical_gate) {
-        # This is a logical gate - mark where it came from and move it up
-        child$moved_from <- unlist(child$parent)
-        child$parent <- unlist(node$name)  # Update parent to current node
+        # Process children first so nested logical gates can bubble up.
+        processed_child <- process_node(child, current_target)
         
-        if (.pkgenv$verbose) message(sprintf("Moving logical gate '%s' from '%s' to '%s'", 
-                        unlist(child$name),
-                        child$moved_from,
-                        child$parent))
-        
-        # Add to current level (don't process its children yet)
-        children_to_keep <- c(children_to_keep, list(child))
-      } else {
-        # Not a logical gate - process recursively
-        processed_child <- process_node(child)
-        
-        # Check if this child has logical gates in its children that should move up
+        # Any logical grandchildren of a logical gate belong at the target
+        # ancestor level, not under this gate.
         if (!is.null(processed_child$children)) {
-          child_logical_gates <- list()
-          child_regular_children <- list()
-          
           for (grandchild in processed_child$children) {
-            if (is.list(grandchild) && !is.null(grandchild$type) && 
+            if (is.list(grandchild) &&
+                !is.null(grandchild$type) &&
                 grandchild$type %in% c("and", "or", "not")) {
-              # This grandchild is a logical gate - move it up to current level
               grandchild$moved_from <- unlist(processed_child$name)
-              grandchild$parent <- unlist(node$name)
-              
-              if (.pkgenv$verbose) message(sprintf("Moving logical gate '%s' from '%s' (grandchild) to '%s'", 
-                              unlist(grandchild$name),
-                              grandchild$moved_from,
-                              grandchild$parent))
-              
+              grandchild$parent <- current_target
+              gates_to_move_up <- c(gates_to_move_up, list(grandchild))
+            }
+          }
+          
+          processed_child$children <- Filter(
+            function(g) {
+              !(is.list(g) && !is.null(g$type) && g$type %in% c("and", "or", "not"))
+            },
+            processed_child$children
+          )
+          if (length(processed_child$children) == 0) {
+            processed_child$children <- NULL
+          }
+        }
+        
+        processed_child$moved_from <- unlist(processed_child$parent)
+        processed_child$parent <- current_target
+        
+        if (.pkgenv$verbose) {
+          message(sprintf("Moving logical gate '%s' from '%s' to '%s'",
+                          unlist(processed_child$name),
+                          processed_child$moved_from,
+                          processed_child$parent))
+        }
+        
+        if (!node_is_logical) {
+          # Keep the logical gate at this non-logical level.
+          children_to_keep <- c(children_to_keep, list(processed_child))
+        } else {
+          # Bubble it up further.
+          gates_to_move_up <- c(gates_to_move_up, list(processed_child))
+        }
+      } else {
+        # Non-logical child: recurse, then pull its logical grandchildren up.
+        processed_child <- process_node(child, current_target)
+        
+        child_logical_gates <- list()
+        child_regular_children <- list()
+        
+        if (!is.null(processed_child$children)) {
+          for (grandchild in processed_child$children) {
+            if (is.list(grandchild) &&
+                !is.null(grandchild$type) &&
+                grandchild$type %in% c("and", "or", "not")) {
+              grandchild$moved_from <- unlist(processed_child$name)
+              grandchild$parent <- current_target
               child_logical_gates <- c(child_logical_gates, list(grandchild))
             } else {
               child_regular_children <- c(child_regular_children, list(grandchild))
             }
           }
-          
-          # Update the child's children to only have non-logical gates
-          processed_child$children <- child_regular_children
-          if (length(processed_child$children) == 0) {
-            processed_child$children <- NULL
-          }
-          
-          # Add the child to keep
-          children_to_keep <- c(children_to_keep, list(processed_child))
-          
-          # Add logical gates from this child to current level
-          gates_from_grandchildren <- c(gates_from_grandchildren, child_logical_gates)
-        } else {
-          children_to_keep <- c(children_to_keep, list(processed_child))
         }
+        
+        processed_child$children <- child_regular_children
+        if (length(processed_child$children) == 0) {
+          processed_child$children <- NULL
+        }
+        
+        children_to_keep <- c(children_to_keep, list(processed_child))
+        gates_to_move_up <- c(gates_to_move_up, child_logical_gates)
       }
     }
     
-    # Combine regular children with logical gates moved up from grandchildren
-    node$children <- c(children_to_keep, gates_from_grandchildren)
-    
+    node$children <- c(children_to_keep, gates_to_move_up)
     if (length(node$children) == 0) {
       node$children <- NULL
     }
@@ -756,10 +786,7 @@ move_logical_gates_up <- function(tree) {
     return(node)
   }
   
-  # Process the tree
-  processed_tree <- process_node(tree)
-  
-  return(processed_tree)
+  process_node(tree)
 }
 
 
@@ -805,12 +832,12 @@ create_gatingset_from_cytoset <- function(cytoset,
   
   for (i in seq_len(min(length(sample_uuids), actual_sample_count))) {
     sample_uuid <- sample_uuids[i][[1]]
-    
-    cat("Processing sample", i, "of", actual_sample_count, "\n")
-    
+
+    if (.pkgenv$verbose) cat("Processing sample", i, "of", actual_sample_count, "\n")
+
     # Extract single cytoframe
     cf <- cytoset[[i]]
-    
+
     # Apply compensation (if available)
     if (!is.null(compensations[[sample_uuid]])) {
       # Map compensation channel names to cytoframe parameter names
@@ -828,8 +855,16 @@ create_gatingset_from_cytoset <- function(cytoset,
     gs_single <- GatingSet(cs)
     
     # Apply transformations (sample-specific)
-    sample_transformations <- transformations[[sample_uuid]] %||% transformations[[1]]
+    # sample_transformations <- transformations[[sample_uuid]] %||% transformations[[1]]
+    sample_transformations <- transformations[[sample_uuid]]
+    if (is.null(sample_transformations) && length(transformations) > 0) {
+      sample_transformations <- transformations[[1]]
+    }
     
+    # When transform=TRUE, data is transformed to display space and gates are
+    # extracted in the same transformed space (via use_transformed_coords).
+    # This keeps gating evaluation, visualization, and gate coordinates
+    # consistent.
     if (!is.null(sample_transformations) && length(sample_transformations) > 0) {
       # Map transformation channel names to flowFrame parameter names
       # This handles cases where transformation names don't match (e.g., "Comp-APC-Ax700-A" vs "APC-Ax700-A")
@@ -837,19 +872,25 @@ create_gatingset_from_cytoset <- function(cytoset,
         sample_transformations,
         colnames(cf)
       )
-      
-      # Filter out NULL or linear transforms
-      tryCatch({
-        if (length(trans_mapped) > 0) {
-          transList = flowWorkspace::transformerList(from=names(trans_mapped), trans=trans_mapped)
+
+      # Keep only non-NULL, non-linear transforms (flowWorkspace-compatible objects)
+      trans_apply <- Filter(function(t) {
+        !is.null(t) &&
+          (is.null(attr(t, "type")) || attr(t, "type") != "linear")
+      }, trans_mapped)
+
+      if (length(trans_apply) > 0) {
+        tryCatch({
+          transList <- flowWorkspace::transformerList(
+            from  = names(trans_apply),
+            trans = trans_apply
+          )
           gs_single <- flowWorkspace::transform(gs_single, transList)
-        }
-        
-      }, error = function(e) {
-        warning(sprintf("Failed to apply transformations for sample %d: %s",
-                        i, e$message))
-      })
-      
+        }, error = function(e) {
+          warning(sprintf("Failed to apply transformations for sample %d: %s",
+                          i, e$message))
+        })
+      }
     }
     
     # Extract the GatingHierarchy
@@ -857,7 +898,7 @@ create_gatingset_from_cytoset <- function(cytoset,
   }
   
   # Combine GatingHierarchy objects into a GatingSet
-  cat("Combining", length(gsList), "GatingHierarchy objects into GatingSet...\n")
+  if (.pkgenv$verbose) cat("Combining", length(gsList), "GatingHierarchy objects into GatingSet...\n")
   # this will permanately transformt the data and loose transformation information
   gs = merge_list_to_gs(gsList)
   
@@ -897,13 +938,6 @@ create_gatingset_from_cytoset <- function(cytoset,
         warning("Failed to set pData: ", e$message)
       })
     }
-  }
-  
-  # Verify transformations were applied
-  cat("\n=== Verification ===\n")
-  for (i in seq_len(actual_sample_count)) {
-    trans_check <- gh_get_transformations(gsList[[i]])
-    cat(sprintf("Sample %d: %d transformations applied\n", i, length(trans_check)))
   }
   
   # Add gates and populations
