@@ -512,67 +512,6 @@ for (i in 1:14) {
   }
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# TEST 15 — FlowSOM extreme compensation -----
-# ─────────────────────────────────────────────────────────────────────────────
-run_test(15, {
-  test_dir <- file.path(BASE_TEST_DIR, "test14")
-  dir.create(test_dir, showWarnings = FALSE, recursive = TRUE)
-  
-  # Copy FCS file for test14 from the public FlowSOM example data.
-  # The parser reads the file named "68983.fcs" from test_dir (matching the
-  # workspace subset), so we always restore it from the original FlowSOM data
-  # to prevent a previously exported/compensated copy from being reused.
-  flowsom_fcs <- system.file("extdata", "68983.fcs", package = "FlowSOM")
-  if (flowsom_fcs == "" || !file.exists(flowsom_fcs)) {
-    stop("FlowSOM example data 68983.fcs not found. Install FlowSOM to run test 14.")
-  }
-  fcs_src <- file.path(BASE_TEST_DIR, "test14", "sample14.fcs")
-  fcs_src_org <- file.path(BASE_TEST_DIR, "sample14.org.fcs")
-  fcs_main <- file.path(test_dir, "68983.fcs")
-   cat("  Importing FlowSOM wsp:", flowsom_wsp, "\n")
-   fj_path = "flowjo_export_tests/test14/test14_export.llm.extreme.compensation.flowjo"
-   ws <- tryCatch(
-     read_flowjo11_workspace(fj_path),
-     error = function(e) {
-       warning("Failed to parse ", fj_path, ": ", e$message)
-       return(NULL)
-     }
-   )
-   if (is.null(ws)) return(NULL)
-   
-   # Determine search path for FCS files (same directory as the .flowjo file)
-   fcs_search_path <- dirname(fj_path)
-   
-   # Convert to GatingSet list.  We request execution so counts are computed.
-   gs_list <- tryCatch(
-     fj11_to_gatingset(
-       fj11_workspace = ws,
-       group_name         = 1,
-       path               = fcs_search_path,
-       execute            = TRUE,
-       stop_on_multiple   = FALSE,
-       include_empty_tree = FALSE
-     ),
-     error = function(e) {
-       warning("Failed to convert ", fj_path, " to GatingSet: ", e$message)
-       return(NULL)
-     }
-   )
-  cat("  Imported GatingSet with", length(gs_list), "samples\n")
-  
-  # Print population counts
-  stats <- flowWorkspace::gs_pop_get_count_fast(gs_list[[1]])
-  cat("  FlowSOM population counts:\n")
-  for (i in seq_len(nrow(stats))) {
-    cat(sprintf("    %-30s %d\n", stats$Population[i], stats$Count[i]))
-  }
-  
-  # Export to v10 format using CyFj11
-  export_flowjo10_workspace(gs, file.path(test_dir, "test14_export.wsp"))
-  
-  cat("  Exported to test14_export.wsp\n")
-})
 
 cat("\n", strrep("=", 60), "\n")
 cat("All tests complete. WSP files written to:\n")

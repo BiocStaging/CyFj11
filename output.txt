@@ -1448,3 +1448,169 @@ Would you like me to implement these changes directly, or do you want to review/
 
 
 
+===========
+
+Based on CyFj11.v3.docx, the relationship is much tighter, but there are still a few places where the standalone appendix files (Appendix_A.md, Appendix_B.md, Appendix_C.md) and the .docx appendices have drifted apart. Here is the comparison.
+
+Overall assessment
+
+CyFj11.v3.docx has a different appendix structure than the .md files:
+
+- .docx uses Appendices A–E (A = test scenarios, B = validation results, C = FJ11 backward compatibility, D = extended discussion, E = technical implementation/installation).
+- The .md files only provide Appendices A–C (A = test scenarios, B = validation results + compatibility + compensation, C = Gating-ML conformance).
+
+So the .md files collapse .docx Appendices B and C into one file (Appendix_B.md), and omit .docx Appendices D and E entirely. Conversely, the .docx does not have a dedicated Gating-ML conformance appendix; it embeds conformance inside Appendix B.
+
+Detailed comparison by content
+
+Test scenarios (.docx Appendix A vs Appendix_A.md)
+
+They agree on the 14 tests and their purposes, but there are minor differences in the level of detail:
+
+┌──────────────┬──────────────────────────────────────────────┬────────────────────────────────────────────────┐
+│    Aspect    │          CyFj11.v3.docx Appendix A           │                 Appendix_A.md                  │
+├──────────────┼──────────────────────────────────────────────┼────────────────────────────────────────────────┤
+│ Test 07      │ “Gate position drifts on round-trip; minor   │ More detailed: “Log display-space vs           │
+│ known issue  │ count difference expected”                   │ data-space convention; counts still match”     │
+├──────────────┼──────────────────────────────────────────────┼────────────────────────────────────────────────┤
+│ Test 08      │ Notes FJ11 arcsinh import failure and FJ10   │ Only says “Tests fasinh / GML2 arcsinh         │
+│ known issue  │ exact match                                  │ serialization”                                 │
+├──────────────┼──────────────────────────────────────────────┼────────────────────────────────────────────────┤
+│ Test 10      │ None                                         │ None                                           │
+│ known issue  │                                              │                                                │
+├──────────────┼──────────────────────────────────────────────┼────────────────────────────────────────────────┤
+│ Test 11      │ Lists Boolean gate import failure + APC_pos  │ Only says “Mixed fluorescence transforms”      │
+│ known issue  │ arcsinh exclusion                            │                                                │
+├──────────────┼──────────────────────────────────────────────┼────────────────────────────────────────────────┤
+│ Test 12      │ Detailed: PE_hi 47% anomaly, Boolean gates   │ Only says “Includes NOT gate and log drift     │
+│ known issue  │ not imported, ellipse redrawing              │ case”                                          │
+├──────────────┼──────────────────────────────────────────────┼────────────────────────────────────────────────┤
+│ Test 13      │ Detailed: FITC_PE_gate 825-cell discrepancy, │ Only says “3-level depth; NOT boolean gate     │
+│ known issue  │  exclusions                                  │ tested”                                        │
+├──────────────┼──────────────────────────────────────────────┼────────────────────────────────────────────────┤
+│ Test 14      │ Detailed: NK1_1+ marker failure, pipeline    │ Shorter; mentions NK1_1+ parsing issue         │
+│ known issue  │ notes, FJ10 max deviation 0.05%              │                                                │
+└──────────────┴──────────────────────────────────────────────┴────────────────────────────────────────────────┘
+
+So Appendix_A.md is a lightly summarized version of .docx Appendix A. The core facts are consistent, but the .docx carries the detailed failure notes that justify exclusions in the statistical summary.
+
+Validation results (.docx Appendix B vs Appendix_B.md)
+
+The numbers match between the two, but the narrative framing differs:
+
+- .docx Appendix B leads with the 75% / 15-of-20 exact agreement summary for tests 01–13 and the 80% / 12-of-15 exact agreement for test 14.
+- Appendix_B.md puts the full per-population Table B1 first and the summary statistics (Table B3) at the end.
+- Appendix_B.md includes sections on FlowJo v11 compatibility findings (B.2), compensation matrix preservation (B.4), summary statistics (B.5), and Gating-ML conformance cross-reference (B.6). These are not in .docx Appendix B; they are in .docx Appendix C or embedded elsewhere.
+
+One concrete inconsistency: .docx Appendix B says test 14 compensation identity is confirmed in “Supplementary Table S1,” but the .md files call it test14_compensation_elementwise.csv / test14_compensation_elementwise.md. The label “Supplementary Table S1” does not appear in the .md set.
+
+FlowJo v11 backward compatibility (.docx Appendix C vs Appendix_B.md §B.2)
+
+These are largely equivalent:
+
+┌──────────────────────────────────────────┬─────────────────────────────────────────────────────────────┐
+│             .docx Appendix C             │                        Appendix_B.md                        │
+├──────────────────────────────────────────┼─────────────────────────────────────────────────────────────┤
+│ Boolean gate import failure              │ B.2.1 Boolean gates                                         │
+├──────────────────────────────────────────┼─────────────────────────────────────────────────────────────┤
+│ Arcsinh transformation rendering failure │ B.2.2 Arcsinh ellipsoid gates                               │
+├──────────────────────────────────────────┼─────────────────────────────────────────────────────────────┤
+│ Marker name parsing failure (Test 14)    │ B.2.5 Real-world test 14 marker-name issue                  │
+├──────────────────────────────────────────┼─────────────────────────────────────────────────────────────┤
+│ Import workaround (re-save from FJ10)    │ Not explicitly in B.2; mentioned in B.1 validation pipeline │
+├──────────────────────────────────────────┼─────────────────────────────────────────────────────────────┤
+│ Detailed FJ11 count comparison paragraph │ Distributed across Table B1 and B.2 subsections             │
+└──────────────────────────────────────────┴─────────────────────────────────────────────────────────────┘
+
+Appendix_B.md adds a section on log-transform display space (B.2.4) that is not a separate heading in .docx Appendix C, though it is implicit in the test 12 discussion.
+
+Gating-ML conformance
+
+- .docx embeds it in Appendix B (Table 3) and the main Validation section.
+- Appendix_C.md is a dedicated, more elaborate conformance appendix with Table C1 per test. The totals are identical (50/50), and the breakdown by check category is consistent.
+
+Extended discussion (.docx Appendix D)
+
+There is no equivalent in the .md appendix set. This appendix contains:
+- Use cases and comparison with CytoML / openCyto
+- The full five numbered limitations
+- Future directions (v11 export, spectral unmixing, CyTOF)
+
+Appendix_B.md only briefly mentions CytoML in B.5 and does not include the full discussion.
+
+Technical implementation / installation (.docx Appendix E)
+
+There is no equivalent in the .md appendix set. This appendix contains:
+- Format comparison (v10 XML vs v11 JSON)
+- Gate type conversion details
+- Transformation parameter mapping table
+- Package architecture table
+- Validation methodology (metrics, acceptance criteria)
+
+The transformation parameter mapping table and package architecture table are useful reference material that is absent from the .md files.
+
+Key discrepancies
+
+1. Numbering / naming mismatch. The .docx calls the supplementary material “Appendices A–E,” while the .md files call them “Appendices A–C.” This will confuse readers if both are present.
+2. Missing appendices in .md. .docx Appendices D and E are not represented as standalone .md files. If the .md files are meant to replace the .docx appendices, material has been lost.
+3. Compensation table label. .docx refers to “Supplementary Table S1” for the test 14 element-wise compensation comparison; the .md files call it test14_compensation_elementwise.csv/md. The label is inconsistent.
+4. Level of detail in test-scenario descriptions. Appendix_A.md strips out the detailed failure notes that justify which gates were excluded from the FJ11 comparison. This makes the .md version less self-contained for reproducibility.
+5. Gating-ML conformance placement. .docx puts conformance in Appendix B/Validation; Appendix_C.md makes it a separate appendix. Both are internally consistent, but they are not synchronized.
+6. “Supplementary File 4” reference. .docx Appendix B says compensation details are in “Supplementary File 4,” but the .md files do not use that numbering at all.
+
+Conclusion
+
+The appendices in CyFj11.v3.docx and the standalone Appendix_A/B/C.md files agree on the numerical results and the high-level findings, but they are not the same document. If the .md files are intended to be the canonical appendices for the manuscript, they need to be reconciled with the .docx:
+
+- Add .docx Appendix D content (extended discussion, limitations, CytoML comparison) somewhere — either as a new Appendix_D.md or merged into Appendix_B.md.
+- Add .docx Appendix E content (technical implementation, transformation table, package architecture, validation methodology) — either as Appendix_D.md or Appendix_E.md.
+- Decide on a single naming scheme: “Appendix A/B/C/D/E” vs “Supplementary File/Table S1.”
+- Restore the detailed known-issue notes for tests 08, 11, 12, 13, 14 into Appendix_A.md so it matches the .docx level of detail.
+- Update the cross-references in the main manuscript text so they point to the correct appendix files.
+
+✻ Crunched for 17s
+
+============================
+
+Changes made
+
+New file: manuscript/Appendix_D.md
+
+Contains technical implementation details:
+- D.1 FlowJo v10 vs v11 format comparison table
+- D.2 Gate type conversions (rectangle, polygon, ellipsoid, Boolean, quadrant)
+- D.3 Transformation parameter mapping + display-space vs data-space explanation
+- D.4 Package architecture / source-file table
+- D.5 Validation methodology and acceptance criteria
+
+manuscript/Appendix_A.md
+
+- Added §A.6 “Validation methodology and acceptance criteria” (light version; full pipeline remains in Appendix B, detailed implementation context in Appendix D).
+
+manuscript/Appendix_B.md
+
+- Fixed Table B3 so residual maxima are shown as integer counts (14 cells, 73 cells, 9 cells, 10 cells, 90 cells, 0 cells) instead of floating-point.
+- Added §B.7 cross-reference to Appendix D.
+
+manuscript/Appendix_C.md
+
+- Added a sentence pointing readers to Appendix D for implementation details.
+
+Proposed sentence for the main manuscript
+
+A natural place is the Results → Standards compliance paragraph or the Software Description section. Suggested wording:
+
+▎ “Technical details of the v10/v11 format mapping, gate conversions, transformation parameter handling, and source-code organization are provided in Appendix D.”
+
+If you want it in the Results section, place it right after:
+
+▎ “All 50 applicable Gating-ML 2.0 structural checks passed across the 13 test workspaces (Appendix C).”
+
+So the combined sentence would read:
+
+▎ “All 50 applicable Gating-ML 2.0 structural checks passed across the 13 test workspaces (Appendix C); implementation details of the exporter are provided in Appendix D.”
+
+Let me know if you want me to insert this sentence into CyFj11.v3_SC.docx directly, or if you prefer to do it yourself.
+
+
+

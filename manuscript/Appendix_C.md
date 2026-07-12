@@ -1,3 +1,8 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
 # Appendix C: Gating-ML 2.0 Standards Compliance
 
 CyFj11 exports FlowJo v10 workspaces as XML documents intended to conform to the ISAC Gating-ML 2.0 standard (Spidlen et al., *Cytometry A*, 2012, doi:10.1002/cyto.a.22156). This appendix documents the structural conformance checks performed on the 13 synthetic test workspaces and summarizes the results.
@@ -39,7 +44,7 @@ Legend: ✓ = check passed; — = gate/transform type not present in that test.
 
 ## C.4 Coverage notes
 
-The structural checks verify XML schema conformance, not semantic correctness of population counts. Semantic correctness is assessed separately in Appendix B. The two checks are complementary:
+The structural checks verify XML schema conformance, not semantic correctness of population counts. Semantic correctness is assessed separately in Appendix B. Details of the export implementation --- including the FlowJo v10/v11 format comparison, gate-type conversions, and transformation parameter mapping --- are provided in Appendix D. The two checks are complementary:
 
 - **Structural conformance** guarantees that exported workspaces are parseable by any Gating-ML 2.0–compliant reader.
 - **Population-count validation** guarantees that the gates encoded in those valid XML structures produce the expected event subsets.

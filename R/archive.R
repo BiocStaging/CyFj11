@@ -76,7 +76,7 @@ process_zip_archive <- function(zip_path) {
   # Read manifest files (plain text)
   for(manifest_file in manifest_files) {
     if(file.exists(manifest_file)) {
-      results$manifests[[basename(manifest_file)]] <- readLines(manifest_file)
+      results$manifests[[basename(manifest_file)]] <- readLines(manifest_file, warn = FALSE)
     }
   }
   
@@ -87,7 +87,7 @@ process_zip_archive <- function(zip_path) {
         jsonlite::fromJSON(json_file, simplifyVector = FALSE, simplifyMatrix = FALSE)  # Parse JSON
       }, error = function(e) {
         # If parsing fails, return error and raw content for debugging
-        list(error = e$message, raw_content = readLines(json_file))
+        list(error = e$message, raw_content = readLines(json_file, warn = FALSE))
       })
     }
   }

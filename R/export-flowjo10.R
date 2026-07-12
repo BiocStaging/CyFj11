@@ -55,7 +55,7 @@ export_flowjo10_workspace <- function(gating_set, output_path,
   
   # ---- Determine the directory for FCS path calculations ------------------
   target_fcs_dir <- if (!is.null(fcs_root)) {
-    outDir <- normalizePath(fcs_root, mustWork = FALSE)
+    outDir <- fcs_root
     if (!dir.exists(outDir)) {
       stop(
         "fcs_root directory does not exist: ", outDir
@@ -63,7 +63,7 @@ export_flowjo10_workspace <- function(gating_set, output_path,
     }
     outDir
   } else {
-    dirname(normalizePath(output_path, mustWork = FALSE))
+    dirname(output_path)
   }
   
   # ---- Write FCS files when an explicit fcs_root is supplied --------------
@@ -149,20 +149,30 @@ extract_samples_from_gatingset_v10 <- function(gating_set, target_fcs_dir = NULL
     # GatingSet keywords. FlowJo expects the original FCS parameter names plus
     # the compensated duplicates ($P{18+i}N). Read the original header to recover
     # the acquisition keywords.
-    fcs_header <- tryCatch({
-      fcs_path <- if (!is.na(original_fcs_path) && file.exists(original_fcs_path)) {
-        original_fcs_path
-      } else if (!is.na(final_uri) && file.exists(final_uri)) {
-        final_uri
-      } else {
-        NULL
+    fcs_header <- NULL
+    fcs_path <- NULL
+
+    # First try: the FILENAME keyword points to an existing file
+    if (!is.na(original_fcs_path) && file.exists(original_fcs_path)) {
+      fcs_path <- original_fcs_path
+    }
+    # Second try: the final_uri (target location) already exists
+    else if (!is.na(final_uri) && file.exists(final_uri)) {
+      fcs_path <- final_uri
+    }
+    # Third try: look for the basename in the same directory as FILENAME
+    else if (!is.na(original_fcs_path) && !is.na(original_basename)) {
+      alt_path <- file.path(dirname(original_fcs_path), original_basename)
+      if (file.exists(alt_path)) {
+        fcs_path <- alt_path
       }
-      if (!is.null(fcs_path)) {
+    }
+
+    if (!is.null(fcs_path)) {
+      fcs_header <- tryCatch({
         flowCore::read.FCSheader(fcs_path)[[1]]
-      } else {
-        NULL
-      }
-    }, error = function(e) NULL)
+      }, error = function(e) NULL)
+    }
     
     # GatingSet-derived keywords that should be preserved/overlaid
     gs_keywords <- tryCatch({
@@ -259,34 +269,23 @@ parse_spill_keyword <- function(keywords) {
 #' @return Named list of keywords for the exported workspace.
 #' @keywords internal
 build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
-  if (is.null(fcs_keywords) || length(fcs_keywords) == 0) {
-    # Fall back to GatingSet keywords if original header unavailable
-    keywords <- if (!is.null(gs_keywords)) gs_keywords else list()
-    keywords[["FILENAME"]] <- final_filename
-    return(keywords)
+  # Start from GatingSet keywords as base (contains SPILL matrix if compensation exists)
+  keywords <- if (!is.null(gs_keywords)) as.list(gs_keywords) else list()
+
+  # Overlay original FCS header keywords if available (these have the original acquisition values)
+  if (!is.null(fcs_keywords) && length(fcs_keywords) > 0) {
+    fcs_list <- as.list(fcs_keywords)
+    # Copy FCS keywords, but skip SPILL (we'll handle it specially below)
+    for (k in names(fcs_list)) {
+      if (k != "SPILL") {
+        keywords[[k]] <- fcs_list[[k]]
+      }
+    }
   }
-  
-  # Start from original FCS header
-  keywords <- as.list(fcs_keywords)
-  
-  # Overlay GatingSet-derived values that should be preserved
-  overlay_keys <- c("GUID", "ORIGINALGUID", "transformation", "APPLY COMPENSATION",
-                    "AUTOBS", "EXPORT TIME", "EXPORT USER NAME", "EXPERIMENT NAME",
-                    "FSC ASF", "TUBE NAME", "THRESHOLD", "WINDOW EXTENSION")
-  for (k in overlay_keys) {
-    v <- gs_keywords[[k]]
-    if (!is.null(v)) keywords[[k]] <- v
-  }
-  
-  # Overlay flowCore-derived range keywords
-  flowcore_keys <- grep("^flowCore_\\$P[0-9]+R", names(gs_keywords), value = TRUE)
-  for (k in flowcore_keys) {
-    keywords[[k]] <- gs_keywords[[k]]
-  }
-  
+
   # Rewrite FILENAME as requested
   keywords[["FILENAME"]] <- final_filename
-  
+
   # Add compensated duplicate parameters when compensation is present
   spill <- parse_spill_keyword(keywords)
   if (!is.null(spill)) {
@@ -295,34 +294,41 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
     # Determine existing $PAR
     par_val <- suppressWarnings(as.integer(keywords[["$PAR"]]))
     if (is.na(par_val)) par_val <- n_orig
-    
+
     # TODO verify that comp name has to be changed.
     # Add $P{par_val + i}N/S/R entries for each compensated channel
     for (i in seq_along(comp_names)) {
       orig_name <- comp_names[i]
       comp_name <- paste0("Comp-", orig_name)
       idx <- par_val + i
-      
+
       # Find original parameter index for this channel
       orig_idx <- which(comp_names == orig_name)[1]
       orig_s <- keywords[[sprintf("$P%dS", orig_idx)]] %||% ""
       orig_r <- keywords[[sprintf("$P%dR", orig_idx)]] %||% "262144"
-      
+
       keywords[[sprintf("$P%dN", idx)]] <- comp_name
       keywords[[sprintf("$P%dS", idx)]] <- orig_s
       keywords[[sprintf("$P%dR", idx)]] <- as.character(orig_r)
     }
-    
-    # Ensure SPILL is serialized in FCS flat format: n, names, values
-    if (is.matrix(keywords[["SPILL"]])) {
-      sp <- keywords[["SPILL"]]
+
+    # Ensure SPILL is serialized in FCS flat format: n, names, values.
+    # GatingSet keywords may store SPILL as a matrix even when the original
+    # FCS header had a flat string, so normalize both forms.
+    sp <- keywords[["SPILL"]]
+    if (is.matrix(sp)) {
       if (is.null(rownames(sp)) && !is.null(colnames(sp))) rownames(sp) <- colnames(sp)
       if (is.null(colnames(sp)) && !is.null(rownames(sp))) colnames(sp) <- rownames(sp)
       flat_spill <- paste(c(ncol(sp), colnames(sp), as.vector(sp)), collapse = ",")
       keywords[["SPILL"]] <- flat_spill
+    } else if (is.character(sp)) {
+      # Already a flat string (possibly a single element); keep as-is.
+      if (length(sp) > 1) {
+        keywords[["SPILL"]] <- paste(sp, collapse = ",")
+      }
     }
   }
-  
+
   keywords
 }
 
@@ -1387,7 +1393,8 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
   } else {
     # Full FJ10 format with all attributes
     current_time <- format(Sys.time(), "%a %b %d %H:%M:%S %Z %Y")
-    client_ts <- as.character(as.integer(as.numeric(Sys.time()) * 1000))
+    client_ts <- format(Sys.time(), "%s%OS3")
+    client_ts <- gsub("\\.", "", client_ts)
     
     xml_lines <- c(
       '<?xml version="1.0" encoding="UTF-8"?>',

@@ -1,0 +1,200 @@
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2859:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2859:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2859:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2859:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2859:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2886:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2886:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2886:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2886:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2886:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2886:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2886:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2886:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2886:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2886:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2912:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2912:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2912:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2912:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2912:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2912:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2912:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2912:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2977:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2977:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:3060:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:3060:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+FAILURE: 'test-export-flowjo10.R:3090:3' ----------
+Expected `length(spill_parts)` to equal `1 + 2 + 4`.
+Differences:
+1/1 mismatches
+[1] 1 - 7 == -6
+SPILL keyword has 1 + n + n^2 values
+
+FAILURE: 'test-export-flowjo10.R:3092:3' ----------
+Expected `spill_parts[1]` to equal "2".
+Differences:
+1/1 mismatches
+x[1]: "1"
+y[1]: "2"
+SPILL keyword starts with channel count
+
+FAILURE: 'test-export-flowjo10.R:3093:3' ----------
+Expected `all(spill_parts[2:3] == c("FITC-A", "PE-A"))` to be TRUE.
+Differences:
+`actual`:   <NA>
+`expected`: TRUE
+
+SPILL keyword channel header is correct
+
+WARNING: 'test-export-flowjo10.R:3113:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:3113:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:3147:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, out_wsp)) at test-export-flowjo10.R:3147:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, out_wsp)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:3190:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(...) at test-export-flowjo10.R:3190:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, out_wsp, fcs_root = fcs_dir)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+FAILURE: 'test-export-flowjo10.R:3202:3' ----------
+Expected `grepl(fcs_dir, uri, fixed = TRUE)` to be TRUE.
+Differences:
+`actual`:   FALSE
+`expected`: TRUE 
+
+
+FAILURE: 'test-export-flowjo10.R:3208:3' ----------
+Expected `any(grepl(fcs_dir, kw_values, fixed = TRUE))` to be TRUE.
+Differences:
+`actual`:   FALSE
+`expected`: TRUE 
+
+
+FAILURE: 'test-export-flowjo10.R:3291:3' ----------
+Expected `grepl(fcs_dir, uri, fixed = TRUE)` to be TRUE.
+Differences:
+`actual`:   FALSE
+`expected`: TRUE 
+
+
+[ FAIL 6 | WARN 172 | SKIP 0 | PASS 398 ]

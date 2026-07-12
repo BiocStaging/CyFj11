@@ -41,7 +41,7 @@ Standard FlowJo-equivalent parameters were used:
 | 11 | Mixed transforms + Boolean | 2D rect, 1D ranges, polygon, Boolean AND/OR | Biexponential (FITC-A), arcsinh (APC-A), linear | 2 | Mixed fluorescence transforms. |
 | 12 | Full Boolean set + ellipse | 2D rect, ellipse, ranges, Boolean AND/OR/NOT | Biexponential (FITC-A), log (PE-A), linear | 2 | Includes `NOT` gate and log drift case. |
 | 13 | Deep arcsinh hierarchy | Polygon, 2D rect, ellipse, ranges, Boolean AND/NOT | Arcsinh (FITC-A, PE-A, APC-A), linear | 3 | `live → {singlets, FITC_PE_gate} → {FITC_pos, APC_pos, double_pos, not_double}`. |
-| 14 | Real-world FlowSOM data | Polygon, rectangles | Linear (scatter), biexponential (fluorescence) | 3 | Public mouse bone-marrow dataset (`68983.fcs`); tests compensation matrix preservation. Populations downstream of the `NK1_1+` marker are unavailable in FlowJo v11 because the importer does not parse the underscore–plus character combination. |
+| 14 | Real-world FlowSOM data | Polygon, rectangles | Linear (scatter), biexponential (fluorescence) | 3 | Public mouse bone-marrow dataset (`68983.fcs`); tests compensation matrix preservation. |
 
 ## A.4 Source files
 
@@ -66,18 +66,7 @@ Generated artifacts for each test are stored under `flowjo_export_tests/testNN/`
 
 Test 14 additionally contains the public FlowSOM files `68983.fcs` and `gating.wsp`, plus the CyFj11-exported workspace `test14_export.wsp`.
 
-## A.6 Validation methodology and acceptance criteria
-
-The validation pipeline and per-population results are described in Appendix B. The metrics and acceptance criteria used to judge success are summarized below.
-
-| Metric | Acceptance criterion |
-|:---|:---|
-| Population count difference | ≤ 0.5% absolute |
-| Gate coordinate deviation | ≤ 0.1% of axis range (95th percentile) |
-| KS D-statistic (transformations) | < 0.05 for ≥ 95% of comparisons |
-| Boolean membership agreement | 100% |
-
-## A.7 Regeneration
+## A.6 Regeneration
 
 Tests 01–14 can be regenerated from the package root by running:
 

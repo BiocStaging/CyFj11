@@ -1,0 +1,2205 @@
+ℹ Testing CyFj11
+***** LOADING HELPER FILE *****
+WARNING: 'test-archive.R:58:3' --------------------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_67039/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─CyFj11::read_flowjo11_workspace(test_file) at test-archive.R:58:3
+ 2.   └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 3.     └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+WARNING: 'test-archive.R:84:3' --------------------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_13960/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─CyFj11:::process_zip_archive(test_file) at test-archive.R:84:3
+ 2.   └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+WARNING: 'test-build-gating-tree.R:33:1' ----------
+package ‘flowWorkspace’ was built under R version 4.5.2
+Backtrace:
+    ▆
+ 1. └─base::library(flowWorkspace) at test-build-gating-tree.R:33:1
+ 2.   └─base (local) testRversion(pkgInfo, package, pkgpath)
+
+WARNING: 'test-conversion-full.R:46:3' ------------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_32532/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─CyFj11::read_flowjo11_workspace(workspace_path) at test-conversion-full.R:46:3
+ 2.   └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 3.     └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+===========================================
+  Resolving FCS File Paths
+===========================================
+
+
+Resolving 1 sample paths...
+
+OK sample04.fcs
+
+===========================================
+  Resolution Summary
+===========================================
+Total samples:   1 
+  Found:         1  (100.0%)
+  Missing:       0  (0.0%)
+  Multiple:      0  (0.0%)
+===========================================
+
+WARNING: 'test-conversion-full.R:57:5' ------------
+No compensation found for sample: 9d31a6f4-342d-4b66-a508-1f7d470e6bd9
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_error(...) at test-conversion-full.R:56:3
+ 2. │ └─testthat:::quasi_capture(...)
+ 3. │   ├─testthat (local) .capture(...)
+ 4. │   │ └─base::withCallingHandlers(...)
+ 5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:57:5
+ 7.   └─CyFj11:::extract_compensation(...) at CyFj11/R/conversion.R:318:3
+
+
+=== COMPENSATION DIAGNOSTIC ===
+Number of samples: 1 
+Number of comp matrices found: 0 
+Comp list names:  
+Sample UUIDs:
+   9d31a6f4-342d-4b66-a508-1f7d470e6bd9 
+UUID 9d31a6f4 ... → comp found: FALSE 
+================================
+
+Processing sample 1 of 1 
+=== Sample 1 ===
+UUID: 9d31a6f4-342d-4b66-a508-1f7d470e6bd9 
+Compensation found: FALSE 
+Keys in comp_list:  
+Colnames before comp: FSC-A, FSC-H, SSC-A, SSC-H, FITC-A, PE-A, APC-A, PerCP-Cy5-5-A 
+Warning: stack imbalance in '{', 127 then 129
+Warning: stack imbalance in 'for', 120 then 122
+Warning: stack imbalance in '{', 116 then 118
+Warning: stack imbalance in 'for', 109 then 111
+Combining 1 GatingHierarchy objects into GatingSet...
+
+=== Verification ===
+Sample 1: 0 transformations applied
+WARNING: 'test-conversion-full.R:57:5' ------------
+Failed to add population 'ch8High': Expected string vector of length 1
+  Parent: cells/Singlets/Single_cells/cd8Pos/Q4:PE-A :: CD4-,PerCP-Cy5-5-A :: CD14- : cells/Singlets/Single_cells/cd8Pos/Q3:PE-A :: CD4+,PerCP-Cy5-5-A :: CD14- : cells/Singlets/Single_cells/cd8Pos/Q1:PE-A :: CD4-,PerCP-Cy5-5-A :: CD14+ : cells/Singlets/Single_cells/cd8Pos/Q2:PE-A :: CD4+,PerCP-Cy5-5-A :: CD14+
+  Gate type: rectangleGate
+Backtrace:
+     ▆
+  1. ├─testthat::expect_error(...) at test-conversion-full.R:56:3
+  2. │ └─testthat:::quasi_capture(...)
+  3. │   ├─testthat (local) .capture(...)
+  4. │   │ └─base::withCallingHandlers(...)
+  5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+  6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:57:5
+  7.   └─CyFj11:::create_gatingset_from_cytoset(...) at CyFj11/R/conversion.R:340:3
+  8.     └─CyFj11:::add_populations_to_gatingset(...) at CyFj11/R/helpers-conversion.R:989:7
+  9.       └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:97:5
+ 10.         └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:444:9
+ 11.           ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 12.           │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 13.           │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 14.           │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 15.           └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 16.             ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 17.             │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 18.             │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 19.             │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 20.             └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 21.               ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 22.               │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 23.               │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 24.               │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 25.               └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 26.                 ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 27.                 │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 28.                 │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 29.                 │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 30.                 └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 31.                   ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 32.                   │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 33.                   │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 34.                   │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 35.                   └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 36.                     ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 37.                     │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 38.                     │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 39.                     │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 40.                     └─base::tryCatch(...) at CyFj11/R/populations.R:659:9
+ 41.                       └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 42.                         └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 43.                           └─value[[3L]](cond)
+
+WARNING: 'test-conversion-full.R:57:5' ------------
+Failed to add population 'cd8HighLow': Expected string vector of length 1
+  Parent: cells/Singlets/Single_cells/cd8Pos/Q4:PE-A :: CD4-,PerCP-Cy5-5-A :: CD14- : cells/Singlets/Single_cells/cd8Pos/Q3:PE-A :: CD4+,PerCP-Cy5-5-A :: CD14- : cells/Singlets/Single_cells/cd8Pos/Q1:PE-A :: CD4-,PerCP-Cy5-5-A :: CD14+ : cells/Singlets/Single_cells/cd8Pos/Q2:PE-A :: CD4+,PerCP-Cy5-5-A :: CD14+
+  Gate type: rectangleGate
+Backtrace:
+     ▆
+  1. ├─testthat::expect_error(...) at test-conversion-full.R:56:3
+  2. │ └─testthat:::quasi_capture(...)
+  3. │   ├─testthat (local) .capture(...)
+  4. │   │ └─base::withCallingHandlers(...)
+  5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+  6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:57:5
+  7.   └─CyFj11:::create_gatingset_from_cytoset(...) at CyFj11/R/conversion.R:340:3
+  8.     └─CyFj11:::add_populations_to_gatingset(...) at CyFj11/R/helpers-conversion.R:989:7
+  9.       └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:97:5
+ 10.         └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:444:9
+ 11.           ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 12.           │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 13.           │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 14.           │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 15.           └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 16.             ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 17.             │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 18.             │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 19.             │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 20.             └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 21.               ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 22.               │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 23.               │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 24.               │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 25.               └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 26.                 ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 27.                 │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 28.                 │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 29.                 │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 30.                 └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 31.                   ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 32.                   │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 33.                   │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 34.                   │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 35.                   └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 36.                     ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 37.                     │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 38.                     │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 39.                     │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 40.                     └─base::tryCatch(...) at CyFj11/R/populations.R:659:9
+ 41.                       └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 42.                         └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 43.                           └─value[[3L]](cond)
+
+WARNING: 'test-conversion-full.R:57:5' ------------
+Could not resolve all component paths for logical gate: And gate of ch8High, cd8HighLow
+  Missing components: ch8High, cd8HighLow
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_error(...) at test-conversion-full.R:56:3
+ 2. │ └─testthat:::quasi_capture(...)
+ 3. │   ├─testthat (local) .capture(...)
+ 4. │   │ └─base::withCallingHandlers(...)
+ 5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:57:5
+ 7.   └─CyFj11:::create_gatingset_from_cytoset(...) at CyFj11/R/conversion.R:340:3
+ 8.     └─CyFj11:::add_populations_to_gatingset(...) at CyFj11/R/helpers-conversion.R:989:7
+
+WARNING: 'test-conversion-full.R:57:5' ------------
+Could not resolve all component paths for logical gate: Not gate of ch8High
+  Missing components: ch8High
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_error(...) at test-conversion-full.R:56:3
+ 2. │ └─testthat:::quasi_capture(...)
+ 3. │   ├─testthat (local) .capture(...)
+ 4. │   │ └─base::withCallingHandlers(...)
+ 5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:57:5
+ 7.   └─CyFj11:::create_gatingset_from_cytoset(...) at CyFj11/R/conversion.R:340:3
+ 8.     └─CyFj11:::add_populations_to_gatingset(...) at CyFj11/R/helpers-conversion.R:989:7
+
+WARNING: 'test-conversion-full.R:57:5' ------------
+Could not resolve all component paths for logical gate: Or gate of ch8High, cd8HighLow
+  Missing components: cd8HighLow, ch8High
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_error(...) at test-conversion-full.R:56:3
+ 2. │ └─testthat:::quasi_capture(...)
+ 3. │   ├─testthat (local) .capture(...)
+ 4. │   │ └─base::withCallingHandlers(...)
+ 5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:57:5
+ 7.   └─CyFj11:::create_gatingset_from_cytoset(...) at CyFj11/R/conversion.R:340:3
+ 8.     └─CyFj11:::add_populations_to_gatingset(...) at CyFj11/R/helpers-conversion.R:989:7
+
+WARNING: 'test-conversion-full.R:57:5' ------------
+Could not resolve all component paths for logical gate: Not gate of cd8HighLow
+  Missing components: cd8HighLow
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_error(...) at test-conversion-full.R:56:3
+ 2. │ └─testthat:::quasi_capture(...)
+ 3. │   ├─testthat (local) .capture(...)
+ 4. │   │ └─base::withCallingHandlers(...)
+ 5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:57:5
+ 7.   └─CyFj11:::create_gatingset_from_cytoset(...) at CyFj11/R/conversion.R:340:3
+ 8.     └─CyFj11:::add_populations_to_gatingset(...) at CyFj11/R/helpers-conversion.R:989:7
+
+WARNING: 'test-conversion-full.R:76:3' ------------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_99192/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─CyFj11::read_flowjo11_workspace(workspace_path) at test-conversion-full.R:76:3
+ 2.   └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 3.     └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+===========================================
+  Resolving FCS File Paths
+===========================================
+
+
+Resolving 1 sample paths...
+
+OK sample04.fcs
+
+===========================================
+  Resolution Summary
+===========================================
+Total samples:   1 
+  Found:         1  (100.0%)
+  Missing:       0  (0.0%)
+  Multiple:      0  (0.0%)
+===========================================
+
+WARNING: 'test-conversion-full.R:85:5' ------------
+No compensation found for sample: 9d31a6f4-342d-4b66-a508-1f7d470e6bd9
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_error(...) at test-conversion-full.R:84:3
+ 2. │ └─testthat:::quasi_capture(...)
+ 3. │   ├─testthat (local) .capture(...)
+ 4. │   │ └─base::withCallingHandlers(...)
+ 5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:85:5
+ 7.   └─CyFj11:::extract_compensation(...) at CyFj11/R/conversion.R:318:3
+
+
+=== COMPENSATION DIAGNOSTIC ===
+Number of samples: 1 
+Number of comp matrices found: 0 
+Comp list names:  
+Sample UUIDs:
+   9d31a6f4-342d-4b66-a508-1f7d470e6bd9 
+UUID 9d31a6f4 ... → comp found: FALSE 
+================================
+
+Processing sample 1 of 1 
+=== Sample 1 ===
+UUID: 9d31a6f4-342d-4b66-a508-1f7d470e6bd9 
+Compensation found: FALSE 
+Keys in comp_list:  
+Colnames before comp: FSC-A, FSC-H, SSC-A, SSC-H, FITC-A, PE-A, APC-A, PerCP-Cy5-5-A 
+Combining 1 GatingHierarchy objects into GatingSet...
+
+=== Verification ===
+Sample 1: 0 transformations applied
+WARNING: 'test-conversion-full.R:85:5' ------------
+Failed to add population 'ch8High': Expected string vector of length 1
+  Parent: cells/Singlets/Single_cells/cd8Pos/Q4:PE-A :: CD4-,PerCP-Cy5-5-A :: CD14- : cells/Singlets/Single_cells/cd8Pos/Q3:PE-A :: CD4+,PerCP-Cy5-5-A :: CD14- : cells/Singlets/Single_cells/cd8Pos/Q1:PE-A :: CD4-,PerCP-Cy5-5-A :: CD14+ : cells/Singlets/Single_cells/cd8Pos/Q2:PE-A :: CD4+,PerCP-Cy5-5-A :: CD14+
+  Gate type: rectangleGate
+Backtrace:
+     ▆
+  1. ├─testthat::expect_error(...) at test-conversion-full.R:84:3
+  2. │ └─testthat:::quasi_capture(...)
+  3. │   ├─testthat (local) .capture(...)
+  4. │   │ └─base::withCallingHandlers(...)
+  5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+  6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:85:5
+  7.   └─CyFj11:::create_gatingset_from_cytoset(...) at CyFj11/R/conversion.R:340:3
+  8.     └─CyFj11:::add_populations_to_gatingset(...) at CyFj11/R/helpers-conversion.R:989:7
+  9.       └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:97:5
+ 10.         └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:444:9
+ 11.           ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 12.           │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 13.           │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 14.           │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 15.           └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 16.             ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 17.             │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 18.             │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 19.             │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 20.             └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 21.               ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 22.               │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 23.               │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 24.               │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 25.               └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 26.                 ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 27.                 │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 28.                 │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 29.                 │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 30.                 └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 31.                   ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 32.                   │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 33.                   │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 34.                   │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 35.                   └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 36.                     ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 37.                     │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 38.                     │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 39.                     │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 40.                     └─base::tryCatch(...) at CyFj11/R/populations.R:659:9
+ 41.                       └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 42.                         └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 43.                           └─value[[3L]](cond)
+
+WARNING: 'test-conversion-full.R:85:5' ------------
+Failed to add population 'cd8HighLow': Expected string vector of length 1
+  Parent: cells/Singlets/Single_cells/cd8Pos/Q4:PE-A :: CD4-,PerCP-Cy5-5-A :: CD14- : cells/Singlets/Single_cells/cd8Pos/Q3:PE-A :: CD4+,PerCP-Cy5-5-A :: CD14- : cells/Singlets/Single_cells/cd8Pos/Q1:PE-A :: CD4-,PerCP-Cy5-5-A :: CD14+ : cells/Singlets/Single_cells/cd8Pos/Q2:PE-A :: CD4+,PerCP-Cy5-5-A :: CD14+
+  Gate type: rectangleGate
+Backtrace:
+     ▆
+  1. ├─testthat::expect_error(...) at test-conversion-full.R:84:3
+  2. │ └─testthat:::quasi_capture(...)
+  3. │   ├─testthat (local) .capture(...)
+  4. │   │ └─base::withCallingHandlers(...)
+  5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+  6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:85:5
+  7.   └─CyFj11:::create_gatingset_from_cytoset(...) at CyFj11/R/conversion.R:340:3
+  8.     └─CyFj11:::add_populations_to_gatingset(...) at CyFj11/R/helpers-conversion.R:989:7
+  9.       └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:97:5
+ 10.         └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:444:9
+ 11.           ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 12.           │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 13.           │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 14.           │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 15.           └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 16.             ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 17.             │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 18.             │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 19.             │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 20.             └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 21.               ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 22.               │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 23.               │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 24.               │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 25.               └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 26.                 ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 27.                 │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 28.                 │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 29.                 │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 30.                 └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 31.                   ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 32.                   │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 33.                   │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 34.                   │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 35.                   └─CyFj11:::add_population_node(...) at CyFj11/R/populations.R:694:11
+ 36.                     ├─base::tryCatch(...) at CyFj11/R/populations.R:616:5
+ 37.                     │ └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 38.                     │   └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 39.                     │     └─base (local) doTryCatch(return(expr), name, parentenv, handler)
+ 40.                     └─base::tryCatch(...) at CyFj11/R/populations.R:659:9
+ 41.                       └─base (local) tryCatchList(expr, classes, parentenv, handlers)
+ 42.                         └─base (local) tryCatchOne(expr, names, parentenv, handlers[[1L]])
+ 43.                           └─value[[3L]](cond)
+
+WARNING: 'test-conversion-full.R:85:5' ------------
+Could not resolve all component paths for logical gate: And gate of ch8High, cd8HighLow
+  Missing components: ch8High, cd8HighLow
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_error(...) at test-conversion-full.R:84:3
+ 2. │ └─testthat:::quasi_capture(...)
+ 3. │   ├─testthat (local) .capture(...)
+ 4. │   │ └─base::withCallingHandlers(...)
+ 5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:85:5
+ 7.   └─CyFj11:::create_gatingset_from_cytoset(...) at CyFj11/R/conversion.R:340:3
+ 8.     └─CyFj11:::add_populations_to_gatingset(...) at CyFj11/R/helpers-conversion.R:989:7
+
+WARNING: 'test-conversion-full.R:85:5' ------------
+Could not resolve all component paths for logical gate: Not gate of ch8High
+  Missing components: ch8High
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_error(...) at test-conversion-full.R:84:3
+ 2. │ └─testthat:::quasi_capture(...)
+ 3. │   ├─testthat (local) .capture(...)
+ 4. │   │ └─base::withCallingHandlers(...)
+ 5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:85:5
+ 7.   └─CyFj11:::create_gatingset_from_cytoset(...) at CyFj11/R/conversion.R:340:3
+ 8.     └─CyFj11:::add_populations_to_gatingset(...) at CyFj11/R/helpers-conversion.R:989:7
+
+WARNING: 'test-conversion-full.R:85:5' ------------
+Could not resolve all component paths for logical gate: Or gate of ch8High, cd8HighLow
+  Missing components: cd8HighLow, ch8High
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_error(...) at test-conversion-full.R:84:3
+ 2. │ └─testthat:::quasi_capture(...)
+ 3. │   ├─testthat (local) .capture(...)
+ 4. │   │ └─base::withCallingHandlers(...)
+ 5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:85:5
+ 7.   └─CyFj11:::create_gatingset_from_cytoset(...) at CyFj11/R/conversion.R:340:3
+ 8.     └─CyFj11:::add_populations_to_gatingset(...) at CyFj11/R/helpers-conversion.R:989:7
+
+WARNING: 'test-conversion-full.R:85:5' ------------
+Could not resolve all component paths for logical gate: Not gate of cd8HighLow
+  Missing components: cd8HighLow
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_error(...) at test-conversion-full.R:84:3
+ 2. │ └─testthat:::quasi_capture(...)
+ 3. │   ├─testthat (local) .capture(...)
+ 4. │   │ └─base::withCallingHandlers(...)
+ 5. │   └─rlang::eval_bare(quo_get_expr(.quo), quo_get_env(.quo))
+ 6. └─CyFj11::fj11_to_gatingset(...) at test-conversion-full.R:85:5
+ 7.   └─CyFj11:::create_gatingset_from_cytoset(...) at CyFj11/R/conversion.R:340:3
+ 8.     └─CyFj11:::add_populations_to_gatingset(...) at CyFj11/R/helpers-conversion.R:989:7
+
+WARNING: 'test-conversion-integration.R:31:3' ----------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_62636/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─load_example_workspace() at test-conversion-integration.R:31:3
+ 2.   └─CyFj11::read_flowjo11_workspace(test_file) at tests/testthat/helper-data.R:324:3
+ 3.     └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 4.       └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+Workspace has all required components for conversion
+WARNING: 'test-conversion-integration.R:44:3' ----------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_59135/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─load_example_workspace() at test-conversion-integration.R:44:3
+ 2.   └─CyFj11::read_flowjo11_workspace(test_file) at tests/testthat/helper-data.R:324:3
+ 3.     └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 4.       └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+First group has 10 elements
+WARNING: 'test-conversion-integration.R:62:3' ----------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_17863/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─load_example_workspace() at test-conversion-integration.R:62:3
+ 2.   └─CyFj11::read_flowjo11_workspace(test_file) at tests/testthat/helper-data.R:324:3
+ 3.     └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 4.       └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+Found 1 data sources with valid URIs
+WARNING: 'test-conversion-integration.R:86:3' ----------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_15813/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─load_example_workspace() at test-conversion-integration.R:86:3
+ 2.   └─CyFj11::read_flowjo11_workspace(test_file) at tests/testthat/helper-data.R:324:3
+ 3.     └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 4.       └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+Found 13 population definitions with names
+WARNING: 'test-conversion-integration.R:110:3' ----------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_45896/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─load_example_workspace() at test-conversion-integration.R:110:3
+ 2.   └─CyFj11::read_flowjo11_workspace(test_file) at tests/testthat/helper-data.R:324:3
+ 3.     └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 4.       └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+Found 13 population definitions with gate types
+WARNING: 'test-conversion-integration.R:131:3' ----------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_91695/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─load_example_workspace() at test-conversion-integration.R:131:3
+ 2.   └─CyFj11::read_flowjo11_workspace(test_file) at tests/testthat/helper-data.R:324:3
+ 3.     └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 4.       └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+Found 16 populations with parents
+Found 16 populations with children
+WARNING: 'test-conversion-integration.R:162:3' ----------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_81140/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─load_example_workspace() at test-conversion-integration.R:162:3
+ 2.   └─CyFj11::read_flowjo11_workspace(test_file) at tests/testthat/helper-data.R:324:3
+ 3.     └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 4.       └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+Found 1 sample UUIDs
+WARNING: 'test-conversion-integration.R:177:3' ----------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_33682/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─load_example_workspace() at test-conversion-integration.R:177:3
+ 2.   └─CyFj11::read_flowjo11_workspace(test_file) at tests/testthat/helper-data.R:324:3
+ 3.     └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 4.       └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+Found 8 population definitions with gate parameters
+WARNING: 'test-example-data.R:35:3' ---------------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_59406/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─CyFj11::read_flowjo11_workspace(test_file) at test-example-data.R:35:3
+ 2.   └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 3.     └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+Loaded FlowJo v11 workspace with:
+  - 3 groups
+  - 1 data sources
+  - 13 population definitions
+  - 16 populations
+WARNING: 'test-example-data.R:55:3' ---------------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_92742/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─CyFj11::read_flowjo11_workspace(test_file) at test-example-data.R:55:3
+ 2.   └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 3.     └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+Found populations: list("Ungated"), list("Q4:PE-A :: CD4-,PerCP-Cy5-5-A :: CD14-", "Q3:PE-A :: CD4+,PerCP-Cy5-5-A :: CD14-", "Q1:PE-A :: CD4-,PerCP-Cy5-5-A :: CD14+", "Q2:PE-A :: CD4+,PerCP-Cy5-5-A :: CD14+"), list("Not gate of cd8HighLow"), list("Singlets"), list("And gate of ch8High, cd8HighLow"), list("cells"), list("Single_cells"), list("Lymphocytes-test"), list("cd8HighLow"), list("cd8Pos"), list("Not gate of ch8High"), list("ch8High"), list("Or gate of ch8High, cd8HighLow") 
+WARNING: 'test-example-workflow.R:45:3' -----------
+incomplete final line found on '/Users/bernd/Rtmp//RtmpJQTWu7/processing_76253_73076/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt'
+Backtrace:
+    ▆
+ 1. └─CyFj11::read_flowjo11_workspace(workspace_path) at test-example-workflow.R:45:3
+ 2.   └─CyFj11:::process_zip_archive(workspace_path) at CyFj11/R/archive.R:118:3
+ 3.     └─base::readLines(manifest_file) at CyFj11/R/archive.R:79:7
+
+Archive:  /System/Volumes/Data/pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFj11/inst/extdata/test.data.flowjo
+  inflating: /Users/bernd/Rtmp//RtmpJQTWu7/flowjo_extract_129dd7d33d530/workbench.json  
+  inflating: /Users/bernd/Rtmp//RtmpJQTWu7/flowjo_extract_129dd7d33d530/preferences.json  
+  inflating: /Users/bernd/Rtmp//RtmpJQTWu7/flowjo_extract_129dd7d33d530/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11.json  
+  inflating: /Users/bernd/Rtmp//RtmpJQTWu7/flowjo_extract_129dd7d33d530/analyses/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11/analysis-4ee532fc-26a9-482d-930c-f94ccfa10a11_manifest.txt  
+Pretty printed JSON saved to: test.data_pretty.json 
+WARNING: 'test-export-flowjo10.R:200:3' -----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:200:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:227:3' -----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:227:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:263:3' -----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:263:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:300:3' -----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:300:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:555:3' -----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:555:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:598:3' -----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:598:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:641:3' -----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:641:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:681:3' -----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(...) at test-export-flowjo10.R:681:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gating_set = gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:724:3' -----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:724:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:771:3' -----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:771:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1036:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1036:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1079:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1079:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1115:3' ----------
+package ‘xml2’ was built under R version 4.5.2
+Backtrace:
+    ▆
+ 1. └─base::library(xml2) at test-export-flowjo10.R:1115:3
+ 2.   └─base (local) testRversion(pkgInfo, package, pkgpath)
+
+WARNING: 'test-export-flowjo10.R:1169:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1169:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1169:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1169:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1169:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1169:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1203:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1203:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1203:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1203:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1203:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1203:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1235:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1235:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1235:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1235:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1235:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1235:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1271:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1271:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1271:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1271:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1271:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1271:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1303:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1303:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1303:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1303:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1303:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1303:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1348:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1348:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1348:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1348:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1348:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1348:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1394:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1394:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1394:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1394:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1394:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1394:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1394:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1394:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1394:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1394:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1431:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1431:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1431:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1431:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1431:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1431:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1431:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1431:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1431:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1431:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1460:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1460:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1460:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1460:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1460:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1460:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1460:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1460:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1460:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1460:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1494:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1494:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1494:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1494:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1494:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1494:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1494:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1494:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1539:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1539:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1539:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1539:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1539:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1539:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1539:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1539:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1539:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1539:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1576:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1576:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1576:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1576:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1576:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1576:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1576:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1576:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1576:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1576:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1609:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1609:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1609:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1609:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1609:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1609:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1609:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1609:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1609:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:1609:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1644:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1644:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1644:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1644:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:1644:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1644:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1644:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1644:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:1720:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1720:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1765:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1765:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1807:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1807:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1918:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:1918:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:1982:3' ----------
+Unsupported gate type for population: pop (class: list)
+Backtrace:
+    ▆
+ 1. └─CyFj11:::convert_gate_to_flowjo10_format(list(), "pop") at test-export-flowjo10.R:1982:3
+
+FAILURE: 'test-export-flowjo10.R:2059:5' ----------
+Expected inverse 1 to equal `fj$inverse(v)`.
+Differences:
+1/1 mismatches
+[1] 1.04 - 10000 == -9999
+
+FAILURE: 'test-export-flowjo10.R:2057:5' ----------
+Expected forward 10 to equal `fj$transform(v)`.
+Differences:
+1/1 mismatches
+[1] 64 - 0.25 == 63.8
+
+FAILURE: 'test-export-flowjo10.R:2059:5' ----------
+Expected inverse 10 to equal `fj$inverse(v)`.
+Differences:
+1/1 mismatches
+[1] 1.43 - 1e+40 == -1e+40
+
+FAILURE: 'test-export-flowjo10.R:2057:5' ----------
+Expected forward 100 to equal `fj$transform(v)`.
+Differences:
+1/1 mismatches
+[1] 128 - 0.5 == 128
+
+FAILURE: 'test-export-flowjo10.R:2059:5' ----------
+Expected inverse 100 to equal `fj$inverse(v)`.
+Differences:
+1/1 mismatches
+[1] 36.5 - Inf == -Inf
+
+FAILURE: 'test-export-flowjo10.R:2057:5' ----------
+Expected forward 1000 to equal `fj$transform(v)`.
+Differences:
+1/1 mismatches
+[1] 192 - 0.75 == 191
+
+FAILURE: 'test-export-flowjo10.R:2059:5' ----------
+Expected inverse 1000 to equal `fj$inverse(v)`.
+Differences:
+1/1 mismatches
+[1] 4.22e+15 - Inf == -Inf
+
+FAILURE: 'test-export-flowjo10.R:2057:5' ----------
+Expected forward 10000 to equal `fj$transform(v)`.
+Differences:
+1/1 mismatches
+[1] 256 - 1 == 255
+
+FAILURE: 'test-export-flowjo10.R:2059:5' ----------
+Expected inverse 10000 to equal `fj$inverse(v)`.
+Differences:
+1/1 mismatches
+[1] 1.78e+156 - Inf == -Inf
+
+WARNING: 'test-export-flowjo10.R:2115:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2115:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2115:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2115:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2115:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2115:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2153:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2153:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2153:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2153:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2153:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2153:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2153:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2153:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2153:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2153:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2186:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2186:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2186:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2186:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2186:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2186:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2186:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2186:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2186:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2186:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2213:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2213:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2213:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2213:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2213:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2213:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2213:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2213:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2213:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2213:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2242:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2242:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2242:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2242:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2242:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2242:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2242:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2242:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2275:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2275:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2275:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2275:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2275:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2275:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2305:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2305:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2305:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2305:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2305:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2305:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2343:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2343:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2343:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2343:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2343:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2343:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2343:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2343:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2343:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2343:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2376:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2376:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2376:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2376:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2376:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2376:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2376:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2376:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2376:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2376:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2403:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2403:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2403:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2403:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2403:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2403:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2403:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2403:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2403:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2403:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2432:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2432:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2432:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2432:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2432:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2432:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2432:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2432:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2467:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2467:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2467:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2467:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2467:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2467:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2495:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2495:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2495:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2495:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2495:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2495:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2532:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2532:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2532:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2532:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2532:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2532:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2581:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2581:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2625:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2625:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2625:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2625:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2625:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2625:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2625:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2625:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2625:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2625:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2678:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2678:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2678:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2678:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2678:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2678:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2729:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2729:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2729:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2729:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2729:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2729:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2729:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2729:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2729:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2729:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2765:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2765:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2765:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2765:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2765:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2765:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2765:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2765:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2765:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2765:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2815:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2815:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2815:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2815:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2815:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2815:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2859:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2859:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2859:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2859:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2859:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2859:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2859:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2859:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2859:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2859:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2886:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2886:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2886:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2886:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2886:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2886:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2886:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2886:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2886:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. └─CyFj11::export_flowjo10_workspace(gs, temp_file) at test-export-flowjo10.R:2886:3
+ 2.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 3.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2912:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2912:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:2912:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2912:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1518:13
+
+WARNING: 'test-export-flowjo10.R:2912:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2912:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2912:3' ----------
+not implemented: logtgml2
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2912:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+ 6.     └─CyFj11:::emit_transform_xml(...) at CyFj11/R/export-flowjo10.R:1722:7
+
+WARNING: 'test-export-flowjo10.R:2977:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:2977:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+WARNING: 'test-export-flowjo10.R:3060:3' ----------
+NAs introduced by coercion to integer range
+Backtrace:
+    ▆
+ 1. ├─testthat::expect_true(export_flowjo10_workspace(gs, temp_file)) at test-export-flowjo10.R:3060:3
+ 2. │ └─testthat::quasi_label(enquo(object), label)
+ 3. │   └─rlang::eval_bare(expr, quo_get_env(quo))
+ 4. └─CyFj11::export_flowjo10_workspace(gs, temp_file)
+ 5.   └─CyFj11:::generate_flowjo10_xml(...) at CyFj11/R/export-flowjo10.R:84:3
+
+FAILURE: 'test-export-flowjo10.R:3090:3' ----------
+Expected `length(spill_parts)` to equal `1 + 2 + 4`.
+Differences:
+1/1 mismatches
+[1] 1 - 7 == -6
+SPILL keyword has 1 + n + n^2 values
+
+
+Maximum number of failures exceeded; quitting.
+ℹ Increase this number with (e.g.) `testthat::set_max_fails(Inf)` 
+Warning messages:
+1: package ‘testthat’ was built under R version 4.5.2 
+2: package ‘flowCore’ was built under R version 4.5.2 
