@@ -257,7 +257,7 @@ parse_spill_keyword <- function(keywords) {
   mat_vals <- vals[(n + 2):needed_total]
   if (any(is.na(mat_vals))) return(NULL)
   
-  mat <- matrix(mat_vals, nrow = n, ncol = n, dimnames = list(col_names, col_names))
+  mat <- matrix(mat_vals, nrow = n, ncol = n, dimnames = list(col_names, col_names), byrow = TRUE)
   mat
 }
 
