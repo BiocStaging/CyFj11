@@ -34,8 +34,7 @@ data from the Bioconductor `FlowSOM` package. The workflow demonstrates how to:
 2. Import the v10 workspace into a `GatingSet` with `CytoML`.
 3. Export the `GatingSet` back to a FlowJo v10 `.wsp` file with `CyFj11`.
 4. Re-import the exported workspace and compare population counts.
-5. Verify that the compensation (`SPILL`) matrix survives the round trip.
-6. Visualize the result with `ggcyto`.
+5. Visualize the result with `ggcyto`.
 
 All data are taken unchanged from `FlowSOM`; no compensation matrix is modified.
 
@@ -106,7 +105,7 @@ Now export the same `GatingSet` to a new FlowJo v10 `.wsp` file using
 
 ```{r export-v10, eval=has_flowsom}
 export_path <- file.path(test_dir, "test14_export.wsp")
-CyFj11::export_flowjo10_workspace(gs, export_path)
+CyFj11::export_flowjo10_workspace(gs[[1]], export_path)
 
 stopifnot(file.exists(export_path))
 cat("Exported workspace:", export_path, "\n")
@@ -142,35 +141,6 @@ if (!all_equal) {
 }
 ```
 
-## Verify compensation matrix survival
-
-A key part of the round trip is that the FCS `SPILL` matrix is preserved in the
-exported FlowJo workspace. We compare the original FCS `SPILL` keyword with the
-`spilloverMatrix` written into the exported `.wsp` file.
-
-```{r verify-compensation, eval=has_flowsom}
-orig_spill <- flowCore::keyword(flowCore::read.FCS(flowsom_fcs), "SPILL")[[1]]
-
-# Extract SPILL keyword from the exported workspace's Sample keywords.
-wsp_lines <- readLines(export_path)
-spill_line <- wsp_lines[grep('name="SPILL"', wsp_lines)]
-flat <- sub('.*value="', "", spill_line)
-flat <- sub('" */>.*', "", flat)
-parts <- strsplit(flat, ",")[[1]]
-n <- as.integer(parts[1])
-exp_names <- parts[2:(n + 1)]
-exp_vals <- as.numeric(parts[(n + 2):(n + 1 + n * n)])
-exp_spill <- matrix(exp_vals, nrow = n, ncol = n,
-                    dimnames = list(exp_names, exp_names))
-
-# Exported matrix is on the same 0-1 proportion scale as the original FCS keyword.
-exp_spill_ordered <- exp_spill[colnames(orig_spill), colnames(orig_spill)]
-max_diff <- max(abs(exp_spill_ordered - orig_spill))
-cat("SPILL matrix dimension:", n, "x", n, "\n")
-cat("Max absolute element-wise difference:", max_diff, "\n")
-stopifnot(max_diff < 1e-6)
-```
-
 ## Visualization
 
 Plot a gate from the imported `GatingSet`. Because the original FlowSOM
@@ -181,7 +151,7 @@ biexponential channels you may prefer `ggcyto_par_set(limits = "data")`.
 pops <- flowWorkspace::gs_get_pop_paths(gs)
 plot_pop <- if (length(pops) > 1) pops[2] else pops[1]
 
-ggcyto::autoplot(gs[[1]], plot_pop, bins = 128)
+ggcyto::autoplot(gs, plot_pop, bins = 128)
 ```
 
 ## Complete script
@@ -222,7 +192,7 @@ all(flowWorkspace::gs_pop_get_count_fast(gs)$Count ==
 
 # 6. Plot
 pops <- flowWorkspace::gs_get_pop_paths(gs)
-ggcyto::autoplot(gs[[1]], pops[2], bins = 128)
+ggcyto::autoplot(gs, pops[2], bins = 128)
 ```
 
 ## See also

@@ -257,7 +257,7 @@ parse_spill_keyword <- function(keywords) {
   mat_vals <- vals[(n + 2):needed_total]
   if (any(is.na(mat_vals))) return(NULL)
   
-  mat <- matrix(mat_vals, nrow = n, ncol = n, dimnames = list(col_names, col_names))
+  mat <- matrix(mat_vals, nrow = n, ncol = n, dimnames = list(col_names, col_names), byrow = TRUE)
   mat
 }
 
@@ -692,12 +692,22 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
   }
   
   # --- log (includes logtGml2) ---
-  if (type %in% c("log", "logtGml2")) {
+  if (type %in% c("log", "logtGml2", "flowJo_log")) {
+    # browser()
+    fn_env <- tryCatch(environment(trans), error = function(e) new.env())
+    
+    decade <- p$decade %||% p$n %||%
+      fn_env$n %||% fn_env$decade %||% 1
+    offset <- p$offset %||% p$m %||%
+      fn_env$m %||% fn_env$offset %||% 1
+    scale  <- p$scale  %||% fn_env$scale  %||% 1
+    
     return(list(
       transformType = "Log",
-      base          = p$base   %||% 10,
-      offset        = p$offset %||% 1,
-      decade        = p$decade %||% 1
+      base          = p$base %||% 10,
+      offset        = offset,
+      decade        = decade,    # now correctly 6, not 1
+      scale         = scale
     ))
   }
   
@@ -845,11 +855,12 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
     # Fetch once for non-log types (log closures from gh_get_transformations
     # are broken — they capture `t` as base::t() instead of the numeric param).
     trans_list     <- gh_get_transformations(gh, inverse = TRUE)
-    valid_log_args <- c("decade", "offset", "scale", "n", "equal.space")
+    valid_log_args <- c("decade", "offset", "scale", "shift", "n", "equal.space")
     
     .apply_inverse_val <- function(val, param_name) {
       spec <- get_transform_spec(gh, param_name)
       if (is.null(spec)) return(val)
+      # browser()
       switch(
         spec$transformType,
         "Linear" = val,

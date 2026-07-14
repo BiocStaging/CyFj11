@@ -30,8 +30,6 @@
 #'   \item \code{\link{read_flowjo11_workspace}} - Main function to read and parse FlowJo v11 workspace files
 #'   \item \code{\link{fj11_to_gatingset}} - Convert FlowJo v11 workspace to GatingSet object
 #'   \item \code{\link{export_flowjo10_workspace}} - Export GatingSet object to FlowJo v10 workspace format
-#'   \item \code{\link{extract_flowjo_stats}} - Extract population counts and statistics from FlowJo workspace (.wsp) XML files
-#'   \item \code{\link{check_wsp_csv_coverage}} - Check whether a mapping CSV covers all statistics in a set of .wsp files
 #' }
 #'
 #' @section File Organization:
@@ -48,16 +46,7 @@
 #'   \item \code{populations.R} - Population tree and node functions
 #'   \item \code{transformations.R} - Transformation extraction and creation functions
 #'   \item \code{export-flowjo10.R} - FlowJo v10 workspace export functions
-#'   \item \code{extract-flowjo-stats.R} - FlowJo workspace (.wsp) statistic extraction functions
 #' }
-#'
-#' @section Statistics Extraction:
-#' The package can extract population counts and statistics directly from
-#' FlowJo workspace (.wsp) XML files, without requiring conversion to a
-#' GatingSet. Use \code{\link{extract_flowjo_stats}} to produce a wide-format
-#' table of statistics, optionally guided by a mapping CSV. The helper
-#' \code{\link{check_wsp_csv_coverage}} reports coverage gaps between a set
-#' of workspaces and a mapping CSV before extraction.
 #'
 #' @section Example Data:
 #' The package includes an example FlowJo v11 workspace file for testing and development:

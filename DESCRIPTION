@@ -21,13 +21,7 @@ Imports:
     scales,
     magrittr,
     graphics,
-    stats,
-    xml2,
-    readr,
-    tidyr,
-    purrr,
-    rlang,
-    tibble
+    stats
 Suggests:
     testthat (>= 3.0.0),
     Biobase,
@@ -38,7 +32,8 @@ Suggests:
     knitr,
     mockery,
     qpdf,
-    rmarkdown
+    rmarkdown,
+    xml2
 VignetteBuilder: knitr
 biocViews: FlowCytometry, DataImport, DataExport, Gating, WorkspaceConversion
 URL: https://github.com/baj12/CyFj11
