@@ -27,7 +27,6 @@
 #' @importFrom dplyr anti_join arrange bind_rows case_when coalesce count desc distinct enquo filter group_by if_else left_join mutate n select summarise ungroup
 #' @importFrom readr read_csv write_csv
 #' @importFrom tidyr pivot_wider
-#' @importFrom purrr map_dfr
 #' @importFrom rlang %||%
 #' @importFrom tibble tibble
 #' @importFrom utils capture.output
@@ -118,7 +117,7 @@ extract_flowjo_stats <- function(wsp_files,
   }
 
   # ---- Extract long-format table ----
-  long_table <- map_dfr(wsp_files, extract_wsp_data_long)
+  long_table <- bind_rows(lapply(wsp_files, extract_wsp_data_long))
 
   if (value_as_numeric) {
     long_table <- long_table %>%
@@ -296,14 +295,6 @@ extract_flowjo_stats <- function(wsp_files,
 #'   \item{covered}{Logical; \code{TRUE} if all signatures are in the CSV.}
 #' }
 #'
-#' @examples
-#' \dontrun{
-#' check_wsp_csv_coverage(
-#'   wsp_files = c("panel1.wsp", "panel2.wsp"),
-#'   csv_file = "wsp_stat_mapping.csv"
-#' )
-#' }
-#'
 #' @export
 check_wsp_csv_coverage <- function(wsp_files, csv_file) {
   if (!is.character(wsp_files) || length(wsp_files) == 0) {
@@ -324,7 +315,7 @@ check_wsp_csv_coverage <- function(wsp_files, csv_file) {
     ) %>%
     distinct(population_path, stat_name, stat_ancestor)
 
-  long_table <- map_dfr(wsp_files, extract_wsp_data_long) %>%
+  long_table <- bind_rows(lapply(wsp_files, extract_wsp_data_long)) %>%
     mutate(
       stat_ancestor = if_else(is.na(stat_ancestor) | stat_ancestor == "",
                               NA_character_,
@@ -400,7 +391,7 @@ extract_wsp_data_long <- function(file) {
   doc <- xml_ns_strip(read_xml(file))
   samples <- xml_find_all(doc, "//SampleNode")
 
-  map_dfr(samples, function(sample) {
+  bind_rows(lapply(samples, function(sample) {
     sample_name  <- xml_attr(sample, "name")
     sample_id    <- xml_attr(sample, "sampleID")
     sample_count <- suppressWarnings(as.numeric(xml_attr(sample, "count")))
@@ -408,7 +399,7 @@ extract_wsp_data_long <- function(file) {
     # ---- Population-level counts (the count attribute) ----
     populations <- xml_find_all(sample, ".//Population")
 
-    pop_counts <- map_dfr(populations, function(pop) {
+    pop_counts <- bind_rows(lapply(populations, function(pop) {
       attrs <- xml_attrs(pop)
       tibble(
         file = basename(file),
@@ -423,12 +414,12 @@ extract_wsp_data_long <- function(file) {
         stat_ancestor = NA_character_,
         value_raw = attrs["count"]
       )
-    })
+    }))
 
     # ---- Statistic elements ----
     stats <- xml_find_all(sample, ".//Statistic")
 
-    stat_rows <- map_dfr(stats, function(stat) {
+    stat_rows <- bind_rows(lapply(stats, function(stat) {
       attrs <- xml_attrs(stat)
       tibble(
         file = basename(file),
@@ -443,10 +434,10 @@ extract_wsp_data_long <- function(file) {
         stat_ancestor = attrs["ancestor"] %||% NA_character_,
         value_raw = attrs["value"]
       )
-    })
+    }))
 
     bind_rows(pop_counts, stat_rows)
-  })
+  }))
 }
 
 #' Extract the leaf population name from a population path

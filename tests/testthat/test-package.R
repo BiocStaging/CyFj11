@@ -39,18 +39,18 @@ test_that("Package loads correctly", {
 })
 
 test_that("Verbose mode functions work", {
-  # Test initial state
-  initial_state <- get_verbose()
-  expect_false(initial_state)
+  # Don't assume initial state - set known state and restore on exit
+  on.exit(set_verbose(FALSE))
   
-  # Test setting to TRUE
-  set_verbose(TRUE)
-  expect_true(get_verbose())
-  
-  # Test setting to FALSE
+  # Test FALSE
   set_verbose(FALSE)
   expect_false(get_verbose())
   
-  # Restore initial state
-  set_verbose(initial_state)
+  # Test TRUE
+  set_verbose(TRUE)
+  expect_true(get_verbose())
+  
+  # Test back to FALSE
+  set_verbose(FALSE)
+  expect_false(get_verbose())
 })

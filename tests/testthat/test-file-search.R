@@ -59,12 +59,18 @@ test_that("search_fcs_files rejects non-character input", {
 
 test_that("search_fcs_files errors when all directories are nonexistent", {
   expect_error(
-    search_fcs_files("/nonexistent/directory"),
+    expect_warning(
+      search_fcs_files("/nonexistent/directory"),
+      "do not exist"
+    ),
     "No valid root directories provided",
     fixed = TRUE
   )
   expect_error(
-    search_fcs_files(c("/fake/one", "/fake/two")),
+    expect_warning(
+      search_fcs_files(c("/fake/one", "/fake/two")),
+      "do not exist"
+    ),
     "No valid root directories provided",
     fixed = TRUE
   )
@@ -376,10 +382,13 @@ test_that("search_fcs_files returns zero rows for an empty directory", {
 
 test_that("resolve_all_fcs_paths errors on nonexistent root directory", {
   ds <- list("s1" = list(definition = list(uri = "/path/sample.fcs")))
+  expect_warning(
   expect_error(
     resolve_all_fcs_paths(ds, "/nonexistent/path"),
     "No valid root directories provided",
     fixed = TRUE
+  ),
+  "do not exist"
   )
 })
 

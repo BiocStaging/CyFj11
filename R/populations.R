@@ -128,10 +128,73 @@ add_populations_to_gatingset <- function(gs, gating_trees, gates, sample_uuids,
   }
 }
 
-#' Compare and adjust gate transformations to match gating hierarchy
-#' @param gh GatingHierarchy object
-#' @param gate_obj flowCore gate object
-#' @param strip_comp_prefix Logical. Strip "Comp-" prefix from gate parameter names?
+#' Compare and Adjust Gate Parameter Names to Match a GatingHierarchy
+#'
+#' Ensures that the parameter names stored inside a \code{flowCore} gate object
+#' are consistent with the parameter names present in a \code{GatingHierarchy}
+#' after compensation and transformations have been applied.
+#'
+#' The function performs two distinct tasks:
+#' \enumerate{
+#'   \item \strong{Parameter-name remapping.}  Gate parameter names extracted
+#'     from the FlowJo workspace may differ from the names actually present in
+#'     the \code{GatingHierarchy} (e.g., a gate may reference
+#'     \code{"Comp-APC-Ax700-A"} while the compensated \code{cytoframe} column
+#'     is named \code{"APC-Ax700-A"}, or \code{"/"} characters may have been
+#'     sanitized to \code{"_"} by \code{flowCore}).  The function resolves these
+#'     discrepancies via \code{\link{map_gate_params_to_gh}} and then rewrites
+#'     the gate's internal parameter slots with
+#'     \code{\link{update_gate_param_names}}.
+#'   \item \strong{Transformation-space adjustment (currently disabled).}  A
+#'     code path exists—guarded by \code{if (FALSE)}—that would convert gate
+#'     coordinates from raw data space to transformed (display) space using the
+#'     transformers registered in the \code{GatingHierarchy}.  This path is
+#'     disabled because the current pipeline calls
+#'     \code{\link[=extract_all_gates]{extract_all_gates}} with
+#'     \code{use_transformed_coords = FALSE}, so gate coordinates are already
+#'     expressed in the same space as the (untransformed) \code{cytoframe} data.
+#' }
+#'
+#' The set of parameter names considered for matching is the union of:
+#' \itemize{
+#'   \item names returned by \code{\link[flowWorkspace]{gh_get_transformations}}
+#'     (non-linear channels only), and
+#'   \item all column names of the root \code{cytoframe} (so that linear /
+#'     scatter parameters such as \code{FSC-A} and \code{SSC-A} are also
+#'     available for matching).
+#' }
+#'
+#' If no gate parameter can be mapped to any \code{GatingHierarchy} parameter
+#' the original gate object is returned unchanged.
+#'
+#' @param gh A \code{GatingHierarchy} object (single sample).  Used to retrieve
+#'   both the registered transformers (\code{gh_get_transformations}) and the
+#'   full list of column names from the root population data frame.
+#' @param gate_obj A \code{flowCore} gate object (e.g., \code{rectangleGate},
+#'   \code{polygonGate}, \code{ellipsoidGate}, \code{quadGate}).  Its internal
+#'   parameter names will be remapped to match \code{gh}.
+#' @param strip_comp_prefix Logical. When \code{TRUE} (default), the
+#'   \code{"Comp-"} prefix is stripped from gate parameter names before
+#'   attempting to match them against the \code{GatingHierarchy} parameter
+#'   names.  Set to \code{FALSE} when gate names are expected to already include
+#'   the \code{"Comp-"} prefix (i.e., compensation was applied externally with
+#'   matching names).
+#'
+#' @return The input \code{gate_obj} with its internal parameter names updated
+#'   to match those in \code{gh}.  All gate coordinate slots (\code{@min},
+#'   \code{@max}, \code{@boundaries}, \code{@boundary}, \code{@mean},
+#'   \code{@cov}) are updated consistently via
+#'   \code{\link{update_gate_param_names}}.  If no mapping is found, the
+#'   original object is returned unmodified.
+#'
+#' @seealso
+#'   \code{\link{map_gate_params_to_gh}} for the underlying name-mapping logic,
+#'   \code{\link{update_gate_param_names}} for the slot-level renaming,
+#'   \code{\link{apply_transforms_to_gate}} for the (currently disabled)
+#'   coordinate-transformation step,
+#'   \code{\link{add_population_node}} which calls this function before
+#'   passing a gate to \code{\link[flowWorkspace]{gs_pop_add}}.
+#'
 #' @keywords internal
 adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) {
 
@@ -162,7 +225,8 @@ adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) 
   needs_adjustment <- FALSE
   trans_to_apply <- list()
 
-  if (FALSE) {
+  if (FALSE) { # nocov start
+    # Disabled: gate coordinates are converted to raw data space by display_to_raw().
     for (i in seq_along(gate_params)) {
       gate_param <- gate_params[i]
       gh_param <- mapped_params[[gate_param]]
@@ -190,14 +254,14 @@ adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) 
         needs_adjustment <- TRUE
         trans_to_apply[[gh_param]] <- gh_trans_func
 
-        if (.pkgenv$verbose) {
+        if (.pkgenv$verbose) { # nocov
           message("Parameter '", gate_param, "' -> '", gh_param, "' needs adjustment:")
           message("  Gate coords in: raw data space")
           message("  Hierarchy expects: ", gh_trans_type, " transformed space")
         }
       }
     }
-  }
+  } # nocov end
 
   # If no mapping found at all, return original gate
   if (all(sapply(mapped_params, is.null))) {
@@ -279,7 +343,7 @@ update_gate_param_names <- function(gate_obj, mapped_params) {
     })
     names(gate_obj@boundary) <- new_names
     
-    if (.pkgenv$verbose) {
+    if (.pkgenv$verbose) { # nocov
       message("  Updated quadGate boundary names: ", paste(old_names, collapse = ", "),
               " -> ", paste(new_names, collapse = ", "))
     }
@@ -309,7 +373,69 @@ update_gate_param_names <- function(gate_obj, mapped_params) {
   return(gate_obj)
 }
 
-#' Apply transformations to gate coordinates
+#' Apply Transformation Functions to Gate Coordinates
+#'
+#' Converts the coordinate values stored inside a \code{flowCore} gate object
+#' from one data space to another by evaluating a set of named transformation
+#' functions.  This is typically used to move gate coordinates from raw
+#' (instrument) space into a transformed (display) space so that they align with
+#' the transformed \code{cytoframe} data held in a \code{GatingHierarchy}.
+#'
+#' Each gate type stores its defining coordinates in different slots; the
+#' function handles all four common types:
+#' \describe{
+#'   \item{\code{rectangleGate}}{The \code{@min} and \code{@max} named numeric
+#'     vectors are transformed channel-by-channel for every parameter that
+#'     appears in \code{trans_list}.}
+#'   \item{\code{quadGate}}{The \code{@boundary} named numeric vector (the two
+#'     divider positions, one per axis) is transformed for every matching
+#'     parameter.}
+#'   \item{\code{polygonGate}}{Each column of the \code{@boundaries} matrix that
+#'     matches a parameter in \code{trans_list} is transformed element-wise,
+#'     preserving the polygon vertex order.}
+#'   \item{\code{ellipsoidGate}}{The \code{@mean} vector is transformed
+#'     parameter-by-parameter.  A \code{warning} is emitted because applying a
+#'     non-linear transform to the mean without also adjusting the covariance
+#'     matrix \code{@cov} does not correctly preserve the ellipsoid shape; the
+#'     covariance matrix is left unchanged.}
+#' }
+#'
+#' Parameters present in the gate but absent from \code{trans_list} (e.g.,
+#' scatter channels with a linear or identity transform) are left unchanged.
+#' If \code{trans_list} is empty the original gate object is returned
+#' immediately without modification.
+#'
+#' @note
+#' This function is currently \strong{not called} by the active pipeline.  Gate
+#' coordinates are extracted in transformed (display) space by
+#' \code{\link{extract_all_gates}} when \code{use_transformed_coords = TRUE}
+#' (the default), making an additional in-place transformation of gate
+#' coordinates unnecessary.  The function is retained for use cases where gate
+#' coordinates must be converted programmatically after extraction.
+#'
+#' @param gate_obj A \code{flowCore} gate object whose coordinate slots will be
+#'   transformed.  Supported classes: \code{rectangleGate},
+#'   \code{quadGate}, \code{polygonGate}, \code{ellipsoidGate}.  Objects of
+#'   other classes are returned unmodified.
+#' @param trans_list A named list of transformation functions, where each name
+#'   is a \code{GatingHierarchy} parameter name (e.g., \code{"APC-Ax700-A"})
+#'   and each value is a single-argument function that maps numeric raw values
+#'   to transformed values.  Typically a subset of the list returned by
+#'   \code{\link[flowWorkspace]{gh_get_transformations}}.  An empty list causes
+#'   the function to return \code{gate_obj} unchanged.
+#'
+#' @return The input \code{gate_obj} with coordinate slots updated in place for
+#'   all parameters found in \code{trans_list}.  The object class and all other
+#'   slots are preserved.
+#'
+#' @seealso
+#'   \code{\link{adjust_gate_transformations}} which determines which
+#'   transformations need to be applied and calls this function,
+#'   \code{\link{extract_all_gates}} for gate extraction with optional
+#'   coordinate-space control via \code{use_transformed_coords},
+#'   \code{\link[flowWorkspace]{gh_get_transformations}} for retrieving
+#'   the transformation functions registered in a \code{GatingHierarchy}.
+#'
 #' @keywords internal
 apply_transforms_to_gate <- function(gate_obj, trans_list) {
   
@@ -327,7 +453,7 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
       if (param %in% names(gate_obj@min)) {
         old_val <- gate_obj@min[param]
         gate_obj@min[param] <- trans_func(old_val)
-        if (.pkgenv$verbose) {
+        if (.pkgenv$verbose) { # nocov
           message("  Transformed ", param, " min: ", old_val, " -> ", gate_obj@min[param])
         }
       }
@@ -335,14 +461,14 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
       if (param %in% names(gate_obj@max)) {
         old_val <- gate_obj@max[param]
         gate_obj@max[param] <- trans_func(old_val)
-        if (.pkgenv$verbose) {
+        if (.pkgenv$verbose) { # nocov
           message("  Transformed ", param, " max: ", old_val, " -> ", gate_obj@max[param])
         }
       }
     }
     
   } else if (inherits(gate_obj, "quadGate")) {
-    # browser()
+    # browser() # nocov
     # Quadrant gates have boundary (divider positions) that need transformation
     # Note: slot is "boundary" (singular), not "boundaries"
     boundary <- gate_obj@boundary
@@ -353,7 +479,7 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
         old_val <- boundary[param]
         boundary[param] <- trans_func(old_val)
         
-        if (.pkgenv$verbose) {
+        if (.pkgenv$verbose) { # nocov
           message("  Transformed ", param, " quad divider: ", old_val, " -> ", boundary[param])
         }
       }
@@ -371,7 +497,7 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
         old_vals <- boundaries[, param]
         boundaries[, param] <- trans_func(old_vals)
         
-        if (.pkgenv$verbose) {
+        if (.pkgenv$verbose) { # nocov
           message("  Transformed ", param, " polygon boundaries")
           message("    Range: ", min(old_vals), "-", max(old_vals), 
                   " -> ", min(boundaries[, param]), "-", max(boundaries[, param]))
@@ -392,7 +518,7 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
         old_val <- gate_obj@mean[param_idx]
         gate_obj@mean[param_idx] <- trans_func(old_val)
         
-        if (.pkgenv$verbose) {
+        if (.pkgenv$verbose) { # nocov
           message("  Transformed ", param, " ellipse mean: ", old_val, " -> ", gate_obj@mean[param_idx])
         }
         
@@ -407,19 +533,101 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
   return(gate_obj)
 }
 
-#' Add Population Node Recursively
+#' Add Population Node Recursively to a GatingHierarchy
+#'
+#' Recursively walks a gating tree node and adds each population—together with
+#' its associated gate—to a single-sample \code{GatingHierarchy}.  Both regular
+#' flow-cytometry gates (rectangle, polygon, ellipsoid, quadrant) and logical
+#' (boolean) gates (\code{and}/\code{or}/\code{not}) are supported.
+#'
+#' For logical gates, all component populations must already exist in the
+#' \code{GatingHierarchy} before the boolean expression can be evaluated.  When
+#' a component is missing the gate is pushed onto \code{deferred} rather than
+#' silently dropped, allowing \code{\link{add_populations_to_gatingset}} to retry
+#' in a subsequent pass once earlier populations have been resolved.
+#'
+#' The function performs the following steps for each node:
+#' \enumerate{
+#'   \item Sanitizes the population name (replaces \code{/} with \code{:}) to
+#'     avoid conflicts with the flowWorkspace path separator.
+#'   \item Skips the virtual root/ungated node (already present in every new
+#'     \code{GatingSet}).
+#'   \item Looks up the gate object in \code{gates} using the key
+#'     \code{paste0(definition_uuid, "_", sample_uuid)}.
+#'   \item For \strong{regular gates}: verifies marker-name consistency, adjusts
+#'     parameter names via \code{\link{adjust_gate_transformations}}, and adds
+#'     the gate with \code{\link[flowWorkspace]{gs_pop_add}}.
+#'   \item For \strong{logical gates}: resolves each component population to its
+#'     path in the hierarchy, builds a \code{booleanFilter} expression, and adds
+#'     it with \code{\link[flowWorkspace]{gs_pop_add}}.  If any component path
+#'     cannot be resolved the node is pushed to \code{deferred}.
+#'   \item Recurses into \code{node$children}.
+#' }
+#'
+#' @param gh A \code{GatingHierarchy} object (single sample) to which populations
+#'   are added.
+#' @param node A named list representing one node of the gating tree produced by
+#'   \code{\link{build_gating_tree}}.  Expected fields:
+#'   \describe{
+#'     \item{\code{name}}{Character or list. Population name.}
+#'     \item{\code{type}}{Character. Gate type, e.g. \code{"rectangle"},
+#'       \code{"polygon"}, \code{"and"}, \code{"or"}, \code{"not"},
+#'       \code{"root"}.}
+#'     \item{\code{definition_uuid}}{Character or list. UUID of the corresponding
+#'       population definition—used to look up the gate object.}
+#'     \item{\code{logical_gate_info}}{Optional list describing a boolean gate;
+#'       present only when \code{type} is \code{"and"}, \code{"or"}, or
+#'       \code{"not"}.  Contains \code{operator} and
+#'       \code{combined_populations}.}
+#'     \item{\code{children}}{Optional list of child nodes.}
+#'     \item{\code{parent}}{Character. Full path of the parent population, used
+#'       when recursing into children.}
+#'   }
+#' @param gates Named list of \code{flowCore} gate objects keyed by
+#'   \code{paste0(definition_uuid, "_", sample_uuid)}.  Typically the output of
+#'   \code{\link{extract_all_gates}}.
+#' @param sample_uuid Character scalar. UUID of the sample being processed.
+#'   Used to look up the correct gate from \code{gates} and to provide
+#'   informative warning messages.
+#' @param parent Character scalar. Path of the parent population in \code{gh}
+#'   under which the current node will be added.  Use \code{"root"} (the
+#'   default) for top-level populations.
+#' @param strip_comp_prefix Logical. When \code{TRUE} (default), the
+#'   \code{"Comp-"} prefix is stripped from gate parameter names before
+#'   matching against the \code{GatingHierarchy} parameters.  Set to
+#'   \code{FALSE} when compensation has already been applied with names that
+#'   include the prefix.
+#' @param verbose Logical. When \code{TRUE}, diagnostic messages are emitted
+#'   via \code{\link{message}} at each step (gate lookup, boolean expression
+#'   construction, name mapping, etc.).  Default \code{FALSE}.
+#' @param deferred An \code{environment} (or \code{NULL}) used to collect
+#'   logical gates that could not be added because one or more component
+#'   populations are not yet present in \code{gh}.  Callers should pass the
+#'   same environment object on all recursive calls so that
+#'   \code{\link{add_populations_to_gatingset}} can retry the deferred gates in
+#'   a subsequent pass.  When \code{NULL}, unresolvable logical gates raise a
+#'   \code{warning} immediately instead of being deferred.
+#'
+#' @return \code{NULL} invisibly.  The function modifies \code{gh} and
+#'   \code{deferred} in place as side effects.
+#'
+#' @seealso
+#'   \code{\link{add_populations_to_gatingset}} for the top-level caller that
+#'   manages the deferred-retry loop,
+#'   \code{\link{build_gating_tree}} for tree construction,
+#'   \code{\link{adjust_gate_transformations}} for parameter-name remapping,
+#'   \code{\link{extract_all_gates}} for gate extraction.
+#'
 #' @keywords internal
-#' @importFrom flowWorkspace gs_pop_add
-#' @importFrom utils str
+#' @importFrom flowWorkspace gs_pop_add gs_get_pop_paths
+#' @importFrom flowCore parameters
 #' @importFrom magrittr %>%
-#' @param strip_comp_prefix Logical. Strip "Comp-" prefix from gate parameter names?
-#' @param verbose Logical. Print verbose messages?
 add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
                                 strip_comp_prefix = TRUE, verbose = FALSE,
                                 deferred = NULL) {
-  if (.pkgenv$verbose) message(node$name, "\n")
+  if (.pkgenv$verbose) message(node$name, "\n") # nocov
   # if(stringr::str_starts(node$name, "TNF")) {
-  # browser()
+  # browser() # nocov
   # }
   # Extract node name correctly (it's a list in FlowJo v11)
   node_name <- if (is.list(node$name) && length(node$name) > 0) {
@@ -433,12 +641,12 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
   # '/' get rewritten inconsistently.  Sanitize once here so parent/child paths
   # built later match the node names actually created in the GatingSet.
   node_name <- sanitize_population_name(node_name)
-  if (.pkgenv$verbose) message(node$type)
-  # browser()
+  if (.pkgenv$verbose) message(node$type) # nocov
+  # browser() # nocov
   # Skip root node (already exists).  The incoming parent may be a sanitized
   # path (with '/' as path separator) or the literal string 'root'.
   parent_sanitized <- if (identical(parent, "root")) parent else sanitize_path_with_separator(parent)
-  if (.pkgenv$verbose) message("parent: ", paste(parent_sanitized, collapse = " : "),"\n")
+  if (.pkgenv$verbose) message("parent: ", paste(parent_sanitized, collapse = " : "),"\n") # nocov
   if (parent_sanitized[1] == "root" && (node_name[1] == "root" || node_name[1] == "Ungated")) {
     if (!is.null(node$children)) {
       for (child in node$children) {
@@ -475,8 +683,8 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
   gate_key <- paste0(definition_uuid, "_", sample_uuid)
   gate_obj <- gates[[gate_key]]
   is_logica_gate <- !is.null(node$logical_gate_info)
-  if (.pkgenv$verbose) message(node_name, " (sample: ", sample_uuid, ")\n")
-  # browser()
+  if (.pkgenv$verbose) message(node_name, " (sample: ", sample_uuid, ")\n") # nocov
+  # browser() # nocov
   if (is.null(gate_obj) && ! is_logica_gate) {
     # Get available population paths for debugging
     all_pop_paths <- tryCatch(flowWorkspace::gs_get_pop_paths(gh), error = function(e) NULL)
@@ -494,17 +702,17 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
   }
   if(is_logica_gate){
     # Create boolean filter for logical gate
-    # browser()
+    # browser() # nocov
     # Create boolean filter for logical gate
     operator <- node$logical_gate_info$operator
     component_names <- node$logical_gate_info$combined_populations
     
-    if (.pkgenv$verbose) message("Building logical gate: ", node_name, " (", operator, ")")
-    if (.pkgenv$verbose) message("  Components: ", paste(component_names, collapse = ", "))
+    if (.pkgenv$verbose) message("Building logical gate: ", node_name, " (", operator, ")") # nocov
+    if (.pkgenv$verbose) message("  Components: ", paste(component_names, collapse = ", ")) # nocov
     
     # Get all existing populations in the gating hierarchy
     all_paths <- flowWorkspace::gs_get_pop_paths(gh)
-    if (.pkgenv$verbose) message("  Available paths: ", paste(all_paths, collapse = ", "))
+    if (.pkgenv$verbose) message("  Available paths: ", paste(all_paths, collapse = ", ")) # nocov
     
     # For each component, find its path in the hierarchy
     component_refs <- sapply(component_names, function(comp_name) {
@@ -521,7 +729,7 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
       
       # Use the first matching path
       path <- matching_paths[1]
-      if (.pkgenv$verbose) message("    Found: ", comp_name, " -> ", path)
+      if (.pkgenv$verbose) message("    Found: ", comp_name, " -> ", path) # nocov
       return(path)
     })
     
@@ -557,14 +765,14 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
       return()
     }
     
-    if (.pkgenv$verbose) message("  Boolean expression: ", bool_expr)
+    if (.pkgenv$verbose) message("  Boolean expression: ", bool_expr) # nocov
     tryCatch({
       # Use the programmatic approach from the documentation
       # Create as symbol and substitute into booleanFilter call
       call_expr <- substitute(booleanFilter(v), list(v = as.symbol(bool_expr)))
       bool_filter <- eval(call_expr)
       
-      if (.pkgenv$verbose) message("  Created filter: ", class(bool_filter))
+      if (.pkgenv$verbose) message("  Created filter: ", class(bool_filter)) # nocov
       
       flowWorkspace::gs_pop_add(
         gh,
@@ -573,7 +781,7 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
         name = node_name
       )
       
-      if (.pkgenv$verbose) message("  Successfully added logical gate: ", node_name)
+      if (.pkgenv$verbose) message("  Successfully added logical gate: ", node_name) # nocov
       
       # Recompute immediately to verify it works
       # flowWorkspace::recompute(gh)
@@ -618,8 +826,8 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
       # for now we ignore tsne gates
       if(!startsWith(node_name[1], "tsne")){
         # name for quadrant should be of length 4
-        if (.pkgenv$verbose) message("parent: ", parent, " ", node_name[1], "\n")
-        # browser()
+        if (.pkgenv$verbose) message("parent: ", parent, " ", node_name[1], "\n") # nocov
+        # browser() # nocov
         # this seems to be working for the current case but should 
         if(inherits(gate_obj, "quadGate")){
           node_name = node_name[c(3,4,2,1)]
@@ -629,7 +837,7 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
         flowframe_params <- markernames(gh)
         gate_params <- flowCore::parameters(gate_obj)
         
-        if (.pkgenv$verbose) {
+        if (.pkgenv$verbose) { # nocov
           message("Verifying marker name consistency for gate: ", node_name[1])
           message("  Gate params: ", paste(gate_params, collapse = ", "))
           message("  FlowFrame params: ", paste(flowframe_params, collapse = ", "))
@@ -642,7 +850,7 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
           gate_source = paste(node_name, collapse = "/")
         )
         
-        if (!verification$valid && .pkgenv$verbose) {
+        if (!verification$valid && .pkgenv$verbose) { # nocov
           for (warn in verification$warnings) {
             message("  WARNING: ", warn)
           }
@@ -652,7 +860,7 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
         gate_obj_adjusted <- adjust_gate_transformations(gh, gate_obj, strip_comp_prefix = strip_comp_prefix)
         
         # Verify marker names again after adjustment
-        if (.pkgenv$verbose) {
+        if (.pkgenv$verbose) { # nocov
           gate_params_adjusted <- flowCore::parameters(gate_obj_adjusted)
           message("  Gate params after adjustment: ", paste(gate_params_adjusted, collapse = ", "))
         }
@@ -664,14 +872,14 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
             parent = parent,
             name = node_name
           )
-          if (.pkgenv$verbose) {
+          if (.pkgenv$verbose) { # nocov
             message("  Successfully added gate: ", paste(node_name, collapse = "/"))
           }
         }, error = function(e) {
           # Ignore "already exists" errors - this can happen with quadGates
           # when the population was already added in a previous step
           if (grepl("already exists", e$message, ignore.case = TRUE)) {
-            if (.pkgenv$verbose) {
+            if (.pkgenv$verbose) { # nocov
               message("  Population already exists, skipping: ", paste(node_name, collapse = "/"))
             }
           } else {

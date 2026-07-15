@@ -307,19 +307,3 @@ create_mock_fcs_files <- function(dir) {
   return(c("sample1.fcs", "sample2.fcs", "sample3.fcs"))
 }
 
-#' Load Example FlowJo v11 Workspace
-#' 
-#' Loads the example FlowJo v11 workspace from inst/extdata/test.data.flowjo
-#' for use in tests and examples.
-#' 
-#' @return A flowjo11_workspace object
-#' @keywords internal
-#' 
-load_example_workspace <- function() {
-  test_file <- system.file("extdata", "test.data.flowjo", package = "CyFj11")
-  if (!file.exists(test_file)) {
-    stop("Example FlowJo v11 file not found. Please ensure the package is installed with inst/extdata/test.data.flowjo")
-  }
-  
-  return(read_flowjo11_workspace(test_file))
-}

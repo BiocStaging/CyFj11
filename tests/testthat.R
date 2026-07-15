@@ -21,5 +21,5 @@
 
 library(testthat)
 library(CyFj11)
-
+set_verbose(T)
 test_check("CyFj11")

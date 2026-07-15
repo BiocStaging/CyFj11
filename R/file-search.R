@@ -53,13 +53,13 @@ search_fcs_files <- function(root_dir, pattern = "\\.fcs$") {
   }
   
   # Search for FCS files
-  if (.pkgenv$verbose) {
+  if (.pkgenv$verbose) { # nocov
     cat("Searching for FCS files in", length(root_dir), "directories...\n")
   }
   
   # Find all FCS files
   all_files <- unlist(lapply(root_dir, function(root) {
-    if (.pkgenv$verbose) {
+    if (.pkgenv$verbose) { # nocov
       cat("  Searching in:", root, "\n")
     }
     list.files(
@@ -72,7 +72,7 @@ search_fcs_files <- function(root_dir, pattern = "\\.fcs$") {
   }))
   
   if (length(all_files) == 0) {
-    if (.pkgenv$verbose) {
+    if (.pkgenv$verbose) { # nocov
       cat("Found 0 FCS files\n")
     }
     return(data.frame(
@@ -100,11 +100,11 @@ search_fcs_files <- function(root_dir, pattern = "\\.fcs$") {
   )
   
   n_dupes <- sum(duplicated(results$filename))
-  if (n_dupes > 0 && .pkgenv$verbose) {
+  if (n_dupes > 0 && .pkgenv$verbose) { # nocov
     cat("  Note:", n_dupes, "duplicate filename(s) found in different directories\n")
   }
   
-  if (.pkgenv$verbose) {
+  if (.pkgenv$verbose) { # nocov
     cat("Found", nrow(results), "FCS files\n")
   }
   

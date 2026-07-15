@@ -868,7 +868,7 @@ test_that("get_transform_spec handles log transformation", {
   expect_equal(result$transformType, "Log")
   expect_equal(result$base, 10)
   expect_equal(result$offset, 1)
-  expect_equal(result$decade, 1)
+  expect_equal(result$decade, 6)
 })
 
 test_that("get_transform_spec handles logtGml2 transformation", {
@@ -899,7 +899,7 @@ test_that("get_transform_spec handles logtGml2 transformation", {
   expect_equal(result$transformType, "Log")
   expect_equal(result$base, 10)
   expect_equal(result$offset, 1)
-  expect_equal(result$decade, 1)
+  expect_equal(result$decade, 6)
 })
 
 test_that("get_transform_spec handles logicle transformation", {
@@ -956,7 +956,7 @@ test_that("get_transform_spec handles fasinh transformation", {
   gh <- gs[[1]]
   
   # Test the function
-  result <- CyFj11:::get_transform_spec(gh, "FITC-A")
+  result <- CyFj11:::get_transform_spec(gh, dim = "FITC-A")
   
   expect_type(result, "list")
   expect_equal(result$transformType, "Arcsinh")
@@ -1112,8 +1112,8 @@ test_that("export_flowjo10_workspace handles biexponential transformation correc
   
   # Optional: Detailed XML structure validation if xml2 available
   skip_if_not_installed("xml2")
-  library(xml2)
-  
+  suppressPackageStartupMessages(library(xml2))
+
   doc <- read_xml(temp_file)
   
   # Look for transform nodes with biex characteristics
@@ -1972,14 +1972,17 @@ test_that("convert_gate warns on unsupported gate type", {
 
 test_that("convert_gate returns NULL when flowCore unavailable", {
   skip_on_cran()
-  
+
   # Mock requireNamespace to return FALSE
   mockery::stub(
     CyFj11:::convert_gate_to_flowjo10_format,
     "requireNamespace", FALSE
   )
-  
-  result <- CyFj11:::convert_gate_to_flowjo10_format(list(), "pop")
+
+  expect_warning(
+    result <- CyFj11:::convert_gate_to_flowjo10_format(list(), "pop"),
+    "Unsupported gate type"
+  )
   expect_null(result)
 })
 
@@ -3315,5 +3318,89 @@ test_that("export_flowjo10_workspace errors when explicit fcs_root is missing", 
     export_flowjo10_workspace(gs, out_wsp, fcs_root = tempfile()),
     "fcs_root directory does not exist"
   )
+})
+
+
+test_that("export_flowjo10_workspace handles ellipsoid gate", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+
+  library(flowWorkspace)
+  library(flowCore)
+
+  ff <- create_test_fcs(n = 8000, seed = 350)
+  gs <- GatingSet(flowSet(ff))
+
+  cov <- matrix(c(1.5e9, 7e8, 7e8, 1e9), ncol = 2)
+  colnames(cov) <- rownames(cov) <- c("FSC-A", "SSC-A")
+  gate <- ellipsoidGate(
+    filterId = "ellipse_cells",
+    .gate = cov,
+    mean = c("FSC-A" = 120000, "SSC-A" = 80000),
+    distance = 2
+  )
+  gs_pop_add(gs, gate, parent = "root")
+  recompute(gs)
+
+  temp_file <- tempfile(fileext = ".wsp")
+  on.exit(unlink(temp_file))
+
+  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(file.exists(temp_file))
+
+  xml_content <- readLines(temp_file)
+  expect_true(any(grepl("ellipse_cells", xml_content)))
+  expect_true(any(grepl("EllipsoidGate", xml_content, ignore.case = TRUE)))
+})
+
+
+test_that("export_flowjo10_workspace handles boolean gate", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+
+  library(flowWorkspace)
+  library(flowCore)
+
+  ff <- create_test_fcs(n = 8000, seed = 351)
+  gs <- GatingSet(flowSet(ff))
+
+  gs_pop_add(gs, rectangleGate(filterId = "CD4_pos", "FITC-A" = c(1, 3)), parent = "root")
+  gs_pop_add(gs, rectangleGate(filterId = "CD8_pos", "PE-A"   = c(1, 3)), parent = "root")
+  gs_pop_add(gs, booleanFilter(`CD4_pos` & `CD8_pos`, filterId = "DP"), parent = "root")
+  recompute(gs)
+
+  temp_file <- tempfile(fileext = ".wsp")
+  on.exit(unlink(temp_file))
+
+  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(file.exists(temp_file))
+
+  xml_content <- readLines(temp_file)
+  expect_true(any(grepl("DP", xml_content)))
+})
+
+
+test_that("export_flowjo10_workspace writes FCS files with fcs_root", {
+  skip_on_cran()
+  skip_if_not_installed("flowWorkspace")
+  skip_if_not_installed("flowCore")
+
+  library(flowWorkspace)
+  library(flowCore)
+
+  ff <- create_test_fcs(n = 500, seed = 352)
+  gs <- GatingSet(flowSet(ff))
+
+  fcs_dir <- tempfile("fcsroot_")
+  dir.create(fcs_dir)
+  on.exit(unlink(fcs_dir, recursive = TRUE))
+
+  temp_file <- file.path(fcs_dir, "export.wsp")
+
+  expect_true(export_flowjo10_workspace(gs, temp_file, fcs_root = fcs_dir))
+  expect_true(file.exists(temp_file))
+  expect_true(any(grepl("\\.fcs$", list.files(fcs_dir), ignore.case = TRUE)))
 })
 

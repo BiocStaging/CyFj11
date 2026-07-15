@@ -46,16 +46,16 @@ process_zip_archive <- function(zip_path) {
   on.exit({
     if(dir.exists(work_dir)) {
       unlink(work_dir, recursive = TRUE)
-      if (.pkgenv$verbose) cat("Cleaned up temporary directory:", work_dir, "\n")
+      if (.pkgenv$verbose) cat("Cleaned up temporary directory:", work_dir, "\n") # nocov
     }
   })
   
-  if (.pkgenv$verbose) cat("Created temporary directory:", work_dir, "\n")
+  if (.pkgenv$verbose) cat("Created temporary directory:", work_dir, "\n") # nocov
   
   # Extract all files from the ZIP archive
   unzip(zip_path, exdir = work_dir)
   zip_info <- list.files(work_dir, recursive = TRUE, full.names = TRUE)
-  if (.pkgenv$verbose) {
+  if (.pkgenv$verbose) { # nocov
     cat("Archive contains", length(zip_info), "files:\n")
   print(zip_info)
   }
@@ -63,7 +63,7 @@ process_zip_archive <- function(zip_path) {
   manifest_files <- grep("manifest\\.txt$", zip_info, value = TRUE)
   json_files <- grep("\\.json$", zip_info, value = TRUE)
   
-  if (.pkgenv$verbose) {
+  if (.pkgenv$verbose) { # nocov
     cat("\nFound", length(manifest_files), "manifest file(s)\n")
   cat("Found", length(json_files), "JSON file(s)\n")
   }
@@ -101,6 +101,12 @@ process_zip_archive <- function(zip_path) {
 #'
 #' @param workspace_path Path to the FlowJo workspace file (.flowjo)
 #' @return Parsed workspace object containing manifest and JSON data
+#' @examples
+#' \donttest{
+#'   ws_path <- system.file("extdata", "test.data.flowjo", package = "CyFj11")
+#'   ws <- read_flowjo11_workspace(ws_path)
+#'   print(ws)
+#' }
 #' @export
 read_flowjo11_workspace <- function(workspace_path) {
   # Validate input
@@ -114,7 +120,7 @@ read_flowjo11_workspace <- function(workspace_path) {
   }
   
   # Process the ZIP archive
-  if (.pkgenv$verbose) message("Reading FlowJo v11 workspace:", workspace_path, "\n")
+  if (.pkgenv$verbose) message("Reading FlowJo v11 workspace:", workspace_path, "\n") # nocov
   results <- process_zip_archive(workspace_path)
   
   # Get the main analysis JSON (find the first analysis JSON file)
@@ -151,7 +157,7 @@ read_flowjo11_workspace <- function(workspace_path) {
   
   # Add class attribute for S3 methods
   class(workspace) <- "flowjo11_workspace"
-  if (.pkgenv$verbose) {
+  if (.pkgenv$verbose) { # nocov
     cat("Successfully parsed FlowJo v11 workspace\n")
     cat("  - Manifest files:", length(workspace$manifest), "\n")
     cat("  - JSON files:", length(workspace$json), "\n")

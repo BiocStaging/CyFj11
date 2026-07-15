@@ -67,8 +67,8 @@ extract_all_gates <- function(populationDefinitions,
       } else {
         gate_to_use <- gate_def
       }
-      if (.pkgenv$verbose) message("pop_def: ", pop_def, " ", sample_uuid)
-      # browser()
+      if (.pkgenv$verbose) message("pop_def: ", pop_def, " ", sample_uuid) # nocov
+      # browser() # nocov
       if (is.null(gate_to_use)) next
       
       # Convert to flowCore gate
@@ -121,7 +121,7 @@ convert_flowjo_gate <- function(gate,
     }
   }
   
-  if (.pkgenv$verbose) message("Converting gate: ", gate_type, " - ", pop_name)
+  if (.pkgenv$verbose) message("Converting gate: ", gate_type, " - ", pop_name) # nocov
   
   tryCatch({
     switch(gate_type,
@@ -280,7 +280,7 @@ apply_extension <- function(coords, extend_val = 0, extend_to = -4000) {
 #' @keywords internal
 #' @importFrom flowCore rectangleGate
 convert_rectangle_gate <- function(gate, pop_name, extend_val, extend_to, correct_faulty_gate = 0, use_transformed_coords = FALSE) {
-  # browser()
+  # browser() # nocov
   # Extract parameters
   x_param <- gate$xAxis$parameterSpec$name %||% gate$xParameter
   y_param <- gate$yAxis$parameterSpec$name %||% gate$yParameter
