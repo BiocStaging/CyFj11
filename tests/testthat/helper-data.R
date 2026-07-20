@@ -21,6 +21,9 @@
 
 message("***** LOADING HELPER FILE *****")
 
+# Enable verbose output during tests so all verbose code paths are exercised.
+CyFj11::set_verbose(TRUE)
+
 #' Create Mock FlowJo v11 Workspace Structure
 #' @keywords internal
 create_mock_workspace <- function() {
