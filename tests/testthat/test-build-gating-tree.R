@@ -29,8 +29,8 @@ NULL
 skip_if_not_installed("flowCore")
 skip_if_not_installed("flowWorkspace")
 
-library(flowCore)
-library(flowWorkspace)
+suppressPackageStartupMessages(library(flowCore))
+suppressPackageStartupMessages(library(flowWorkspace))
 
 test_that("build_gating_tree works with minimal data", {
   # Create minimal mock data for testing build_gating_tree

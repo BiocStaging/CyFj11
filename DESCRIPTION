@@ -1,27 +1,38 @@
 Package: CyFj11
 Type: Package
-Title: Parse and Extract Data from FlowJo v11 Workspace Files
-Version: 0.99.0
-Authors@R: person("Bernd", "Jagla", email = "bernd.jagla@pasteur.fr", role = c("aut", "cre"))
-Description: Provides functions to parse FlowJo v11 workspace files (.flowjo) and extract gating information, populations, and associated FCS files. Includes utilities for exporting data to FlowJo v10 workspace format. The package enables bidirectional data flow between FlowJo and R/Bioconductor, facilitating reproducible analysis workflows.
+Title: Parse FlowJo v11 Workspace Files and Export to FlowJo v10
+Version: 0.99.9
+Authors@R: person("Bernd", "Jagla", , "bernd.jagla@pasteur.fr", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-7696-0484"))
+Author: Bernd Jagla [aut, cre] (<https://orcid.org/0000-0002-7696-0484>)
+Description: Provides functions to parse FlowJo v11 workspace files
+    (.flowjo) and extract gating information, populations, and associated
+    FCS files. Includes utilities for exporting data to FlowJo v10
+    workspace format. The package enables bidirectional data flow between
+    FlowJo and R/Bioconductor, facilitating reproducible analysis
+    workflows.
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
 Depends:
-    R (>= 4.0.0)
+    R (>= 4.5.0)
 Imports:
     jsonlite,
     stringr,
     zip,
     dplyr,
-    utils,
     flowWorkspace,
     flowCore,
+    readr,
+    rlang,
+    tibble,
+    tidyr,
+    xml2,
     methods,
     scales,
     magrittr,
     graphics,
-    stats
+    stats,
+    utils
 Suggests:
     testthat (>= 3.0.0),
     Biobase,
@@ -31,13 +42,12 @@ Suggests:
     ggcyto,
     knitr,
     mockery,
+    BiocStyle,
     qpdf,
-    rmarkdown,
-    xml2
+    rmarkdown
 VignetteBuilder: knitr
-biocViews: FlowCytometry, DataImport, DataExport, Gating, WorkspaceConversion
+biocViews: FlowCytometry, DataImport, Infrastructure, Preprocessing
 URL: https://github.com/baj12/CyFj11
 BugReports: https://github.com/baj12/CyFj11/issues
-SystemRequirements: None
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.0.0

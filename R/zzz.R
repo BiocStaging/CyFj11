@@ -37,13 +37,8 @@
 #' @return Invisible NULL. Called for side effects.
 #' @export
 #' @examples
-#' \dontrun{
-#' # Enable verbose output
 #' set_verbose(TRUE)
-#'
-#' # Disable verbose output
 #' set_verbose(FALSE)
-#' }
 set_verbose <- function(v) {
   .pkgenv$verbose <- v
 }

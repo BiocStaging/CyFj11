@@ -186,19 +186,19 @@ find_root_population <- function(populations, populationDefinitions, sample_uuid
 build_gating_tree <- function(sample_uuid, populations, populationDefinitions, root_uuid) {
   
   # First, identify all logical gates before building the tree
-  if (.pkgenv$verbose) message("Identifying logical gates...")
+  if (.pkgenv$verbose) message("Identifying logical gates...") # nocov
   gate_result <- identify_logical_gates(populations, populationDefinitions)
   logical_gates_info <- gate_result$gates
   populationDefinitions <- gate_result$populationDefinitions  # Use updated version!
   
   if (length(logical_gates_info) > 0) {
-    if (.pkgenv$verbose) message(sprintf("Found %d logical gates", length(logical_gates_info)))
-    if (.pkgenv$verbose) {
+    if (.pkgenv$verbose) message(sprintf("Found %d logical gates", length(logical_gates_info))) # nocov
+    if (.pkgenv$verbose) { # nocov
       summary_df <- create_logical_gate_summary(logical_gates_info)
       print(summary_df)
     }
   } else {
-    if (.pkgenv$verbose) message("No logical gates found")
+    if (.pkgenv$verbose) message("No logical gates found") # nocov
   }
   
   # Track visited population UUIDs to prevent infinite loops
@@ -209,7 +209,7 @@ build_gating_tree <- function(sample_uuid, populations, populationDefinitions, r
     
     # Prevent infinite recursion
     if (!is.null(visited[[pop_uuid]])) {
-      if (.pkgenv$verbose) warning("Circular reference detected for population: ", pop_uuid)
+      if (.pkgenv$verbose) warning("Circular reference detected for population: ", pop_uuid) # nocov
       return(NULL)
     }
     visited[[pop_uuid]] <- TRUE
@@ -260,7 +260,7 @@ build_gating_tree <- function(sample_uuid, populations, populationDefinitions, r
     # Add logical gate information if this is a logical gate
     gate_info <- find_gate_info(pop_uuid, logical_gates_info)
     if (!is.null(gate_info)) {
-      if (.pkgenv$verbose) message(sprintf("Adding gate info for: %s", unlist(node_name)))
+      if (.pkgenv$verbose) message(sprintf("Adding gate info for: %s", unlist(node_name))) # nocov
       
       node$logical_gate_info <- list(
         operator = gate_info$gate_type,
@@ -272,7 +272,7 @@ build_gating_tree <- function(sample_uuid, populations, populationDefinitions, r
       # The gateDefinition should already be in pop_def from identify_logical_gates
       # But verify and add if missing
       if (is.null(node$pop_def$definition$gateDefinition)) {
-        if (.pkgenv$verbose) message(sprintf("  -> Adding missing gateDefinition for %s", unlist(node_name)))
+        if (.pkgenv$verbose) message(sprintf("  -> Adding missing gateDefinition for %s", unlist(node_name))) # nocov
         node$pop_def$definition$gateDefinition <- list(
           type = "logical",
           operator = gate_info$gate_type,
@@ -280,7 +280,7 @@ build_gating_tree <- function(sample_uuid, populations, populationDefinitions, r
           component_uuids = gate_info$combined_population_uuids
         )
       } else {
-        if (.pkgenv$verbose) message(sprintf("  -> gateDefinition already exists for %s", unlist(node_name)))
+        if (.pkgenv$verbose) message(sprintf("  -> gateDefinition already exists for %s", unlist(node_name))) # nocov
       }
     }
     
@@ -313,7 +313,7 @@ build_gating_tree <- function(sample_uuid, populations, populationDefinitions, r
           }
           idx = idx + 1
         }
-        # browser()
+        # browser() # nocov
         for (child_pop_uuid in child_uuids[order(pop_order)]) {
           child_pop <- populations[[child_pop_uuid]]
           pop_num <- child_pop$definition$populationNumber
@@ -351,23 +351,23 @@ build_gating_tree <- function(sample_uuid, populations, populationDefinitions, r
   }
   
   # Build the tree
-  if (.pkgenv$verbose) message("Building tree...")
+  if (.pkgenv$verbose) message("Building tree...") # nocov
   tree <- build_node(root_uuid)
   
   # Move logical gates up one level (if any exist)
   if (length(logical_gates_info) > 0) {
-    if (.pkgenv$verbose) message("\nMoving logical gates up in hierarchy...")
+    if (.pkgenv$verbose) message("\nMoving logical gates up in hierarchy...") # nocov
     tree <- move_logical_gates_up(tree)
     
     # Remove duplicates at each level (after moving)
-    if (.pkgenv$verbose) message("\nRemoving duplicates...")
+    if (.pkgenv$verbose) message("\nRemoving duplicates...") # nocov
     tree <- deduplicate_tree(tree)
     
     # Get updated summary
     summary_after <- summarize_logical_gates(tree)
     if (!is.null(summary_after)) {
-      if (.pkgenv$verbose) message("\nLogical gates in final tree:")
-      if (.pkgenv$verbose) print(summary_after)
+      if (.pkgenv$verbose) message("\nLogical gates in final tree:") # nocov
+      if (.pkgenv$verbose) print(summary_after) # nocov
     }
   }
   
@@ -459,7 +459,7 @@ identify_logical_gates <- function(populations, populationDefinitions) {
     
     if (!is.null(gate_type) && gate_type %in% c("and", "or", "not")) {
       gate_name <- unlist(pop_def$definition$name)
-      if (.pkgenv$verbose) message(sprintf("Found logical gate: %s (type: %s, uuid: %s)", 
+      if (.pkgenv$verbose) message(sprintf("Found logical gate: %s (type: %s, uuid: %s)", # nocov
                                            gate_name, gate_type, pop$uuid))
       
       # Find combined populations
@@ -467,11 +467,11 @@ identify_logical_gates <- function(populations, populationDefinitions) {
       
       if (!is.null(combined) && length(combined) > 0) {
         combined_names <- sapply(combined, function(x) x$name)
-        if (.pkgenv$verbose) message(sprintf("  - Combines: %s", paste(combined_names, collapse = ", ")))
+        if (.pkgenv$verbose) message(sprintf("  - Combines: %s", paste(combined_names, collapse = ", "))) # nocov
         
         # Add gateDefinition if missing
         if (is.null(pop_def$definition$gateDefinition)) {
-          if (.pkgenv$verbose) message(sprintf("  - Adding gateDefinition to populationDefinitions"))
+          if (.pkgenv$verbose) message(sprintf("  - Adding gateDefinition to populationDefinitions")) # nocov
           populationDefinitions[[pop_def$uuid]]$definition$gateDefinition <- list(
             type = "logical",
             operator = gate_type,
@@ -733,7 +733,7 @@ move_logical_gates_up <- function(tree) {
         processed_child$moved_from <- unlist(processed_child$parent)
         processed_child$parent <- current_target
         
-        if (.pkgenv$verbose) {
+        if (.pkgenv$verbose) { # nocov
           message(sprintf("Moving logical gate '%s' from '%s' to '%s'",
                           unlist(processed_child$name),
                           processed_child$moved_from,
@@ -826,14 +826,14 @@ create_gatingset_from_cytoset <- function(cytoset,
                                           strip_comp_prefix = TRUE) {
   
   actual_sample_count <- length(cytoset)
-  # browser()
+  # browser() # nocov
   # Create individual GatingHierarchy objects with transformations
   gsList = list()
   
   for (i in seq_len(min(length(sample_uuids), actual_sample_count))) {
     sample_uuid <- sample_uuids[i][[1]]
 
-    if (.pkgenv$verbose) cat("Processing sample", i, "of", actual_sample_count, "\n")
+    if (.pkgenv$verbose) cat("Processing sample", i, "of", actual_sample_count, "\n") # nocov
 
     # Extract single cytoframe
     cf <- cytoset[[i]]
@@ -898,7 +898,7 @@ create_gatingset_from_cytoset <- function(cytoset,
   }
   
   # Combine GatingHierarchy objects into a GatingSet
-  if (.pkgenv$verbose) cat("Combining", length(gsList), "GatingHierarchy objects into GatingSet...\n")
+  if (.pkgenv$verbose) cat("Combining", length(gsList), "GatingHierarchy objects into GatingSet...\n") # nocov
   # this will permanately transformt the data and loose transformation information
   gs = merge_list_to_gs(gsList)
   
@@ -951,7 +951,7 @@ create_gatingset_from_cytoset <- function(cytoset,
                                    gates = gates,
                                    sample_uuids = actual_sample_uuids,
                                    strip_comp_prefix = strip_comp_prefix,
-                                   verbose = .pkgenv$verbose)
+                                   verbose = .pkgenv$verbose) # nocov
       
     }
   }

@@ -52,16 +52,21 @@ test_that("fj11_to_gatingset works with example data", {
   skip_if(!file.exists(fcs_file), "FCS file not found in expected location")
 
   # Test that we can call fj11_to_gatingset with execute=FALSE (faster)
-  # This tests the main conversion pathway without actually executing gates
-  expect_error({
-    gs <- fj11_to_gatingset(
-      fj11_workspace = workspace,
-      group_name = 1,
-      execute = FALSE,
-      path = test_path,
-      stop_on_multiple = FALSE  # More permissive to avoid file search issues
-    )
-  }, NA)  # NA means we don't expect an error
+  # This tests the main conversion pathway without actually executing gates.
+  # The example workspace intentionally lacks some expected population/gate
+  # mappings, so meaningful warnings are expected.
+  expect_warning(
+    expect_error({
+      gs <- fj11_to_gatingset(
+        fj11_workspace = workspace,
+        group_name = 1,
+        execute = FALSE,
+        path = test_path,
+        stop_on_multiple = FALSE  # More permissive to avoid file search issues
+      )
+    }, NA),  # NA means we don't expect an error
+    regexp = "No compensation found|Failed to add population|Could not resolve all component paths"
+  )
 
   # If it ran without error, check the result
   # Note: We're not checking the actual result because it depends on flowWorkspace
@@ -80,16 +85,20 @@ test_that("fj11_to_gatingset handles group selection", {
   fcs_file <- file.path(test_path, "sample04.fcs")
   skip_if(!file.exists(fcs_file), "FCS file not found in expected location")
 
-  # Test with numeric group index
-  expect_error({
-    gs <- fj11_to_gatingset(
-      fj11_workspace = workspace,
-      group_name = 1,
-      execute = FALSE,
-      path = test_path,
-      stop_on_multiple = FALSE  # More permissive to avoid file search issues
-    )
-  }, NA)
+  # Test with numeric group index.  The example workspace triggers the same
+  # conversion warnings as the previous test.
+  expect_warning(
+    expect_error({
+      gs <- fj11_to_gatingset(
+        fj11_workspace = workspace,
+        group_name = 1,
+        execute = FALSE,
+        path = test_path,
+        stop_on_multiple = FALSE  # More permissive to avoid file search issues
+      )
+    }, NA),
+    regexp = "No compensation found|Failed to add population|Could not resolve all component paths"
+  )
 })
 
 test_that("Helper functions work correctly", {

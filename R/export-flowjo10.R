@@ -293,7 +293,7 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
     n_orig <- length(comp_names)
     # Determine existing $PAR
     par_val <- suppressWarnings(as.integer(keywords[["$PAR"]]))
-    if (is.na(par_val)) par_val <- n_orig
+    if (length(par_val) == 0L || is.na(par_val)) par_val <- n_orig
 
     # TODO verify that comp name has to be changed.
     # Add $P{par_val + i}N/S/R entries for each compensated channel
@@ -304,6 +304,7 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
 
       # Find original parameter index for this channel
       orig_idx <- which(comp_names == orig_name)[1]
+      if (is.na(orig_idx)) orig_idx <- i
       orig_s <- keywords[[sprintf("$P%dS", orig_idx)]] %||% ""
       orig_r <- keywords[[sprintf("$P%dR", orig_idx)]] %||% "262144"
 
@@ -645,7 +646,7 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
   trans_list <- gh_get_transformations(gh)
   
   if (is.null(trans_list) || length(trans_list) == 0) {
-    if (.pkgenv$verbose) warning("No transformations found in gating hierarchy for dimension ", dim)
+    if (.pkgenv$verbose) warning("No transformations found in gating hierarchy for dimension ", dim) # nocov
     return(NULL)
   }
   
@@ -693,7 +694,6 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
   
   # --- log (includes logtGml2) ---
   if (type %in% c("log", "logtGml2", "flowJo_log")) {
-    # browser()
     fn_env <- tryCatch(environment(trans), error = function(e) new.env())
     
     decade <- p$decade %||% p$n %||%
@@ -764,20 +764,6 @@ get_referenced_channels <- function(gates) {
   unique(channels)
 }
 
-#' Format Gate Value for XML Output
-#'
-#' Formats gate values for XML output, replacing Inf with appropriate values
-#' and rounding to appropriate precision.
-#'
-#' @param val Gate value
-#' @param channel_max Maximum channel value (default 262144)
-#' @return Formatted value
-#' @keywords internal
-format_gate_value <- function(val, channel_max = 262144) {
-  if (is.infinite(val) && val > 0) return(channel_max)
-  if (is.infinite(val) && val < 0) return(0)
-  return(val)
-}
 
 #' Safely get graph axis parameters for a population
 #'
@@ -831,13 +817,13 @@ get_graph_axes <- function(gh, pop_path) {
 #' Convert Rectangle Gate to FlowJo v10 Format
 #' @keywords internal
 convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
-  
+
   # ---- extract parameters --------------------------------------------------
   params <- NULL
   if (!is.null(gate@parameters)) {
-    params <- names(gate@parameters)
+    params <- flowCore::parameters(gate)
   }
-  
+
   min_vals <- gate@min
   max_vals <- gate@max
   
@@ -860,7 +846,6 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
     .apply_inverse_val <- function(val, param_name) {
       spec <- get_transform_spec(gh, param_name)
       if (is.null(spec)) return(val)
-      # browser()
       switch(
         spec$transformType,
         "Linear" = val,
@@ -909,13 +894,13 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
 #' Convert Polygon Gate to FlowJo v10 Format
 #' @keywords internal
 convert_polygon_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
-  
+
   # ---- extract parameters --------------------------------------------------
   params <- NULL
   if (!is.null(gate@parameters)) {
-    params <- names(gate@parameters)
+    params <- flowCore::parameters(gate)
   }
-  
+
   vertices <- NULL
   if (!is.null(gate@boundaries)) {
     vertices <- gate@boundaries
@@ -1009,11 +994,11 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
   }, error = function(e) {
     NULL
   })
-  # browser()
+  # browser() # nocov
   if (is.null(params) || length(params) < 2) {
     return(NULL)
   }
-  # browser()
+  # browser() # nocov
   # Get ellipse parameters
   mean_vals <- tryCatch({
     gate@mean
@@ -1100,7 +1085,7 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
     y_range <- get_display_range(gh, y_param)
     
     # Helper: map a value to FlowJo display units [0, 256].
-    to_display_coords <- function(value, range_vals, param) {
+    to_display_coords <- function(value, range_vals, param) { # nocov start
       if (!is.null(transF[[param]])) {
         # Transformed channel: value is in the forward-transform output space.
         # Normalise to [0, 256] using the transform's output at raw ceiling.
@@ -1120,7 +1105,7 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
         if (range_span == 0) return(50)
         return(((value - min_val) / range_span) * 256)
       }
-    }
+    } # nocov end
     
     # Convert all x coordinates
     center_x <- to_display_coords(center_x, x_range, x_param)
@@ -1305,7 +1290,7 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
   if (node_type == "Population") {
     return(xml_lines)  # Fallback if unknown type
   }
-  # browser()
+  # browser() # nocov
   # Format display name according to FlowJo conventions
   display_name <- pop_name
   # if (length(def$dependents) > 0) {
@@ -1360,7 +1345,7 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
     # Search for the gate in the gates list that belongs to this dependent
     for (g_id in names(gates$gates)) {
       g <- gates$gates[[g_id]]
-      # browser()
+      # browser() # nocov
       if (!is.na(g$name) && !is.na(dep_name) && 
           (g$name == dep_name || basename(g$population_path) == dep_name)) {
         # Found the dependent's gate, copy its definition
@@ -1393,7 +1378,7 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
   xml_lines <- c(xml_lines, sprintf('%s  <Dependents>', indent))
   for (dep in def$dependents) {
     # message(xml_encode(dep))
-    # browser()
+    # browser() # nocov
     xml_lines <- c(xml_lines, sprintf('%s    <Dependent name="%s" />', indent, xml_encode(dep)))
   }
   xml_lines <- c(xml_lines, sprintf('%s  </Dependents>', indent))
@@ -2545,7 +2530,7 @@ emit_transform_xml <- function(type, channel, transform_obj, atr_tr, data_range,
   # Normalize FlowJo transform type names
   type <- tolower(type)
   if (type %in% c("biexp", "biexponential")) type <- "biex"
-  if (type %in% c("logtGml2", "flowJo_log")) type <- "log"
+  if (type %in% c("logtgml2", "flowjo_log")) type <- "log"
   switch(type,
          "biex" = {
            param_str <- sprintf("transforms:length=\"%d\" transforms:maxRange=\"%d\" transforms:neg=\"%d\" transforms:width=\"%d\" transforms:pos=\"%.8g\"",

@@ -52,7 +52,7 @@ extract_transformations <- function(populationDefinitions, sample_uuids) {
       trans_list[[sample_uuid]] <- trans_obj
     }
   }
-  # browser()
+  # browser() # nocov
   return(trans_list)
 }
 
@@ -164,7 +164,7 @@ parse_transformation_info <- function(trans_info) {
   # Extract type-specific parameters
   switch(normalized_type,
          # "logicle" = {
-         #   browser()
+         #   browser() # nocov
          #   params$w = trans_info[["w"]] %||% trans_info[["W"]] %||% 0.5
          #   params$t = trans_info[["t"]] %||% trans_info[["T"]] %||% 262144
          #   params$m = trans_info[["m"]] %||% trans_info[["M"]] %||% 4.5
@@ -178,7 +178,7 @@ parse_transformation_info <- function(trans_info) {
            params$w = trans_info[["w"]] %||% trans_info[["W"]] %||% -25.11886
          },
          # "arcsinh" = {
-         #   browser()
+         #   browser() # nocov
          #   params$a = trans_info[["a"]] %||% trans_info[["A"]] %||% 0
          #   params$b = trans_info[["b"]] %||% trans_info[["B"]] %||% 1/150
          #   params$c = trans_info[["c"]] %||% trans_info[["C"]] %||% 0
@@ -241,7 +241,7 @@ create_transformation_list <- function(trans_spec) {
 #' @keywords internal
 #' @importFrom flowWorkspace flowjo_biexp_trans
 create_biexponential_transform <- function(spec) {
-  # browser()
+  # browser() # nocov
   # Verify spec is provided and is a list
   if (missing(spec) || is.null(spec)) {
     stop("spec argument is required")
@@ -466,7 +466,7 @@ create_linear_transform <- function(spec) {
   }
  
   # if (a == 0) {
-  #   # browser()
+  #   # browser() # nocov
   #   stop("Parameter 'a' cannot be zero (would cause division by zero in inverse)")
   # }
   # it seems that in FlowJo 10 there is no transformation being done, just 
@@ -481,7 +481,7 @@ create_linear_transform <- function(spec) {
     inverse = function(y) (y - b) / a,
     domain = c(0, gateResolution)  # Add this - input range
   )
-  # browser()
+  # browser() # nocov
   attr(trans_obj, "type") = "linear"
   attr(trans_obj, "parameters") = list(
     minRange = spec[["b"]] %||% 0,
