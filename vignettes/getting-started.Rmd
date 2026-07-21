@@ -153,7 +153,9 @@ The exported workspace can be opened in FlowJo v11, which maintains backward com
 
 ## Next Steps
 
-For more detailed information about exporting to FlowJo, see `vignette("exporting-to-flowjo")`.
+For more detailed information about compensation handling, see `vignette("compensation-workflow")`.
+
+For exporting GatingSet objects back to FlowJo v10 format, see `?export_flowjo10_workspace`.
 
 For function-specific documentation, use the help system:
 ```{r help, eval=FALSE}

@@ -1,10 +1,9 @@
 Package: CyFj11
 Type: Package
 Title: Parse FlowJo v11 Workspace Files and Export to FlowJo v10
-Version: 0.99.0
+Version: 0.99.9
 Authors@R: person("Bernd", "Jagla", , "bernd.jagla@pasteur.fr", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-7696-0484"))
-Author: Bernd Jagla [aut, cre] (<https://orcid.org/0000-0002-7696-0484>)
 Description: Provides functions to parse FlowJo v11 workspace files
     (.flowjo) and extract gating information, populations, and associated
     FCS files. Includes utilities for exporting data to FlowJo v10
@@ -49,5 +48,6 @@ VignetteBuilder: knitr
 biocViews: FlowCytometry, DataImport, Infrastructure, Preprocessing
 URL: https://github.com/baj12/CyFj11
 BugReports: https://github.com/baj12/CyFj11/issues
+SystemRequirements: None
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.0.0

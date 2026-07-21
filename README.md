@@ -1,6 +1,9 @@
 # CyFj11: Parse and Extract Data from FlowJo v11 Workspace Files
 
+[![Bioconductor Build](https://bioconductor.org/shields/build/devel/bioc/CyFj11.svg)](https://bioconductor.org/checkresults/devel/bioc-LATEST/CyFj11/)
+[![Bioconductor Dependencies](https://bioconductor.org/shields/dependencies/devel/CyFj11.svg)](https://bioconductor.org/packages/devel/bioc/html/CyFj11.html)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 The CyFj11 package provides tools to parse FlowJo v11 workspace files (.flowjo) and extract gating information, populations, and associated FCS files.
 
@@ -62,7 +65,7 @@ The package provides comprehensive support for exporting GatingSet objects to Fl
 The package includes essential vignettes to help you get started:
 
 - [Getting Started](vignettes/getting-started.Rmd) - Basic usage of the package
-- [Exporting to FlowJo v10](vignettes/exporting-to-flowjo.Rmd) - Exporting GatingSet objects to FlowJo v10 workspace format
+- [Compensation Workflow](vignettes/compensation-workflow.Rmd) - Handling compensation in flow cytometry data
 
 ## Main Functions
 
