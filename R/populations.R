@@ -295,7 +295,7 @@ adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) 
 #'   matching parameter names.
 #' @return Named list mapping gate params to GatingSet params
 #' @keywords internal
-map_gate_params_to_gh <- function(gate_params, gh_param_names, strip_comp_prefix = TRUE) {
+map_gate_params_to_gh <- function(gate_params, gh_param_names, strip_comp_prefix = TRUE, sanitize_slashes = TRUE) {
   # Use unified parameter name mapping
   # Gate params may have "Comp-" prefix from flowCore compensation
   # and "/" may be sanitized to "_"
@@ -303,7 +303,8 @@ map_gate_params_to_gh <- function(gate_params, gh_param_names, strip_comp_prefix
     source_names = gate_params,
     target_names = gh_param_names,
     strip_comp_prefix = strip_comp_prefix,
-    case_insensitive = FALSE
+    case_insensitive = FALSE,
+    sanitize_slashes = sanitize_slashes
   )
 }
 

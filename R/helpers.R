@@ -83,13 +83,17 @@ load_example_workspace <- function() {
 #'   When supplied, source names are also matched against these descriptions.
 #' @param strip_comp_prefix Logical. Strip "Comp-" prefix from source names? Default FALSE.
 #' @param case_insensitive Logical. Case-insensitive matching? Default FALSE.
+#' @param sanitize_slashes Logical. Replace "/" with "_" in parameter names?
+#'   Default TRUE (matches flowCore behavior). Set to FALSE if you want to preserve
+#'   "/" in marker names (e.g., "CD3/CD4" stays as-is).
 #' @return Named list mapping source names to target names. Unmapped names have NULL values.
 #' @keywords internal
 map_param_names <- function(source_names,
                             target_names,
                             target_descriptions = NULL,
                             strip_comp_prefix = FALSE,
-                            case_insensitive = FALSE) {
+                            case_insensitive = FALSE,
+                            sanitize_slashes = TRUE) {
 
   if (is.null(source_names) || length(source_names) == 0) {
     return(list())
@@ -106,7 +110,9 @@ map_param_names <- function(source_names,
       x <- sub("^Comp-", "", x)
     }
     # Replace "/" with "_" (flowCore compensation sanitization)
-    x <- gsub("/", "_", x)
+    if (sanitize_slashes) {
+      x <- gsub("/", "_", x)
+    }
     # Apply case normalization if requested
     if (case_insensitive) {
       x <- tolower(x)
@@ -258,7 +264,8 @@ verify_gate_marker_names <- function(gate_obj, flowframe_params, gate_source = "
     target_names = names(flowframe_params),
     target_descriptions = flowframe_params,
     strip_comp_prefix = TRUE,
-    case_insensitive = FALSE
+    case_insensitive = FALSE,
+    sanitize_slashes = TRUE
   )
 
   # Check for unmapped parameters

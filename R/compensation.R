@@ -362,7 +362,8 @@ map_compensation_names <- function(comp_matrix, param_names) {
     source_names = comp_names,
     target_names = param_names,
     strip_comp_prefix = FALSE,  # Compensation doesn't add "Comp-" prefix
-    case_insensitive = FALSE
+    case_insensitive = FALSE,
+    sanitize_slashes = TRUE
   )
   
   # Check for unmapped names and warn

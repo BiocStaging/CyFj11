@@ -263,6 +263,32 @@ parse_spill_keyword <- function(keywords) {
 
 #' Build Sample Keywords from Original FCS Header and GatingSet Overlay
 #'
+#' Sanitize channel label for FlowJo compatibility
+#'
+#' Replaces characters that may cause issues in FlowJo workspace files.
+#' @param label Channel label string
+#' @return Sanitized label with problematic characters replaced
+#' @keywords internal
+sanitize_channel_label <- function(label) {
+  if (is.null(label) || length(label) == 0 || is.na(label)) return("")
+  label <- as.character(label)
+  # Replace slash with underscore (NK1/1 -> NK1_1)
+  label <- gsub("/", "_", label)
+  # Replace backslash with underscore
+  label <- gsub("\\\\", "_", label)
+  # Replace other potentially problematic characters
+  label <- gsub(":", "_", label)
+  label <- gsub("<", "_", label)
+  label <- gsub(">", "_", label)
+  label <- gsub("\\|", "_", label)
+  label <- gsub("\\*", "_", label)
+  label <- gsub("\\?", "_", label)
+  label <- gsub("\"", "_", label)
+  label
+}
+
+#' Build FlowJo v10 Workspace Keywords
+#'
 #' @param fcs_keywords Keywords from the original FCS header.
 #' @param gs_keywords Keywords from the GatingSet.
 #' @param final_filename The value to set for FILENAME.
@@ -276,9 +302,15 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
   if (!is.null(fcs_keywords) && length(fcs_keywords) > 0) {
     fcs_list <- as.list(fcs_keywords)
     # Copy FCS keywords, but skip SPILL (we'll handle it specially below)
+    # Also sanitize $PnS channel labels to avoid problematic characters
     for (k in names(fcs_list)) {
       if (k != "SPILL") {
-        keywords[[k]] <- fcs_list[[k]]
+        val <- fcs_list[[k]]
+        # Sanitize $PnS keywords (channel labels)
+        if (grepl("^\\$P[0-9]+S$", k)) {
+          val <- sanitize_channel_label(val)
+        }
+        keywords[[k]] <- val
       }
     }
   }

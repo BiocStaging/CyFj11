@@ -1,8 +1,9 @@
 # Bioconductor Submission Checklist for CyFj11
 
-**Current Version:** 0.9.3  
-**Target:** Bioconductor 3.20 (R 4.5)  
-**Prepared:** 2026-05-22
+**Current Version:** 0.99.9  
+**Target:** Bioconductor 3.22 (R 4.5)  
+**Prepared:** 2026-05-22  
+**Last Updated:** 2026-07-22
 
 ---
 
@@ -11,12 +12,13 @@
 | Category | Status | Notes |
 |----------|--------|-------|
 | Package Structure | ✅ Ready | Standard R package layout |
-| DESCRIPTION File | 🟡 Needs Updates | Missing Bioconductor-specific fields |
-| Documentation | 🟡 Partial | Roxygen2 present, needs review |
-| Vignettes | 🟡 Partial | Needs Bioconductor formatting |
+| DESCRIPTION File | ✅ Ready | biocViews, URL, BugReports, SystemRequirements added; duplicate Author field removed |
+| Documentation | ✅ Ready | Roxygen2 complete, 90+ .Rd files |
+| Vignettes | ✅ Ready | BiocStyle::html_document, proper metadata |
+| README | ✅ Ready | Bioconductor badges added |
 | Tests | 🟡 Unknown | Coverage needs verification (target ≥90%) |
-| README | 🟡 Needs Updates | Needs Bioconductor badges |
 | License | ✅ Ready | MIT + LICENSE file |
+| CITATION | ✅ Ready | inst/CITATION present |
 | R CMD Check | 🔴 Pending | Must pass with 0 ERRORs |
 | BiocCheck | 🔴 Pending | Must pass Bioconductor-specific checks |
 
