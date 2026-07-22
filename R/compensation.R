@@ -111,20 +111,21 @@ extract_compensation_from_platforms <- function(spillover_matrices, dataSources 
     # Extract from compSpec
     if (!is.null(comp_data$definition$compSpec$CompensationSpec)) {
       comp_spec <- comp_data$definition$compSpec$CompensationSpec
-      
+
       # Get coefficients
       coefficients <- comp_spec$coefficients
       if (is.list(coefficients)) {
         coefficients <- do.call(rbind, coefficients)
       }
-      
-      # Get detector names
-      detectors <- sapply(comp_spec$detectors, function(d) d$name)
-      
+
+      # Get compensated channel names from parameters (e.g., "Comp-FITC-A", not "FITC-A")
+      # FlowJo 11 stores the compensated names in the parameters list
+      comp_names <- sapply(comp_spec$parameters, function(p) p$name)
+
       # Create matrix
       comp_matrix <- as.matrix(coefficients)
-      rownames(comp_matrix) <- detectors
-      colnames(comp_matrix) <- detectors
+      rownames(comp_matrix) <- comp_names
+      colnames(comp_matrix) <- comp_names
       comp_matrix <- matrix(
         as.numeric(unlist(comp_matrix)),
         nrow      = nrow(comp_matrix),
@@ -340,47 +341,51 @@ map_compensation_names <- function(comp_matrix, param_names) {
   if (is.null(comp_matrix)) {
     return(NULL)
   }
-  
+
   # Convert to matrix if compensation object
   if (methods::is(comp_matrix, "compensation")) {
     comp_matrix <- comp_matrix@spillover
   }
-  
+
   # Get current compensation channel names
   comp_names <- colnames(comp_matrix)
-  
+
   if (is.null(comp_names)) {
     warning("Compensation matrix has no column names")
     return(comp_matrix)
   }
-  
+
+  # Strip "Comp-" prefix for matching against cytoframe parameters
+  # The compensation matrix now has "Comp-" prefixed names (e.g., "Comp-FITC-A")
+  # but the cytoframe has original names (e.g., "FITC-A")
+  comp_names_base <- sub("^Comp-", "", comp_names)
+
   # Use unified parameter name mapping
   # Compensation names may have "/" that flowCore converts to "_"
-  # We don't strip "Comp-" prefix here because compensation matrices typically
-  # use the original channel names without the prefix
   name_mapping <- map_param_names(
-    source_names = comp_names,
+    source_names = comp_names_base,
     target_names = param_names,
-    strip_comp_prefix = FALSE,  # Compensation doesn't add "Comp-" prefix
+    strip_comp_prefix = FALSE,
     case_insensitive = FALSE,
     sanitize_slashes = TRUE
   )
-  
+
   # Check for unmapped names and warn
-  for (i in seq_along(comp_names)) {
-    if (is.null(name_mapping[[comp_names[i]]])) {
-      warning("Could not map compensation channel '", comp_names[i], "' to any parameter")
+  for (i in seq_along(comp_names_base)) {
+    if (is.null(name_mapping[[comp_names_base[i]]])) {
+      warning("Could not map compensation channel '", comp_names_base[i], "' to any parameter")
     }
   }
-  
-  # Apply mapping to create new compensation matrix with correct names
-  mapped_names <- apply_param_mapping(comp_names, name_mapping, on_no_match = "keep")
-  
+
+  # Apply mapping to create new compensation matrix with cytoframe parameter names
+  # (without "Comp-" prefix, so flowCore::compensate can match them)
+  mapped_names <- apply_param_mapping(comp_names_base, name_mapping, on_no_match = "keep")
+
   # Create new compensation matrix with mapped names
   mapped_comp <- comp_matrix
   colnames(mapped_comp) <- mapped_names
   rownames(mapped_comp) <- mapped_names
-  
+
   flowCore::compensation(mapped_comp)
 }
 
