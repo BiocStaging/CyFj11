@@ -327,15 +327,17 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
     par_val <- suppressWarnings(as.integer(keywords[["$PAR"]]))
     if (length(par_val) == 0L || is.na(par_val)) par_val <- n_orig
 
-    # TODO verify that comp name has to be changed.
     # Add $P{par_val + i}N/S/R entries for each compensated channel
+    # Strip any existing "Comp-" prefix to avoid double prefixing (Comp-Comp-)
     for (i in seq_along(comp_names)) {
       orig_name <- comp_names[i]
-      comp_name <- paste0("Comp-", orig_name)
+      # Strip existing Comp- prefix if present (flowWorkspace may already add it)
+      base_name <- sub("^Comp-", "", orig_name)
+      comp_name <- paste0("Comp-", base_name)
       idx <- par_val + i
 
-      # Find original parameter index for this channel
-      orig_idx <- which(comp_names == orig_name)[1]
+      # Find original parameter index for this channel (using base name)
+      orig_idx <- which(sub("^Comp-", "", comp_names) == base_name)[1]
       if (is.na(orig_idx)) orig_idx <- i
       orig_s <- keywords[[sprintf("$P%dS", orig_idx)]] %||% ""
       orig_r <- keywords[[sprintf("$P%dR", orig_idx)]] %||% "262144"
