@@ -263,30 +263,6 @@ parse_spill_keyword <- function(keywords) {
 
 #' Build Sample Keywords from Original FCS Header and GatingSet Overlay
 #'
-#' Sanitize channel label for FlowJo compatibility
-#'
-#' Replaces characters that may cause issues in FlowJo workspace files.
-#' @param label Channel label string
-#' @return Sanitized label with problematic characters replaced
-#' @keywords internal
-sanitize_channel_label <- function(label) {
-  if (is.null(label) || length(label) == 0 || is.na(label)) return("")
-  label <- as.character(label)
-  # Replace slash with underscore (NK1/1 -> NK1_1)
-  label <- gsub("/", "_", label)
-  # Replace backslash with underscore
-  label <- gsub("\\\\", "_", label)
-  # Replace other potentially problematic characters
-  label <- gsub(":", "_", label)
-  label <- gsub("<", "_", label)
-  label <- gsub(">", "_", label)
-  label <- gsub("\\|", "_", label)
-  label <- gsub("\\*", "_", label)
-  label <- gsub("\\?", "_", label)
-  label <- gsub("\"", "_", label)
-  label
-}
-
 #' Build FlowJo v10 Workspace Keywords
 #'
 #' @param fcs_keywords Keywords from the original FCS header.
@@ -302,15 +278,12 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
   if (!is.null(fcs_keywords) && length(fcs_keywords) > 0) {
     fcs_list <- as.list(fcs_keywords)
     # Copy FCS keywords, but skip SPILL (we'll handle it specially below)
-    # Also sanitize $PnS channel labels to avoid problematic characters
+    # NOTE: We do NOT sanitize $PnS channel labels here - FlowJo uses these
+    # exact values to match against descriptive names in population definitions.
+    # Changing them (e.g., NK1/1 -> NK1_1) breaks FlowJo's ability to read the file.
     for (k in names(fcs_list)) {
       if (k != "SPILL") {
-        val <- fcs_list[[k]]
-        # Sanitize $PnS keywords (channel labels)
-        if (grepl("^\\$P[0-9]+S$", k)) {
-          val <- sanitize_channel_label(val)
-        }
-        keywords[[k]] <- val
+        keywords[[k]] <- fcs_list[[k]]
       }
     }
   }
@@ -327,17 +300,19 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
     par_val <- suppressWarnings(as.integer(keywords[["$PAR"]]))
     if (length(par_val) == 0L || is.na(par_val)) par_val <- n_orig
 
-    # Add $P{par_val + i}N/S/R entries for each compensated channel
-    # Strip any existing "Comp-" prefix to avoid double prefixing (Comp-Comp-)
+    # Add $P{par_val + i}N/S/R entries for each compensated channel.
+    # flowWorkspace adds "Comp-" prefix to compensated channel names.
+    # We add another "Comp-" prefix here, resulting in "Comp-Comp-<channel>".
+    # NOTE: This double prefix appears to be required by FlowJo 11.2 (and FlowJo 10)
+    # to read the exported WSP file correctly. Without it, FlowJo fails to parse
+    # the workspace. This may be a FlowJo bug, but for now we keep the double prefix.
     for (i in seq_along(comp_names)) {
       orig_name <- comp_names[i]
-      # Strip existing Comp- prefix if present (flowWorkspace may already add it)
-      base_name <- sub("^Comp-", "", orig_name)
-      comp_name <- paste0("Comp-", base_name)
+      comp_name <- paste0("Comp-", orig_name)
       idx <- par_val + i
 
-      # Find original parameter index for this channel (using base name)
-      orig_idx <- which(sub("^Comp-", "", comp_names) == base_name)[1]
+      # Find original parameter index for this channel
+      orig_idx <- which(comp_names == orig_name)[1]
       if (is.na(orig_idx)) orig_idx <- i
       orig_s <- keywords[[sprintf("$P%dS", orig_idx)]] %||% ""
       orig_r <- keywords[[sprintf("$P%dR", orig_idx)]] %||% "262144"
