@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
  <Workspace
    version="20.0"
-   modDate="Wed Jul 22 19:19:28 CEST 2026"
-   clientTimestamp="178474076828172"
+   modDate="Wed Jul 22 19:20:43 CEST 2026"
+   clientTimestamp="178474084343714"
    flowJoVersion="10.10.1"
    drawRowBorders="1"
    drawColumnBorders="1"
@@ -13,7 +13,7 @@
    xmlns:transforms="http://www.isac-net.org/std/Gating-ML/v2.0/transformations"
    xmlns:data-type="http://www.isac-net.org/std/Gating-ML/v2.0/datatypes"
    xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v2.0/gating http://www.isac-net.org/std/Gating-ML/v2.0/gating/Gating-ML.v2.0.xsd http://www.isac-net.org/std/Gating-ML/v2.0/transformations http://www.isac-net.org/std/Gating-ML/v2.0/gating/Transformations.v2.0.xsd http://www.isac-net.org/std/Gating-ML/v2.0/datatypes http://www.isac-net.org/std/Gating-ML/v2.0/gating/DataTypes.v2.0.xsd "
-   nonAutoSaveFileName="file:/pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFj11/flowjo_export_tests/test14/test14_export.wsp"
+   nonAutoSaveFileName="file:/pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFj11/flowjo_export_tests/test14/output/test14_export_groupGroup_1_68983_n1_20260722_192042.wsp"
  >
    <WindowPosition x="100" y="100" width="800" height="600" displayed="1" panelState="" />
    <TextTraits font="SansSerif" size="11" name="" style="plain" color="#000000" background="#00ffffff" just="left" />
@@ -45,145 +45,145 @@
        </data-type:parameters>
        <transforms:spillover data-type:parameter="FITC-A" userProvidedCompInfix="Comp-FITC-A" >
          <transforms:coefficient data-type:parameter="FITC-A" transforms:value="1" />
-         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.04737345378" />
-         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.7135625558" />
-         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.053295127" />
-         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.01711556836" />
-         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.001069723061" />
-         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.000865966186" />
-         <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.00993314134" />
-         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.002483286549" />
-         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.00496657067" />
+         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.047373" />
+         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.713563" />
+         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.053295" />
+         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.017116" />
+         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.00107" />
+         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.000866" />
+         <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.009933" />
+         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.002483" />
+         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.004967" />
          <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0" />
        </transforms:spillover>
        <transforms:spillover data-type:parameter="Pacific Blue-A" userProvidedCompInfix="Comp-Pacific Blue-A" >
-         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.0004843844255" />
+         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.000484" />
          <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="1" />
-         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.2714277161" />
-         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.006727130152" />
-         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001736033788" />
-         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.0001085021156" />
+         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.271428" />
+         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.006727" />
+         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001736" />
+         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.000109" />
          <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0" />
          <transforms:coefficient data-type:parameter="PE-A" transforms:value="0" />
          <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0" />
          <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0" />
-         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="3.875074788e-05" />
+         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="3.9e-05" />
        </transforms:spillover>
        <transforms:spillover data-type:parameter="AmCyan-A" userProvidedCompInfix="Comp-AmCyan-A" >
-         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.0008109116417" />
-         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.07767722896" />
+         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.000811" />
+         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.077677" />
          <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="1" />
-         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.04826546232" />
-         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001816442021" />
-         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.001135276215" />
-         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.001773193441" />
+         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.048265" />
+         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001816" />
+         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.001135" />
+         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.001773" />
          <transforms:coefficient data-type:parameter="PE-A" transforms:value="0" />
-         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.0001756974193" />
-         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.003689647867" />
-         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.0009595786987" />
+         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.000176" />
+         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.00369" />
+         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.00096" />
        </transforms:spillover>
        <transforms:spillover data-type:parameter="Qdot 605-A" userProvidedCompInfix="Comp-Qdot 605-A" >
-         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="8.625150837e-05" />
-         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.0002495544461" />
-         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.0005347592349" />
+         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="8.6e-05" />
+         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.00025" />
+         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.000535" />
          <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="1" />
-         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.06681616868" />
-         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.0002576044924" />
-         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="2.606712052e-05" />
+         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.066816" />
+         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.000258" />
+         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="2.6e-05" />
          <transforms:coefficient data-type:parameter="PE-A" transforms:value="0" />
-         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.00391198505" />
-         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.1218944632" />
-         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="3.641730079e-05" />
+         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.003912" />
+         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.121894" />
+         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="3.6e-05" />
        </transforms:spillover>
        <transforms:spillover data-type:parameter="APC-A" userProvidedCompInfix="Comp-APC-A" >
-         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.0004354692847" />
+         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.000435" />
          <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0" />
-         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.002519916421" />
-         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.2305722816" />
+         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.00252" />
+         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.230572" />
          <transforms:coefficient data-type:parameter="APC-A" transforms:value="1" />
-         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.1391643652" />
-         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.07020151977" />
+         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.139164" />
+         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.070202" />
          <transforms:coefficient data-type:parameter="PE-A" transforms:value="0" />
-         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.001887033567" />
-         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.2689651798" />
-         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.012764088" />
+         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.001887" />
+         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.268965" />
+         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.012764" />
        </transforms:spillover>
        <transforms:spillover data-type:parameter="Alexa Fluor 700-A" userProvidedCompInfix="Comp-Alexa Fluor 700-A" >
-         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.001246571912" />
-         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.004637249034" />
-         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.01004737291" />
-         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.01970830206" />
-         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.02652705095" />
+         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.001247" />
+         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.004637" />
+         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.010047" />
+         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.019708" />
+         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.026527" />
          <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="1" />
-         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.4934762574" />
+         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.493476" />
          <transforms:coefficient data-type:parameter="PE-A" transforms:value="0" />
          <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0" />
-         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.009723260755" />
-         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.05765395093" />
+         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.009723" />
+         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.057654" />
        </transforms:spillover>
        <transforms:spillover data-type:parameter="APC-Cy7-A" userProvidedCompInfix="Comp-APC-Cy7-A" >
          <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0" />
-         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.002251962267" />
-         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.002814951294" />
-         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.02420858667" />
-         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.08542924937" />
-         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.05729183821" />
+         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.002252" />
+         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.002815" />
+         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.024209" />
+         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.085429" />
+         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.057292" />
          <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="1" />
          <transforms:coefficient data-type:parameter="PE-A" transforms:value="0" />
          <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0" />
-         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.02387159766" />
-         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.176665966" />
+         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.023872" />
+         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.176666" />
        </transforms:spillover>
        <transforms:spillover data-type:parameter="PE-A" userProvidedCompInfix="Comp-PE-A" >
-         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.001166384879" />
-         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.001717502298" />
-         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.00596605913" />
-         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.01988686352" />
-         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001551291939" />
-         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.0002449408111" />
+         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.001166" />
+         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.001718" />
+         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.005966" />
+         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.019887" />
+         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001551" />
+         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.000245" />
          <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0" />
          <transforms:coefficient data-type:parameter="PE-A" transforms:value="1" />
-         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.3045236332" />
-         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.07575183799" />
-         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.003567193458" />
+         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.304524" />
+         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.075752" />
+         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.003567" />
        </transforms:spillover>
        <transforms:spillover data-type:parameter="PE-Texas Red-A" userProvidedCompInfix="Comp-PE-Texas Red-A" >
-         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.0005446396052" />
-         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.0005402826657" />
-         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.001620847997" />
-         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.09971588873" />
-         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001768989447" />
-         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.0001829988973" />
+         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.000545" />
+         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.00054" />
+         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.001621" />
+         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.099716" />
+         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001769" />
+         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.000183" />
          <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0" />
-         <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.26678625" />
+         <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.266786" />
          <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="1" />
-         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.4260461325" />
-         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.02574692872" />
+         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.426046" />
+         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.025747" />
        </transforms:spillover>
        <transforms:spillover data-type:parameter="PE-Cy5-A" userProvidedCompInfix="Comp-PE-Cy5-A" >
-         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.0003372389468" />
-         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.0005018117174" />
-         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.001672705039" />
-         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.2243933972" />
-         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.2522331335" />
-         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.04052802767" />
-         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.02108777597" />
-         <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.03204781601" />
-         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.01087258258" />
+         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.000337" />
+         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.000502" />
+         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.001673" />
+         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.224393" />
+         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.252233" />
+         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.040528" />
+         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.021088" />
+         <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.032048" />
+         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.010873" />
          <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="1" />
-         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.06295464025" />
+         <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.062955" />
        </transforms:spillover>
        <transforms:spillover data-type:parameter="PE-Cy7-A" userProvidedCompInfix="Comp-PE-Cy7-A" >
-         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.0008522606686" />
-         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.003170410727" />
-         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.006869223243" />
-         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.004755613924" />
-         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.003579494781" />
-         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.003340861717" />
-         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.05555603142" />
-         <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.06924617932" />
-         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.0221587763" />
-         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.01347992258" />
+         <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.000852" />
+         <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.00317" />
+         <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.006869" />
+         <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.004756" />
+         <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.003579" />
+         <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.003341" />
+         <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.055556" />
+         <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.069246" />
+         <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.022159" />
+         <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.01348" />
          <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="1" />
        </transforms:spillover>
      </transforms:spilloverMatrix>
@@ -199,19 +199,10 @@
          <MatrixID matrixId="18405cb6-3c7f-485d-a690-1690f98d59a8" >
            <Transforms>
              <transforms:biex transforms:length="256" transforms:maxRange="262144" transforms:neg="0" transforms:width="-100" transforms:pos="4.4185399" >
-               <data-type:parameter data-type:name="Alexa Fluor 700-A"/>
-             </transforms:biex >
-             <transforms:biex transforms:length="256" transforms:maxRange="262144" transforms:neg="0" transforms:width="-100" transforms:pos="4.4185399" >
-               <data-type:parameter data-type:name="AmCyan-A"/>
-             </transforms:biex >
-             <transforms:biex transforms:length="256" transforms:maxRange="262144" transforms:neg="0" transforms:width="-100" transforms:pos="4.4185399" >
                <data-type:parameter data-type:name="APC-A"/>
              </transforms:biex >
              <transforms:biex transforms:length="256" transforms:maxRange="262144" transforms:neg="0" transforms:width="-100" transforms:pos="4.4185399" >
                <data-type:parameter data-type:name="APC-Cy7-A"/>
-             </transforms:biex >
-             <transforms:biex transforms:length="256" transforms:maxRange="262144" transforms:neg="0" transforms:width="-100" transforms:pos="4.4185399" >
-               <data-type:parameter data-type:name="FITC-A"/>
              </transforms:biex >
              <transforms:biex transforms:length="256" transforms:maxRange="262144" transforms:neg="0" transforms:width="-100" transforms:pos="4.4185399" >
                <data-type:parameter data-type:name="Pacific Blue-A"/>
@@ -227,9 +218,6 @@
              </transforms:biex >
              <transforms:biex transforms:length="256" transforms:maxRange="262144" transforms:neg="0" transforms:width="-100" transforms:pos="4.4185399" >
                <data-type:parameter data-type:name="PE-Texas Red-A"/>
-             </transforms:biex >
-             <transforms:biex transforms:length="256" transforms:maxRange="262144" transforms:neg="0" transforms:width="-100" transforms:pos="4.4185399" >
-               <data-type:parameter data-type:name="Qdot 605-A"/>
              </transforms:biex >
              <transforms:linear transforms:minRange="0.0" transforms:maxRange="262144.0" gain="1" >
                <data-type:parameter data-type:name="FSC-A"/>
@@ -248,6 +236,9 @@
              </transforms:linear >
              <transforms:linear transforms:minRange="0.0" transforms:maxRange="262144.0" gain="1" >
                <data-type:parameter data-type:name="SSC-W"/>
+             </transforms:linear >
+             <transforms:linear transforms:minRange="0.0" transforms:maxRange="262144.0" gain="1" >
+               <data-type:parameter data-type:name="Time"/>
              </transforms:linear >
            </Transforms>
          </MatrixID>
@@ -298,7 +289,7 @@
    </Groups>
    <SampleList>
      <Sample>
-       <DataSet uri="file:/pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFj11/flowjo_export_tests/test14/68983.fcs" sampleID="1" />
+       <DataSet uri="file:/pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFj11/flowjo_export_tests/test14/output/test14_export_groupGroup_1_n1_fcs/68983.fcs" sampleID="1" />
        <transforms:spilloverMatrix spectral="0" weightOptAlgorithmType="OLS" prefix="Comp-" name="Acquisition-defined" editable="0" matrixType="wizardDefined" color="#c0c0c0" version="FlowJo-10.10.1" status="FINALIZED" transforms:id="18405cb6-3c7f-485d-a690-1690f98d59a8" suffix="" >
          <data-type:parameters>
            <data-type:parameter data-type:name="FITC-A" userProvidedCompInfix="Comp-FITC-A" />
@@ -315,145 +306,145 @@
          </data-type:parameters>
          <transforms:spillover data-type:parameter="FITC-A" userProvidedCompInfix="Comp-FITC-A" >
            <transforms:coefficient data-type:parameter="FITC-A" transforms:value="1" />
-           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.04737345378" />
-           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.7135625558" />
-           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.053295127" />
-           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.01711556836" />
-           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.001069723061" />
-           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.000865966186" />
-           <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.00993314134" />
-           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.002483286549" />
-           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.00496657067" />
+           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.047373" />
+           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.713563" />
+           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.053295" />
+           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.017116" />
+           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.00107" />
+           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.000866" />
+           <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.009933" />
+           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.002483" />
+           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.004967" />
            <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0" />
          </transforms:spillover>
          <transforms:spillover data-type:parameter="Pacific Blue-A" userProvidedCompInfix="Comp-Pacific Blue-A" >
-           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.0004843844255" />
+           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.000484" />
            <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="1" />
-           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.2714277161" />
-           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.006727130152" />
-           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001736033788" />
-           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.0001085021156" />
+           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.271428" />
+           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.006727" />
+           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001736" />
+           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.000109" />
            <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0" />
            <transforms:coefficient data-type:parameter="PE-A" transforms:value="0" />
            <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0" />
            <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0" />
-           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="3.875074788e-05" />
+           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="3.9e-05" />
          </transforms:spillover>
          <transforms:spillover data-type:parameter="AmCyan-A" userProvidedCompInfix="Comp-AmCyan-A" >
-           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.0008109116417" />
-           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.07767722896" />
+           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.000811" />
+           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.077677" />
            <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="1" />
-           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.04826546232" />
-           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001816442021" />
-           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.001135276215" />
-           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.001773193441" />
+           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.048265" />
+           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001816" />
+           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.001135" />
+           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.001773" />
            <transforms:coefficient data-type:parameter="PE-A" transforms:value="0" />
-           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.0001756974193" />
-           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.003689647867" />
-           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.0009595786987" />
+           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.000176" />
+           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.00369" />
+           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.00096" />
          </transforms:spillover>
          <transforms:spillover data-type:parameter="Qdot 605-A" userProvidedCompInfix="Comp-Qdot 605-A" >
-           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="8.625150837e-05" />
-           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.0002495544461" />
-           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.0005347592349" />
+           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="8.6e-05" />
+           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.00025" />
+           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.000535" />
            <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="1" />
-           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.06681616868" />
-           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.0002576044924" />
-           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="2.606712052e-05" />
+           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.066816" />
+           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.000258" />
+           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="2.6e-05" />
            <transforms:coefficient data-type:parameter="PE-A" transforms:value="0" />
-           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.00391198505" />
-           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.1218944632" />
-           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="3.641730079e-05" />
+           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.003912" />
+           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.121894" />
+           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="3.6e-05" />
          </transforms:spillover>
          <transforms:spillover data-type:parameter="APC-A" userProvidedCompInfix="Comp-APC-A" >
-           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.0004354692847" />
+           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.000435" />
            <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0" />
-           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.002519916421" />
-           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.2305722816" />
+           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.00252" />
+           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.230572" />
            <transforms:coefficient data-type:parameter="APC-A" transforms:value="1" />
-           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.1391643652" />
-           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.07020151977" />
+           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.139164" />
+           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.070202" />
            <transforms:coefficient data-type:parameter="PE-A" transforms:value="0" />
-           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.001887033567" />
-           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.2689651798" />
-           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.012764088" />
+           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.001887" />
+           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.268965" />
+           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.012764" />
          </transforms:spillover>
          <transforms:spillover data-type:parameter="Alexa Fluor 700-A" userProvidedCompInfix="Comp-Alexa Fluor 700-A" >
-           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.001246571912" />
-           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.004637249034" />
-           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.01004737291" />
-           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.01970830206" />
-           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.02652705095" />
+           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.001247" />
+           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.004637" />
+           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.010047" />
+           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.019708" />
+           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.026527" />
            <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="1" />
-           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.4934762574" />
+           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.493476" />
            <transforms:coefficient data-type:parameter="PE-A" transforms:value="0" />
            <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0" />
-           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.009723260755" />
-           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.05765395093" />
+           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.009723" />
+           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.057654" />
          </transforms:spillover>
          <transforms:spillover data-type:parameter="APC-Cy7-A" userProvidedCompInfix="Comp-APC-Cy7-A" >
            <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0" />
-           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.002251962267" />
-           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.002814951294" />
-           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.02420858667" />
-           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.08542924937" />
-           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.05729183821" />
+           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.002252" />
+           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.002815" />
+           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.024209" />
+           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.085429" />
+           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.057292" />
            <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="1" />
            <transforms:coefficient data-type:parameter="PE-A" transforms:value="0" />
            <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0" />
-           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.02387159766" />
-           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.176665966" />
+           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.023872" />
+           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.176666" />
          </transforms:spillover>
          <transforms:spillover data-type:parameter="PE-A" userProvidedCompInfix="Comp-PE-A" >
-           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.001166384879" />
-           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.001717502298" />
-           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.00596605913" />
-           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.01988686352" />
-           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001551291939" />
-           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.0002449408111" />
+           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.001166" />
+           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.001718" />
+           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.005966" />
+           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.019887" />
+           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001551" />
+           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.000245" />
            <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0" />
            <transforms:coefficient data-type:parameter="PE-A" transforms:value="1" />
-           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.3045236332" />
-           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.07575183799" />
-           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.003567193458" />
+           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.304524" />
+           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.075752" />
+           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.003567" />
          </transforms:spillover>
          <transforms:spillover data-type:parameter="PE-Texas Red-A" userProvidedCompInfix="Comp-PE-Texas Red-A" >
-           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.0005446396052" />
-           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.0005402826657" />
-           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.001620847997" />
-           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.09971588873" />
-           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001768989447" />
-           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.0001829988973" />
+           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.000545" />
+           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.00054" />
+           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.001621" />
+           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.099716" />
+           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.001769" />
+           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.000183" />
            <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0" />
-           <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.26678625" />
+           <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.266786" />
            <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="1" />
-           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.4260461325" />
-           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.02574692872" />
+           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.426046" />
+           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.025747" />
          </transforms:spillover>
          <transforms:spillover data-type:parameter="PE-Cy5-A" userProvidedCompInfix="Comp-PE-Cy5-A" >
-           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.0003372389468" />
-           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.0005018117174" />
-           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.001672705039" />
-           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.2243933972" />
-           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.2522331335" />
-           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.04052802767" />
-           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.02108777597" />
-           <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.03204781601" />
-           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.01087258258" />
+           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.000337" />
+           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.000502" />
+           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.001673" />
+           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.224393" />
+           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.252233" />
+           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.040528" />
+           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.021088" />
+           <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.032048" />
+           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.010873" />
            <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="1" />
-           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.06295464025" />
+           <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="0.062955" />
          </transforms:spillover>
          <transforms:spillover data-type:parameter="PE-Cy7-A" userProvidedCompInfix="Comp-PE-Cy7-A" >
-           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.0008522606686" />
-           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.003170410727" />
-           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.006869223243" />
-           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.004755613924" />
-           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.003579494781" />
-           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.003340861717" />
-           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.05555603142" />
-           <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.06924617932" />
-           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.0221587763" />
-           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.01347992258" />
+           <transforms:coefficient data-type:parameter="FITC-A" transforms:value="0.000852" />
+           <transforms:coefficient data-type:parameter="Pacific Blue-A" transforms:value="0.00317" />
+           <transforms:coefficient data-type:parameter="AmCyan-A" transforms:value="0.006869" />
+           <transforms:coefficient data-type:parameter="Qdot 605-A" transforms:value="0.004756" />
+           <transforms:coefficient data-type:parameter="APC-A" transforms:value="0.003579" />
+           <transforms:coefficient data-type:parameter="Alexa Fluor 700-A" transforms:value="0.003341" />
+           <transforms:coefficient data-type:parameter="APC-Cy7-A" transforms:value="0.055556" />
+           <transforms:coefficient data-type:parameter="PE-A" transforms:value="0.069246" />
+           <transforms:coefficient data-type:parameter="PE-Texas Red-A" transforms:value="0.022159" />
+           <transforms:coefficient data-type:parameter="PE-Cy5-A" transforms:value="0.01348" />
            <transforms:coefficient data-type:parameter="PE-Cy7-A" transforms:value="1" />
          </transforms:spillover>
        </transforms:spilloverMatrix>
@@ -672,7 +663,7 @@
         <Keyword name="EXPERIMENT NAME" value="01-07-2013 E20 andere kleuringen"/>
         <Keyword name="EXPORT TIME" value="02-JUL-2013-00:29:00"/>
         <Keyword name="EXPORT USER NAME" value="Mary"/>
-        <Keyword name="FILENAME" value="/pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFj11/flowjo_export_tests/test14/68983.fcs"/>
+        <Keyword name="FILENAME" value="/pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFj11/flowjo_export_tests/test14/output/test14_export_groupGroup_1_n1_fcs/68983.fcs"/>
         <Keyword name="flowCore_$P10Rmax" value="262144"/>
         <Keyword name="flowCore_$P10Rmin" value="-111"/>
         <Keyword name="flowCore_$P11Rmax" value="262144"/>
@@ -763,11 +754,12 @@
         <Keyword name="P9BS" value="-1"/>
         <Keyword name="P9DISPLAY" value="LOG"/>
         <Keyword name="P9MS" value="0"/>
-        <Keyword name="SPILL" value="11,FITC-A,Pacific Blue-A,AmCyan-A,Qdot 605-A,APC-A,Alexa Fluor 700-A,APC-Cy7-A,PE-A,PE-Texas Red-A,PE-Cy5-A,PE-Cy7-A,1,0.000484384425494696,0.000810911641700991,8.62515083671664e-05,0.000435469284691574,0.00124657191199782,0,0.00116638487891352,0.000544639605205964,0.000337238946750615,0.000852260668586288,0.0473734537760424,1,0.0776772289632046,0.00024955444609927,0,0.0046372490343262,0.00225196226670158,0.00171750229779152,0.000540282665655875,0.000501811717432378,0.00317041072749831,0.713562555808011,0.2714277160578,1,0.000534759234890326,0.00251991642098212,0.0100473729077067,0.00281495129385161,0.00596605913024594,0.0016208479969675,0.00167270503866019,0.00686922324291293,0.0532951269966522,0.00672713015230347,0.0482654623163763,1,0.230572281642703,0.0197083020554931,0.0242085866694151,0.0198868635202973,0.0997158887311075,0.224393397162867,0.00475561392383645,0.0171155683632224,0.0017360337883641,0.00181644202069819,0.0668161686828347,1,0.0265270509451293,0.0854292493741771,0.0015512919390108,0.00176898944740459,0.2522331335242,0.00357949478096977,0.00106972306065406,0.000108502115622298,0.00113527621460229,0.000257604492377373,0.139164365213148,1,0.057291838211487,0.000244940811130929,0.0001829988973073,0.0405280276670603,0.00334086171655158,0.000865966185989057,0,0.00177319344105258,2.60671205180449e-05,0.0702015197666251,0.493476257418239,1,0,0,0.0210877759741683,0.0555560314226733,0.00993314133977799,0,0,0,0,0,0,1,0.266786250030765,0.0320478160119278,0.0692461793226359,0.00248328654942948,0,0.000175697419255832,0.00391198505025097,0.00188703356699681,0,0,0.304523633226369,1,0.0108725825797625,0.0221587762995379,0.00496657066988902,0,0.00368964786662678,0.121894463167697,0.268965179764634,0.00972326075507316,0.0238715976551232,0.0757518379855169,0.426046132482095,1,0.0134799225830281,0,3.87507478803089e-05,0.000959578698678279,3.64173007909419e-05,0.0127640879984278,0.0576539509298989,0.176665965956833,0.00356719345805019,0.025746928716979,0.0629546402540162,1"/>
+        <Keyword name="SPILL" value="11,FITC-A,Pacific Blue-A,AmCyan-A,Qdot 605-A,APC-A,Alexa Fluor 700-A,APC-Cy7-A,PE-A,PE-Texas Red-A,PE-Cy5-A,PE-Cy7-A,1,0.000484,0.000811,8.6e-05,0.000435,0.001247,0,0.001166,0.000545,0.000337,0.000852,0.047373,1,0.077677,0.00025,0,0.004637,0.002252,0.001718,0.00054,0.000502,0.00317,0.713563,0.271428,1,0.000535,0.00252,0.010047,0.002815,0.005966,0.001621,0.001673,0.006869,0.053295,0.006727,0.048265,1,0.230572,0.019708,0.024209,0.019887,0.099716,0.224393,0.004756,0.017116,0.001736,0.001816,0.066816,1,0.026527,0.085429,0.001551,0.001769,0.252233,0.003579,0.00107,0.000109,0.001135,0.000258,0.139164,1,0.057292,0.000245,0.000183,0.040528,0.003341,0.000866,0,0.001773,2.6e-05,0.070202,0.493476,1,0,0,0.021088,0.055556,0.009933,0,0,0,0,0,0,1,0.266786,0.032048,0.069246,0.002483,0,0.000176,0.003912,0.001887,0,0,0.304524,1,0.010873,0.022159,0.004967,0,0.00369,0.121894,0.268965,0.009723,0.023872,0.075752,0.426046,1,0.01348,0,3.9e-05,0.00096,3.6e-05,0.012764,0.057654,0.176666,0.003567,0.025747,0.062955,1"/>
         <Keyword name="THRESHOLD" value="FSC,5000"/>
         <Keyword name="transformation" value="applied"/>
         <Keyword name="TUBE NAME" value="Tube_001"/>
         <Keyword name="WINDOW EXTENSION" value="0.00"/>
+        <Keyword name="$CYTOLIB_VERSION" value="2.22.0"/>
         <Keyword name="$P19N" value="Comp-Comp-FITC-A"/>
         <Keyword name="$P19S" value=" "/>
         <Keyword name="$P19R" value="262144"/>
@@ -816,7 +808,7 @@
            </GraphEnvironment>
          </Graph>
          <Subpopulations>
-           <Population name="Lymphocytes" annotation="" owningGroup="" expanded="1" sortPriority="10" count="19225">
+           <Population name="Lymphocytes" annotation="" owningGroup="" expanded="1" sortPriority="10" count="19079">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="FSC-H" label="" auto="auto" />
           <Axis dimension="y" name="FSC-W" label="" auto="auto" />
@@ -829,7 +821,7 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-             <Gate gating:id="ID1784740769" >
+             <Gate gating:id="ID1784740845" >
                <gating:PolygonGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" quadId="-1" gateResolution="256" >
                  <gating:dimension>
                    <data-type:fcs-dimension data-type:name="FSC-A" />
@@ -838,57 +830,61 @@
                    <data-type:fcs-dimension data-type:name="SSC-A" />
                  </gating:dimension>
                  <gating:vertex>
-                   <gating:coordinate data-type:value="121241" />
-                   <gating:coordinate data-type:value="27904" />
+                   <gating:coordinate data-type:value="120832" />
+                   <gating:coordinate data-type:value="27648" />
                  </gating:vertex>
                  <gating:vertex>
-                   <gating:coordinate data-type:value="101580" />
-                   <gating:coordinate data-type:value="13952" />
+                   <gating:coordinate data-type:value="101376" />
+                   <gating:coordinate data-type:value="13312" />
                  </gating:vertex>
                  <gating:vertex>
-                   <gating:coordinate data-type:value="72089" />
-                   <gating:coordinate data-type:value="8128" />
+                   <gating:coordinate data-type:value="71680" />
+                   <gating:coordinate data-type:value="7168" />
                  </gating:vertex>
                  <gating:vertex>
-                   <gating:coordinate data-type:value="58982" />
-                   <gating:coordinate data-type:value="12800" />
+                   <gating:coordinate data-type:value="58368" />
+                   <gating:coordinate data-type:value="12288" />
                  </gating:vertex>
                  <gating:vertex>
-                   <gating:coordinate data-type:value="53521" />
-                   <gating:coordinate data-type:value="22080" />
+                   <gating:coordinate data-type:value="53248" />
+                   <gating:coordinate data-type:value="21504" />
                  </gating:vertex>
                  <gating:vertex>
-                   <gating:coordinate data-type:value="56797" />
-                   <gating:coordinate data-type:value="41920" />
+                   <gating:coordinate data-type:value="56320" />
+                   <gating:coordinate data-type:value="40960" />
                  </gating:vertex>
                  <gating:vertex>
-                   <gating:coordinate data-type:value="67720" />
+                   <gating:coordinate data-type:value="67584" />
                    <gating:coordinate data-type:value="59392" />
                  </gating:vertex>
                  <gating:vertex>
-                   <gating:coordinate data-type:value="95027" />
-                   <gating:coordinate data-type:value="74560" />
+                   <gating:coordinate data-type:value="94208" />
+                   <gating:coordinate data-type:value="73728" />
                  </gating:vertex>
                  <gating:vertex>
-                   <gating:coordinate data-type:value="122333" />
-                   <gating:coordinate data-type:value="75712" />
+                   <gating:coordinate data-type:value="121856" />
+                   <gating:coordinate data-type:value="74752" />
                  </gating:vertex>
                  <gating:vertex>
-                   <gating:coordinate data-type:value="139810" />
-                   <gating:coordinate data-type:value="67520" />
+                   <gating:coordinate data-type:value="139264" />
+                   <gating:coordinate data-type:value="66560" />
                  </gating:vertex>
                  <gating:vertex>
-                   <gating:coordinate data-type:value="146363" />
-                   <gating:coordinate data-type:value="53568" />
+                   <gating:coordinate data-type:value="145408" />
+                   <gating:coordinate data-type:value="53248" />
                  </gating:vertex>
                  <gating:vertex>
-                   <gating:coordinate data-type:value="137625" />
-                   <gating:coordinate data-type:value="36096" />
+                   <gating:coordinate data-type:value="137216" />
+                   <gating:coordinate data-type:value="35840" />
+                 </gating:vertex>
+                 <gating:vertex>
+                   <gating:coordinate data-type:value="120832" />
+                   <gating:coordinate data-type:value="27648" />
                  </gating:vertex>
                </gating:PolygonGate>
              </Gate>
              <Subpopulations>
-               <Population name="Singlets" annotation="" owningGroup="" expanded="1" sortPriority="10" count="18702">
+               <Population name="Singlets" annotation="" owningGroup="" expanded="1" sortPriority="10" count="18545">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="SSC-H" label="" auto="auto" />
           <Axis dimension="y" name="SSC-W" label="" auto="auto" />
@@ -901,18 +897,18 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                 <Gate gating:id="ID1784740770" gating:parent_id="ID1784740769" >
+                 <Gate gating:id="ID1784740846" gating:parent_id="ID1784740845" >
                    <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >
-                     <gating:dimension gating:min="14199" gating:max="78643" >
+                     <gating:dimension gating:min="13312" gating:max="77824" >
                        <data-type:fcs-dimension data-type:name="FSC-H" />
                      </gating:dimension>
-                     <gating:dimension gating:min="17472" gating:max="201536" >
+                     <gating:dimension gating:min="17408" gating:max="200704" >
                        <data-type:fcs-dimension data-type:name="FSC-W" />
                      </gating:dimension>
                    </gating:RectangleGate>
                  </Gate>
                  <Subpopulations>
-                   <Population name="Singlets2" annotation="" owningGroup="" expanded="1" sortPriority="10" count="18585">
+                   <Population name="Singlets2" annotation="" owningGroup="" expanded="1" sortPriority="10" count="18418">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-PE-A" label="" auto="auto" />
           <Axis dimension="y" name="FSC-A" label="" auto="auto" />
@@ -925,18 +921,18 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                     <Gate gating:id="ID1784740771" gating:parent_id="ID1784740770" >
+                     <Gate gating:id="ID1784740847" gating:parent_id="ID1784740846" >
                        <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >
-                         <gating:dimension gating:min="34952" gating:max="80827" >
+                         <gating:dimension gating:min="34816" gating:max="79872" >
                            <data-type:fcs-dimension data-type:name="SSC-H" />
                          </gating:dimension>
-                         <gating:dimension gating:min="1152" gating:max="120000" >
+                         <gating:dimension gating:min="1024" gating:max="119808" >
                            <data-type:fcs-dimension data-type:name="SSC-W" />
                          </gating:dimension>
                        </gating:RectangleGate>
                      </Gate>
                      <Subpopulations>
-                       <Population name="NK1_1+" annotation="" owningGroup="" expanded="1" sortPriority="10" count="923">
+                       <Population name="NK1_1+" annotation="" owningGroup="" expanded="1" sortPriority="10" count="942">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-PE-Cy7-A" label="" auto="auto" />
           <Axis dimension="y" name="Comp-PE-A" label="" auto="auto" />
@@ -949,18 +945,18 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                         <Gate gating:id="ID1784740772" gating:parent_id="ID1784740771" >
+                         <Gate gating:id="ID1784740848" gating:parent_id="ID1784740847" >
                            <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >
-                             <gating:dimension gating:min="2277.02151517215" gating:max="112714.063447916" >
+                             <gating:dimension gating:min="1978.38100548009" gating:max="105018.074648598" >
                                <data-type:fcs-dimension data-type:name="Comp-PE-A" />
                              </gating:dimension>
-                             <gating:dimension gating:min="37622.5185185185" gating:max="152917.333333333" >
+                             <gating:dimension gating:min="36864" gating:max="152576" >
                                <data-type:fcs-dimension data-type:name="FSC-A" />
                              </gating:dimension>
                            </gating:RectangleGate>
                          </Gate>
                          <Subpopulations>
-                           <Population name="NK cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="312">
+                           <Population name="NK cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="314">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-PE-Cy7-A" label="" auto="auto" />
           <Axis dimension="y" name="Comp-PE-A" label="" auto="auto" />
@@ -973,18 +969,18 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                             <Gate gating:id="ID1784740773" gating:parent_id="ID1784740772" >
+                             <Gate gating:id="ID1784740849" gating:parent_id="ID1784740848" >
                                <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >
-                                 <gating:dimension gating:min="-400.960850615532" gating:max="339.5357091913" >
+                                 <gating:dimension gating:min="-342.817328062892" gating:max="305.014166732699" >
                                    <data-type:fcs-dimension data-type:name="Comp-PE-Cy7-A" />
                                  </gating:dimension>
-                                 <gating:dimension gating:min="4860.37750749548" gating:max="118931.768111845" >
+                                 <gating:dimension gating:min="4325.30518860981" gating:max="109286.58980264" >
                                    <data-type:fcs-dimension data-type:name="Comp-PE-A" />
                                  </gating:dimension>
                                </gating:RectangleGate>
                              </Gate>
                            </Population>
-                           <Population name="NK T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="535">
+                           <Population name="NK T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="545">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-PE-Cy7-A" label="" auto="auto" />
           <Axis dimension="y" name="Comp-PE-A" label="" auto="auto" />
@@ -997,12 +993,12 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                             <Gate gating:id="ID1784740774" gating:parent_id="ID1784740772" >
+                             <Gate gating:id="ID1784740850" gating:parent_id="ID1784740848" >
                                <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >
-                                 <gating:dimension gating:min="720.703025319503" gating:max="20417.3044752327" >
+                                 <gating:dimension gating:min="633.904192282517" gating:max="18668.1989978105" >
                                    <data-type:fcs-dimension data-type:name="Comp-PE-Cy7-A" />
                                  </gating:dimension>
-                                 <gating:dimension gating:min="2110.5792817843" gating:max="59245.522754861" >
+                                 <gating:dimension gating:min="1859.51473398009" gating:max="55651.6910604277" >
                                    <data-type:fcs-dimension data-type:name="Comp-PE-A" />
                                  </gating:dimension>
                                </gating:RectangleGate>
@@ -1010,7 +1006,7 @@
                            </Population>
                          </Subpopulations>
                        </Population>
-                       <Population name="NK1_1-" annotation="" owningGroup="" expanded="1" sortPriority="10" count="17470">
+                       <Population name="NK1_1-" annotation="" owningGroup="" expanded="1" sortPriority="10" count="17192">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-PE-Cy5-A" label="" auto="auto" />
           <Axis dimension="y" name="Comp-PE-Cy7-A" label="" auto="auto" />
@@ -1023,18 +1019,18 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                         <Gate gating:id="ID1784740775" gating:parent_id="ID1784740771" >
+                         <Gate gating:id="ID1784740851" gating:parent_id="ID1784740847" >
                            <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >
-                             <gating:dimension gating:min="-561.16408887596" gating:max="1267.3892245262" >
+                             <gating:dimension gating:min="-481.443516778797" gating:max="1106.47240237388" >
                                <data-type:fcs-dimension data-type:name="Comp-PE-A" />
                              </gating:dimension>
-                             <gating:dimension gating:min="43690.6666666667" gating:max="154067.087719298" >
+                             <gating:dimension gating:min="43008" gating:max="153600" >
                                <data-type:fcs-dimension data-type:name="FSC-A" />
                              </gating:dimension>
                            </gating:RectangleGate>
                          </Gate>
                          <Subpopulations>
-                           <Population name="B cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="2460">
+                           <Population name="B cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="2436">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-PE-Cy5-A" label="" auto="auto" />
           <Axis dimension="y" name="Comp-PE-Cy7-A" label="" auto="auto" />
@@ -1047,18 +1043,18 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                             <Gate gating:id="ID1784740776" gating:parent_id="ID1784740775" >
+                             <Gate gating:id="ID1784740852" gating:parent_id="ID1784740851" >
                                <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >
-                                 <gating:dimension gating:min="1590.61697061674" gating:max="145338.535151617" >
+                                 <gating:dimension gating:min="1369.78276645042" gating:max="133404.517506504" >
                                    <data-type:fcs-dimension data-type:name="Comp-PE-Cy5-A" />
                                  </gating:dimension>
-                                 <gating:dimension gating:min="-612.73452253662" gating:max="986.360901139674" >
+                                 <gating:dimension gating:min="-523.337710276162" gating:max="861.002156134624" >
                                    <data-type:fcs-dimension data-type:name="Comp-PE-Cy7-A" />
                                  </gating:dimension>
                                </gating:RectangleGate>
                              </Gate>
                            </Population>
-                           <Population name="T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="10752">
+                           <Population name="T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="10672">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-APC-Cy7-A" label="" auto="auto" />
           <Axis dimension="y" name="Comp-APC-A" label="" auto="auto" />
@@ -1071,18 +1067,18 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                             <Gate gating:id="ID1784740777" gating:parent_id="ID1784740775" >
+                             <Gate gating:id="ID1784740853" gating:parent_id="ID1784740851" >
                                <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >
-                                 <gating:dimension gating:min="-4123.71354428229" gating:max="1352.24849078339" >
+                                 <gating:dimension gating:min="-2112.52034764543" gating:max="1176.37817367703" >
                                    <data-type:fcs-dimension data-type:name="Comp-PE-Cy5-A" />
                                  </gating:dimension>
-                                 <gating:dimension gating:min="622.589429589553" gating:max="56570.7263173737" >
+                                 <gating:dimension gating:min="544.747480796569" gating:max="51425.6372828443" >
                                    <data-type:fcs-dimension data-type:name="Comp-PE-Cy7-A" />
                                  </gating:dimension>
                                </gating:RectangleGate>
                              </Gate>
                              <Subpopulations>
-                               <Population name="ab T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="9196">
+                               <Population name="ab T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="9113">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-PE-Texas Red-A" label="" auto="auto" />
           <Axis dimension="y" name="Comp-Pacific Blue-A" label="" auto="auto" />
@@ -1095,7 +1091,7 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                                 <Gate gating:id="ID1784740778" gating:parent_id="ID1784740777" >
+                                 <Gate gating:id="ID1784740854" gating:parent_id="ID1784740853" >
                                    <gating:PolygonGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" quadId="-1" gateResolution="256" >
                                      <gating:dimension>
                                        <data-type:fcs-dimension data-type:name="Comp-APC-Cy7-A" />
@@ -1104,33 +1100,37 @@
                                        <data-type:fcs-dimension data-type:name="Comp-APC-A" />
                                      </gating:dimension>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="-39.5967133994397" />
-                                       <gating:coordinate data-type:value="198.570625274303" />
+                                       <gating:coordinate data-type:value="-17.5772228167322" />
+                                       <gating:coordinate data-type:value="176.928145215184" />
                                      </gating:vertex>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="1490.79270678676" />
-                                       <gating:coordinate data-type:value="682.521153661965" />
+                                       <gating:coordinate data-type:value="1288.98613763986" />
+                                       <gating:coordinate data-type:value="588.583413537486" />
                                      </gating:vertex>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="27183.0050830074" />
-                                       <gating:coordinate data-type:value="508.71411238244" />
+                                       <gating:coordinate data-type:value="24449.5124660525" />
+                                       <gating:coordinate data-type:value="440.669405393163" />
                                      </gating:vertex>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="16021.3446966489" />
-                                       <gating:coordinate data-type:value="-555.210089494023" />
+                                       <gating:coordinate data-type:value="14297.6782257535" />
+                                       <gating:coordinate data-type:value="-460.924666278638" />
                                      </gating:vertex>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="692.560059765495" />
-                                       <gating:coordinate data-type:value="-672.296898133604" />
+                                       <gating:coordinate data-type:value="611.048100977168" />
+                                       <gating:coordinate data-type:value="-566.489748620015" />
                                      </gating:vertex>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="-39.5967133994397" />
-                                       <gating:coordinate data-type:value="-92.6942110574785" />
+                                       <gating:coordinate data-type:value="-17.5772228167322" />
+                                       <gating:coordinate data-type:value="-70.3713100163835" />
+                                     </gating:vertex>
+                                     <gating:vertex>
+                                       <gating:coordinate data-type:value="-17.5772228167322" />
+                                       <gating:coordinate data-type:value="176.928145215184" />
                                      </gating:vertex>
                                    </gating:PolygonGate>
                                  </Gate>
                                  <Subpopulations>
-                                   <Population name="CD4 T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="7487">
+                                   <Population name="DN T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="263">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-PE-Texas Red-A" label="" auto="auto" />
           <Axis dimension="y" name="Comp-Pacific Blue-A" label="" auto="auto" />
@@ -1143,18 +1143,18 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                                     <Gate gating:id="ID1784740779" gating:parent_id="ID1784740778" >
+                                     <Gate gating:id="ID1784740855" gating:parent_id="ID1784740854" >
                                        <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >
-                                         <gating:dimension gating:min="1932.59259994587" gating:max="80395.170799091" >
+                                         <gating:dimension gating:min="-361.978917359321" gating:max="566.489748620015" >
                                            <data-type:fcs-dimension data-type:name="Comp-PE-Texas Red-A" />
                                          </gating:dimension>
-                                         <gating:dimension gating:min="-392.377256147259" gating:max="454.266109389619" >
+                                         <gating:dimension gating:min="-381.331116977007" gating:max="305.014166732699" >
                                            <data-type:fcs-dimension data-type:name="Comp-Pacific Blue-A" />
                                          </gating:dimension>
                                        </gating:RectangleGate>
                                      </Gate>
                                    </Population>
-                                   <Population name="CD8 T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="1407">
+                                   <Population name="DP T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="7">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-PE-Texas Red-A" label="" auto="auto" />
           <Axis dimension="y" name="Comp-Pacific Blue-A" label="" auto="auto" />
@@ -1167,18 +1167,18 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                                     <Gate gating:id="ID1784740780" gating:parent_id="ID1784740778" >
+                                     <Gate gating:id="ID1784740856" gating:parent_id="ID1784740854" >
                                        <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >
-                                         <gating:dimension gating:min="-424.894911945091" gating:max="410.23408181152" >
+                                         <gating:dimension gating:min="1369.78276645042" gating:max="67829.0766117494" >
                                            <data-type:fcs-dimension data-type:name="Comp-PE-Texas Red-A" />
                                          </gating:dimension>
-                                         <gating:dimension gating:min="682.521153662005" gating:max="59245.522754861" >
+                                         <gating:dimension gating:min="1250.35497974341" gating:max="24449.5124660525" >
                                            <data-type:fcs-dimension data-type:name="Comp-Pacific Blue-A" />
                                          </gating:dimension>
                                        </gating:RectangleGate>
                                      </Gate>
                                    </Population>
-                                   <Population name="DN T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="267">
+                                   <Population name="CD4 T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="7411">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-PE-Texas Red-A" label="" auto="auto" />
           <Axis dimension="y" name="Comp-Pacific Blue-A" label="" auto="auto" />
@@ -1191,18 +1191,18 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                                     <Gate gating:id="ID1784740781" gating:parent_id="ID1784740778" >
+                                     <Gate gating:id="ID1784740857" gating:parent_id="ID1784740854" >
                                        <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >
-                                         <gating:dimension gating:min="-424.894911945091" gating:max="637.740321977606" >
+                                         <gating:dimension gating:min="1695.57515777227" gating:max="73427.6882594005" >
                                            <data-type:fcs-dimension data-type:name="Comp-PE-Texas Red-A" />
                                          </gating:dimension>
-                                         <gating:dimension gating:min="-445.259449272701" gating:max="349.241107049496" >
+                                         <gating:dimension gating:min="-323.833280255994" gating:max="400.887476865495" >
                                            <data-type:fcs-dimension data-type:name="Comp-Pacific Blue-A" />
                                          </gating:dimension>
                                        </gating:RectangleGate>
                                      </Gate>
                                    </Population>
-                                   <Population name="DP T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="6">
+                                   <Population name="CD8 T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="1403">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-PE-Texas Red-A" label="" auto="auto" />
           <Axis dimension="y" name="Comp-Pacific Blue-A" label="" auto="auto" />
@@ -1215,12 +1215,12 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                                     <Gate gating:id="ID1784740782" gating:parent_id="ID1784740778" >
+                                     <Gate gating:id="ID1784740858" gating:parent_id="ID1784740854" >
                                        <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >
-                                         <gating:dimension gating:min="1590.61697061674" gating:max="73899.5806840407" >
+                                         <gating:dimension gating:min="-361.978917359321" gating:max="361.978917359321" >
                                            <data-type:fcs-dimension data-type:name="Comp-PE-Texas Red-A" />
                                          </gating:dimension>
-                                         <gating:dimension gating:min="1423.35525287163" gating:max="27193.3487130251" >
+                                         <gating:dimension gating:min="588.583413537486" gating:max="55651.6910604277" >
                                            <data-type:fcs-dimension data-type:name="Comp-Pacific Blue-A" />
                                          </gating:dimension>
                                        </gating:RectangleGate>
@@ -1228,7 +1228,7 @@
                                    </Population>
                                  </Subpopulations>
                                </Population>
-                               <Population name="gd T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="1470">
+                               <Population name="gd T cells" annotation="" owningGroup="" expanded="1" sortPriority="10" count="1463">
         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="Comp-FITC-A" type="Pseudocolor" fast="1">
           <Axis dimension="x" name="Comp-APC-Cy7-A" label="" auto="auto" />
           <Axis dimension="y" name="Comp-APC-A" label="" auto="auto" />
@@ -1241,7 +1241,7 @@
             <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />
           </GraphEnvironment>
         </Graph>
-                                 <Gate gating:id="ID1784740783" gating:parent_id="ID1784740777" >
+                                 <Gate gating:id="ID1784740859" gating:parent_id="ID1784740853" >
                                    <gating:PolygonGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" quadId="-1" gateResolution="256" >
                                      <gating:dimension>
                                        <data-type:fcs-dimension data-type:name="Comp-APC-Cy7-A" />
@@ -1250,36 +1250,40 @@
                                        <data-type:fcs-dimension data-type:name="Comp-APC-A" />
                                      </gating:dimension>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="808.416780592109" />
-                                       <gating:coordinate data-type:value="29776.3275101027" />
+                                       <gating:coordinate data-type:value="705.036712484775" />
+                                       <gating:coordinate data-type:value="27468.202046534" />
                                      </gating:vertex>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="-353.787054939811" />
-                                       <gating:coordinate data-type:value="15884.9391625689" />
+                                       <gating:coordinate data-type:value="-286.34782318462" />
+                                       <gating:coordinate data-type:value="14297.6782257535" />
                                      </gating:vertex>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="-767.172490059707" />
-                                       <gating:coordinate data-type:value="4148.9051305022" />
+                                       <gating:coordinate data-type:value="-657.172856228898" />
+                                       <gating:coordinate data-type:value="3651.00863610779" />
                                      </gating:vertex>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="-473.550082615137" />
-                                       <gating:coordinate data-type:value="481.306969367251" />
+                                       <gating:coordinate data-type:value="-400.887476865495" />
+                                       <gating:coordinate data-type:value="420.662048379338" />
                                      </gating:vertex>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="386.447302526581" />
-                                       <gating:coordinate data-type:value="744.823969488066" />
+                                       <gating:coordinate data-type:value="342.817328062892" />
+                                       <gating:coordinate data-type:value="657.172856228898" />
                                      </gating:vertex>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="967.526078337614" />
-                                       <gating:coordinate data-type:value="2441.38990106465" />
+                                       <gating:coordinate data-type:value="833.564870845289" />
+                                       <gating:coordinate data-type:value="2172.74128425319" />
                                      </gating:vertex>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="2131.85485706969" />
-                                       <gating:coordinate data-type:value="12207.3037754015" />
+                                       <gating:coordinate data-type:value="1859.51473398009" />
+                                       <gating:coordinate data-type:value="10991.0418382335" />
                                      </gating:vertex>
                                      <gating:vertex>
-                                       <gating:coordinate data-type:value="1352.24849078341" />
-                                       <gating:coordinate data-type:value="23745.9074896828" />
+                                       <gating:coordinate data-type:value="1176.37817367703" />
+                                       <gating:coordinate data-type:value="21772.5374343427" />
+                                     </gating:vertex>
+                                     <gating:vertex>
+                                       <gating:coordinate data-type:value="705.036712484775" />
+                                       <gating:coordinate data-type:value="27468.202046534" />
                                      </gating:vertex>
                                    </gating:PolygonGate>
                                  </Gate>

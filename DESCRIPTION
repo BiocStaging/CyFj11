@@ -1,7 +1,7 @@
 Package: CyFj11
 Type: Package
 Title: Parse FlowJo v11 Workspace Files and Export to FlowJo v10
-Version: 0.99.94
+Version: 0.99.95
 Authors@R: person("Bernd", "Jagla", , "bernd.jagla@pasteur.fr", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-7696-0484"))
 Author: Bernd Jagla [aut, cre] (<https://orcid.org/0000-0002-7696-0484>)

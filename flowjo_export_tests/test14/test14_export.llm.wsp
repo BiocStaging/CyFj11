@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
- <Workspace version="20.0"  modDate="Tue Jul 21 10:15:59 CEST 2026"  clientTimestamp="1784621759590"  flowJoVersion="10.10.1"  drawRowBorders="1"  drawColumnBorders="1"  curGroup="All Samples"  groupPaneHeight="80"  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xmlns:gating="http://www.isac-net.org/std/Gating-ML/v2.0/gating"  xmlns:transforms="http://www.isac-net.org/std/Gating-ML/v2.0/transformations"  xmlns:data-type="http://www.isac-net.org/std/Gating-ML/v2.0/datatypes"  xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v2.0/gating http://www.isac-net.org/std/Gating-ML/v2.0/gating/Gating-ML.v2.0.xsd http://www.isac-net.org/std/Gating-ML/v2.0/transformations http://www.isac-net.org/std/Gating-ML/v2.0/gating/Transformations.v2.0.xsd http://www.isac-net.org/std/Gating-ML/v2.0/datatypes http://www.isac-net.org/std/Gating-ML/v2.0/gating/DataTypes.v2.0.xsd "  nonAutoSaveFileName="file:/Volumes/scBiomarkers/bernd/cytometry/CyFj11/flowjo_export_tests/test14/test14_export.llm.wsp" >
-   <WindowPosition x="100"  y="100"  width="911"  height="856"  displayed="1"  panelState="" />
+ <Workspace version="20.0"  modDate="Thu Jul 23 15:43:51 CEST 2026"  clientTimestamp="1784814231744"  flowJoVersion="10.10.1"  drawRowBorders="1"  drawColumnBorders="1"  curGroup="All Samples"  groupPaneHeight="80"  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xmlns:gating="http://www.isac-net.org/std/Gating-ML/v2.0/gating"  xmlns:transforms="http://www.isac-net.org/std/Gating-ML/v2.0/transformations"  xmlns:data-type="http://www.isac-net.org/std/Gating-ML/v2.0/datatypes"  xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v2.0/gating http://www.isac-net.org/std/Gating-ML/v2.0/gating/Gating-ML.v2.0.xsd http://www.isac-net.org/std/Gating-ML/v2.0/transformations http://www.isac-net.org/std/Gating-ML/v2.0/gating/Transformations.v2.0.xsd http://www.isac-net.org/std/Gating-ML/v2.0/datatypes http://www.isac-net.org/std/Gating-ML/v2.0/gating/DataTypes.v2.0.xsd "  nonAutoSaveFileName="file:/System/Volumes/Data/pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFj11/flowjo_export_tests/test14/test14_export.llm.wsp" >
+   <WindowPosition x="100"  y="100"  width="800"  height="600"  displayed="1"  panelState="" />
    <TextTraits font="SansSerif"  size="11"  name=""  style="plain"  color="#000000"  background="#00ffffff"  just="left" />
    <Columns>
-     <TColumn width="408" >
+     <TColumn width="366" >
        <Property key="fj.appnode.prop.name" />
      </TColumn>
-     <TColumn width="248" >
+     <TColumn width="206" >
        <Property key="fj.appnode.prop.statistic" />
      </TColumn>
-     <TColumn width="247" >
+     <TColumn width="205" >
        <Property key="fj.appnode.prop.ncells" />
      </TColumn>
    </Columns>
@@ -172,7 +172,7 @@
          <transforms:coefficient data-type:parameter="PE-Cy7-A"  transforms:value="1" />
        </transforms:spillover>
      </transforms:spilloverMatrix>
-     <transforms:spilloverMatrix spectral="0"  weightOptAlgorithmType="OLS"  prefix="Comp-"  name="Acquisition-defined"  editable="0"  matrixType="acquisitionDefined"  color="#c0c0c0"  version="FlowJo-10.10.1"  status="FINALIZED"  transforms:id="d9bf64c8-9939-49fa-ac3e-83ec43b9473c"  suffix="" >
+     <transforms:spilloverMatrix spectral="0"  weightOptAlgorithmType="OLS"  prefix="Comp-"  name="Acquisition-defined"  editable="0"  matrixType="acquisitionDefined"  color="#c0c0c0"  version="FlowJo-10.10.1"  status="FINALIZED"  transforms:id="6193560f-01bd-4cf4-a417-85067391eb49"  suffix="" >
        <data-type:parameters>
          <data-type:parameter data-type:name="FITC-A"  userProvidedCompInfix="Comp-FITC-A" />
          <data-type:parameter data-type:name="Pacific Blue-A"  userProvidedCompInfix="Comp-Pacific Blue-A" />
@@ -441,7 +441,7 @@
    </Groups>
    <SampleList>
      <Sample>
-       <DataSet uri="file:/Volumes/scBiomarkers/bernd/cytometry/CyFj11/flowjo_export_tests/test14/68983.fcs"  sampleID="1" />
+       <DataSet uri="file:/pasteur/helix/projects/scBiomarkers/bernd/cytometry/CyFj11/flowjo_export_tests/test14/68983.fcs"  sampleID="1" />
        <transforms:spilloverMatrix spectral="0"  weightOptAlgorithmType="OLS"  prefix="Comp-"  name="Acquisition-defined"  editable="0"  matrixType="wizardDefined"  color="#c0c0c0"  version="FlowJo-10.10.1"  status="FINALIZED"  transforms:id="18405cb6-3c7f-485d-a690-1690f98d59a8"  suffix="" >
          <data-type:parameters>
            <data-type:parameter data-type:name="FITC-A"  userProvidedCompInfix="Comp-FITC-A" />
@@ -999,7 +999,7 @@
                  <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                </GraphEnvironment>
              </Graph>
-             <Gate gating:id="ID832095079" >
+             <Gate gating:id="ID1609085460" >
                <gating:PolygonGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  quadId="-1"  gateResolution="256" >
                  <gating:dimension>
                    <data-type:fcs-dimension data-type:name="FSC-A" />
@@ -1071,7 +1071,7 @@
                      <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                    </GraphEnvironment>
                  </Graph>
-                 <Gate gating:id="ID424449334"  gating:parent_id="ID832095079" >
+                 <Gate gating:id="ID316418759"  gating:parent_id="ID1609085460" >
                    <gating:RectangleGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  percentX="0"  percentY="0" >
                      <gating:dimension gating:min="14199.0"  gating:max="78643.0" >
                        <data-type:fcs-dimension data-type:name="FSC-H" />
@@ -1095,7 +1095,7 @@
                          <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                        </GraphEnvironment>
                      </Graph>
-                     <Gate gating:id="ID1287591264"  gating:parent_id="ID424449334" >
+                     <Gate gating:id="ID2015415841"  gating:parent_id="ID316418759" >
                        <gating:RectangleGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  percentX="0"  percentY="0" >
                          <gating:dimension gating:min="34952.0"  gating:max="80827.0" >
                            <data-type:fcs-dimension data-type:name="SSC-H" />
@@ -1119,7 +1119,7 @@
                              <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                            </GraphEnvironment>
                          </Graph>
-                         <Gate gating:id="ID1733642807"  gating:parent_id="ID1287591264" >
+                         <Gate gating:id="ID1500577698"  gating:parent_id="ID2015415841" >
                            <gating:RectangleGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  percentX="0"  percentY="0" >
                              <gating:dimension gating:min="2277.02151517215"  gating:max="112714.063447916" >
                                <data-type:fcs-dimension data-type:name="Comp-PE-A" />
@@ -1143,7 +1143,7 @@
                                  <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                                </GraphEnvironment>
                              </Graph>
-                             <Gate gating:id="ID1000069677"  gating:parent_id="ID1733642807" >
+                             <Gate gating:id="ID377079540"  gating:parent_id="ID1500577698" >
                                <gating:RectangleGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  percentX="0"  percentY="0" >
                                  <gating:dimension gating:min="-400.960850615532"  gating:max="339.5357091913" >
                                    <data-type:fcs-dimension data-type:name="Comp-PE-Cy7-A" />
@@ -1167,7 +1167,7 @@
                                  <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                                </GraphEnvironment>
                              </Graph>
-                             <Gate gating:id="ID914420833"  gating:parent_id="ID1733642807" >
+                             <Gate gating:id="ID1194040598"  gating:parent_id="ID1500577698" >
                                <gating:RectangleGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  percentX="0"  percentY="0" >
                                  <gating:dimension gating:min="720.703025319503"  gating:max="20417.3044752327" >
                                    <data-type:fcs-dimension data-type:name="Comp-PE-Cy7-A" />
@@ -1193,7 +1193,7 @@
                              <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                            </GraphEnvironment>
                          </Graph>
-                         <Gate gating:id="ID1244951667"  gating:parent_id="ID1287591264" >
+                         <Gate gating:id="ID1227342744"  gating:parent_id="ID2015415841" >
                            <gating:RectangleGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  percentX="0"  percentY="0" >
                              <gating:dimension gating:min="-561.16408887596"  gating:max="1267.3892245262" >
                                <data-type:fcs-dimension data-type:name="Comp-PE-A" />
@@ -1217,7 +1217,7 @@
                                  <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                                </GraphEnvironment>
                              </Graph>
-                             <Gate gating:id="ID1943300999"  gating:parent_id="ID1244951667" >
+                             <Gate gating:id="ID878769929"  gating:parent_id="ID1227342744" >
                                <gating:RectangleGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  percentX="0"  percentY="0" >
                                  <gating:dimension gating:min="1590.61697061674"  gating:max="145338.535151617" >
                                    <data-type:fcs-dimension data-type:name="Comp-PE-Cy5-A" />
@@ -1241,7 +1241,7 @@
                                  <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                                </GraphEnvironment>
                              </Graph>
-                             <Gate gating:id="ID773217067"  gating:parent_id="ID1244951667" >
+                             <Gate gating:id="ID725148713"  gating:parent_id="ID1227342744" >
                                <gating:RectangleGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  percentX="0"  percentY="0" >
                                  <gating:dimension gating:min="-4123.71354428229"  gating:max="1352.24849078339" >
                                    <data-type:fcs-dimension data-type:name="Comp-PE-Cy5-A" />
@@ -1265,7 +1265,7 @@
                                      <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                                    </GraphEnvironment>
                                  </Graph>
-                                 <Gate gating:id="ID2135263166"  gating:parent_id="ID773217067" >
+                                 <Gate gating:id="ID1989202742"  gating:parent_id="ID725148713" >
                                    <gating:PolygonGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  quadId="-1"  gateResolution="256" >
                                      <gating:dimension>
                                        <data-type:fcs-dimension data-type:name="Comp-APC-Cy7-A" />
@@ -1313,7 +1313,7 @@
                                          <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                                        </GraphEnvironment>
                                      </Graph>
-                                     <Gate gating:id="ID1250569260"  gating:parent_id="ID2135263166" >
+                                     <Gate gating:id="ID471091457"  gating:parent_id="ID1989202742" >
                                        <gating:RectangleGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  percentX="0"  percentY="0" >
                                          <gating:dimension gating:min="1932.59259994587"  gating:max="80395.170799091" >
                                            <data-type:fcs-dimension data-type:name="Comp-PE-Texas Red-A" />
@@ -1337,7 +1337,7 @@
                                          <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                                        </GraphEnvironment>
                                      </Graph>
-                                     <Gate gating:id="ID173449405"  gating:parent_id="ID2135263166" >
+                                     <Gate gating:id="ID1559628440"  gating:parent_id="ID1989202742" >
                                        <gating:RectangleGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  percentX="0"  percentY="0" >
                                          <gating:dimension gating:min="-424.894911945091"  gating:max="410.23408181152" >
                                            <data-type:fcs-dimension data-type:name="Comp-PE-Texas Red-A" />
@@ -1361,7 +1361,7 @@
                                          <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                                        </GraphEnvironment>
                                      </Graph>
-                                     <Gate gating:id="ID1210251479"  gating:parent_id="ID2135263166" >
+                                     <Gate gating:id="ID104768041"  gating:parent_id="ID1989202742" >
                                        <gating:RectangleGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  percentX="0"  percentY="0" >
                                          <gating:dimension gating:min="-424.894911945091"  gating:max="637.740321977606" >
                                            <data-type:fcs-dimension data-type:name="Comp-PE-Texas Red-A" />
@@ -1385,7 +1385,7 @@
                                          <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                                        </GraphEnvironment>
                                      </Graph>
-                                     <Gate gating:id="ID1828732375"  gating:parent_id="ID2135263166" >
+                                     <Gate gating:id="ID1168003728"  gating:parent_id="ID1989202742" >
                                        <gating:RectangleGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  percentX="0"  percentY="0" >
                                          <gating:dimension gating:min="1590.61697061674"  gating:max="73899.5806840407" >
                                            <data-type:fcs-dimension data-type:name="Comp-PE-Texas Red-A" />
@@ -1411,7 +1411,7 @@
                                      <WindowPosition x="247"  y="-1415"  width="390"  height="582"  displayed="0"  panelState="---" />
                                    </GraphEnvironment>
                                  </Graph>
-                                 <Gate gating:id="ID1476504531"  gating:parent_id="ID773217067" >
+                                 <Gate gating:id="ID1878896802"  gating:parent_id="ID725148713" >
                                    <gating:PolygonGate eventsInside="1"  annoOffsetX="0"  annoOffsetY="0"  tint="#000000"  isTinted="0"  lineWeight="Normal"  userDefined="1"  quadId="-1"  gateResolution="256" >
                                      <gating:dimension>
                                        <data-type:fcs-dimension data-type:name="Comp-APC-Cy7-A" />
@@ -1496,9 +1496,9 @@
      </PlateModel>
      <PlateEditorState>
        <KeywordList>
+         <Keyword attribute="Treatment &quot;Drug A&quot;"  value="10ug/L" />
          <Keyword attribute="Assay"  value="GFP Reporter" />
          <Keyword attribute="Time point"  value="24hr" />
-         <Keyword attribute="Treatment &quot;Drug A&quot;"  value="10ug/L" />
        </KeywordList>
        <StagingArea>
          <StagingWell/>

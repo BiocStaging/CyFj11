@@ -272,7 +272,7 @@ main <- function() {
 
   xml_filename <- make_output_filename(
     prefix = prefix,
-    ext = "xml",
+    ext = "wsp",
     timestamp = start_time
   )
   xml_output_path <- file.path(OUTPUT_DIR, xml_filename)

@@ -208,74 +208,26 @@ test_that("get_display_range returns numeric range", {
   expect_true(is.numeric(out))
 })
 
-# Tests for sanitize_channel_label() function
-test_that("sanitize_channel_label replaces slash with underscore", {
-  expect_equal(CyFj11:::sanitize_channel_label("NK1/1"), "NK1_1")
-  expect_equal(CyFj11:::sanitize_channel_label("CD4/CD8"), "CD4_CD8")
-})
-
-test_that("sanitize_channel_label replaces backslash", {
-  expect_equal(CyFj11:::sanitize_channel_label("test\\value"), "test_value")
-})
-
-test_that("sanitize_channel_label replaces colon", {
-  expect_equal(CyFj11:::sanitize_channel_label("Time:01"), "Time_01")
-})
-
-test_that("sanitize_channel_label replaces XML special characters", {
-  expect_equal(CyFj11:::sanitize_channel_label("test<gt>"), "test_gt_")
-  expect_equal(CyFj11:::sanitize_channel_label("a|b"), "a_b")
-})
-
-test_that("sanitize_channel_label replaces Windows reserved characters", {
-  expect_equal(CyFj11:::sanitize_channel_label("file*name"), "file_name")
-  expect_equal(CyFj11:::sanitize_channel_label("what?"), "what_")
-  expect_equal(CyFj11:::sanitize_channel_label('test"quote'), "test_quote")
-})
-
-test_that("sanitize_channel_label handles multiple problematic chars", {
-  expect_equal(CyFj11:::sanitize_channel_label("NK1/1:sub"), "NK1_1_sub")
-  expect_equal(CyFj11:::sanitize_channel_label("a/b\\c:d"), "a_b_c_d")
-  expect_equal(CyFj11:::sanitize_channel_label("test<gt>|*?"), "test_gt____")
-})
-
-test_that("sanitize_channel_label handles edge cases", {
-  expect_equal(CyFj11:::sanitize_channel_label(""), "")
-  expect_equal(CyFj11:::sanitize_channel_label(NULL), "")
-  expect_equal(CyFj11:::sanitize_channel_label(NA), "")
-  expect_equal(CyFj11:::sanitize_channel_label("normal_label"), "normal_label")
-})
-
-# Tests for build_sample_keywords() with problematic channel labels
-test_that("build_sample_keywords sanitizes $PnS channel labels", {
+# Tests for build_sample_keywords() - channel labels are preserved unchanged
+# FlowJo uses $PnS values to match against descriptive names in population definitions,
+# so we must preserve them exactly (e.g., "NK1/1" not "NK1_1")
+test_that("build_sample_keywords preserves $PnS channel labels unchanged", {
   fcs_kw <- list(
     `$TOT` = "10000",
-    `$P1S` = "NK1/1",      # slash should be sanitized
-    `$P2S` = "CD4/CD8",    # slash should be sanitized
-    `$P3S` = "normal"      # no sanitization needed
+    `$P1S` = "NK1/1",      # preserve as-is for FlowJo compatibility
+    `$P2S` = "CD4/CD8",    # preserve as-is
+    `$P3S` = "normal"
   )
   gs_kw <- list()
   out <- CyFj11:::build_sample_keywords(fcs_kw, gs_kw, "sample.fcs")
 
-  expect_equal(out$`$P1S`, "NK1_1")
-  expect_equal(out$`$P2S`, "CD4_CD8")
+  expect_equal(out$`$P1S`, "NK1/1")
+  expect_equal(out$`$P2S`, "CD4/CD8")
   expect_equal(out$`$P3S`, "normal")
   expect_equal(out$FILENAME, "sample.fcs")
 })
 
-test_that("build_sample_keywords sanitizes $PnS with multiple problematic chars", {
-  fcs_kw <- list(
-    `$P1S` = "test<gt>|*?",  # multiple problematic chars
-    `$P2S` = "a:b\\c"        # colon and backslash
-  )
-  gs_kw <- list()
-  out <- CyFj11:::build_sample_keywords(fcs_kw, gs_kw, "sample.fcs")
-
-  expect_equal(out$`$P1S`, "test_gt____")
-  expect_equal(out$`$P2S`, "a_b_c")
-})
-
-test_that("build_sample_keywords handles compensated channels with sanitized labels", {
+test_that("build_sample_keywords handles compensated channels correctly", {
   skip_if_not_installed("flowCore")
   library(flowCore)
 
@@ -286,25 +238,23 @@ test_that("build_sample_keywords handles compensated channels with sanitized lab
   fcs_kw <- list(
     `$PAR` = "2",
     `$P1N` = "FITC-A",
-    `$P1S` = "NK1/1",        # problematic label with slash
+    `$P1S` = "NK1/1",        # preserve original label
     `$P1R` = "262144",
     `$P2N` = "PE-A",
-    `$P2S` = "CD4/CD8",      # problematic label with slash
+    `$P2S` = "CD4/CD8",      # preserve original label
     `$P2R` = "262144",
     SPILL = "2,FITC-A,PE-A,1,0.1,0.1,1"
   )
   gs_kw <- list(SPILL = spill_mat)
   out <- CyFj11:::build_sample_keywords(fcs_kw, gs_kw, "sample.fcs")
 
-  # Original channels should be sanitized
-  expect_equal(out$`$P1S`, "NK1_1")
-  expect_equal(out$`$P2S`, "CD4_CD8")
+  # Original channels should be preserved unchanged
+  expect_equal(out$`$P1S`, "NK1/1")
+  expect_equal(out$`$P2S`, "CD4/CD8")
 
-  # Compensated channels (P3, P4) should also have sanitized labels
-  expect_equal(out$`$P3S`, "NK1_1")  # sanitized copy of P1S
-  expect_equal(out$`$P4S`, "CD4_CD8")  # sanitized copy of P2S
-
-  # Compensated channel names
+  # Compensated channels (P3, P4) should have Comp- prefix on names but preserve $PnS
   expect_equal(out$`$P3N`, "Comp-FITC-A")
   expect_equal(out$`$P4N`, "Comp-PE-A")
+  expect_equal(out$`$P3S`, "NK1/1")  # same as P1S
+  expect_equal(out$`$P4S`, "CD4/CD8")  # same as P2S, preserved
 })
