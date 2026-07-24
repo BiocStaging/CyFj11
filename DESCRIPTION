@@ -42,11 +42,11 @@ Suggests:
     mockery,
     BiocStyle,
     qpdf,
-    rmarkdown,
-    withr
+    rmarkdown
 VignetteBuilder: knitr
 biocViews: FlowCytometry, DataImport, Infrastructure, Preprocessing
 URL: https://github.com/baj12/CyFj11
 BugReports: https://github.com/baj12/CyFj11/issues
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.0.0
+Config/testthat/edition: 3
