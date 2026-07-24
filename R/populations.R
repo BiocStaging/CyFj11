@@ -293,6 +293,9 @@ adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) 
 #' @param strip_comp_prefix Logical. Strip "Comp-" prefix from gate parameter names?
 #'   Default TRUE. Set to FALSE if compensation has already been applied with
 #'   matching parameter names.
+#' @param sanitize_slashes Logical. Replace "/" with "_" in parameter names?
+#'   Default TRUE (matches flowCore behavior). Set to FALSE if you want to preserve
+#'   "/" in marker names (e.g., "CD3/CD4" stays as-is).
 #' @return Named list mapping gate params to GatingSet params
 #' @keywords internal
 map_gate_params_to_gh <- function(gate_params, gh_param_names, strip_comp_prefix = TRUE, sanitize_slashes = TRUE) {

@@ -5,6 +5,7 @@ Version: 0.99.95
 Authors@R: person("Bernd", "Jagla", , "bernd.jagla@pasteur.fr", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-7696-0484"))
 Author: Bernd Jagla [aut, cre] (<https://orcid.org/0000-0002-7696-0484>)
+Maintainer: Bernd Jagla <bernd.jagla@pasteur.fr>
 Description: Provides functions to parse FlowJo v11 workspace files
     (.flowjo) and extract gating information, populations, and associated
     FCS files. Includes utilities for exporting data to FlowJo v10
@@ -17,8 +18,6 @@ Depends:
     R (>= 4.5.0)
 Imports:
     jsonlite,
-    stringr,
-    zip,
     dplyr,
     flowWorkspace,
     flowCore,
@@ -30,7 +29,6 @@ Imports:
     methods,
     scales,
     magrittr,
-    graphics,
     stats,
     utils
 Suggests:
