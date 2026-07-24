@@ -22,4 +22,8 @@
 library(testthat)
 library(CyFj11)
 set_verbose(T)
+
+# Enable testthat 3e features (mocking, etc.)
+withr::local_options(list(testthat.edition = 3))
+
 test_check("CyFj11")

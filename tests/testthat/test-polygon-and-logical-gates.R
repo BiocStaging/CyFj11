@@ -364,6 +364,31 @@ test_that("apply_transforms_to_gate transforms polygonGate boundaries", {
   expect_equal(out@boundaries[, "SSC-H"], boundaries[, "SSC-H"])
 })
 
+test_that("apply_transforms_to_gate transforms ellipsoidGate mean", {
+  # Lines 514-535: ellipsoidGate transformation path
+  mean_vec <- c(`FSC-H` = 500, `SSC-H` = 200)
+  cov_mat <- matrix(c(100, 10, 10, 50), ncol = 2)
+  colnames(cov_mat) <- c("FSC-H", "SSC-H")
+  rownames(cov_mat) <- c("FSC-H", "SSC-H")
+
+  eg <- ellipsoidGate(.gate = cov_mat, mean = mean_vec, filterId = "ell")
+
+  # Apply log transformation
+  trans_func <- function(x) log10(x)
+  trans_list <- list(`FSC-H` = trans_func, `SSC-H` = trans_func)
+
+  # Expect warning about ellipsoid shape
+  expect_warning(
+    out <- CyFj11:::apply_transforms_to_gate(eg, trans_list),
+    "Ellipsoid gate transformation may not preserve exact shape"
+  )
+
+  expect_s4_class(out, "ellipsoidGate")
+  # Mean values should be transformed - use unname() to avoid names mismatch
+  expect_equal(unname(out@mean["FSC-H"]), log10(500), tolerance = 0.01)
+  expect_equal(unname(out@mean["SSC-H"]), log10(200), tolerance = 0.01)
+})
+
 test_that("apply_transforms_to_gate returns original when trans_list is empty", {
   boundaries <- matrix(c(100, 200, 300, 150, 250, 350), ncol = 2)
   colnames(boundaries) <- c("FSC-H", "SSC-H")
@@ -374,4 +399,135 @@ test_that("apply_transforms_to_gate returns original when trans_list is empty", 
 
   expect_s4_class(out, "polygonGate")
   expect_equal(out@boundaries, boundaries)
+})
+
+test_that("add_population_node warns when gate is not found", {
+  # Lines 693-705: Warning when no gate found for population
+  data("GvHD", package = "flowCore")
+  gs <- GatingSet(flowSet(GvHD[[1]]))
+  gh <- gs[[1]]
+
+  # Create a node with a gate reference that doesn't exist
+  node <- list(
+    name = "MissingGate",
+    type = "rectangle",
+    definition_uuid = "non-existent-uuid",
+    children = list()
+  )
+
+  gates <- list()  # Empty gates list - gate won't be found
+
+  # Expect warning about missing gate
+  expect_warning(
+    CyFj11:::add_population_node(
+      gh = gh,
+      node = node,
+      gates = gates,
+      sample_uuid = "sample-1",
+      parent = "root"
+    ),
+    "No gate found for population"
+  )
+})
+
+test_that("add_population_node handles child nodes with parent path", {
+  # Lines 806-820: Processing children with parent path
+  data("GvHD", package = "flowCore")
+  gs <- GatingSet(flowSet(GvHD[[1]]))
+  gh <- gs[[1]]
+
+  # Create parent and child gates
+  parent_uuid <- "parent-uuid"
+  def_uuid <- "child-uuid"
+
+  parent_gate <- rectangleGate(`FSC-H` = c(100, 500), filterId = "parent")
+  child_gate <- rectangleGate(`SSC-H` = c(50, 300), filterId = "child")
+
+  gates <- list()
+  gates[[paste0(parent_uuid, "_sample-1")]] <- parent_gate
+  gates[[paste0(def_uuid, "_sample-1")]] <- child_gate
+
+  node <- list(
+    name = "ParentGate",
+    type = "rectangle",
+    definition_uuid = parent_uuid,
+    children = list(
+      list(
+        name = "ChildGate",
+        type = "rectangle",
+        definition_uuid = def_uuid,
+        parent = "ParentGate",  # Child has explicit parent path
+        children = list()
+      )
+    )
+  )
+
+  # Should process child with explicit parent path (line 807)
+  expect_no_error(
+    CyFj11:::add_population_node(
+      gh = gh,
+      node = node,
+      gates = gates,
+      sample_uuid = "sample-1",
+      parent = "root"
+    )
+  )
+
+  # Check that both populations were added
+  all_paths <- gs_get_pop_paths(gh)
+  expect_true(any(grepl("ParentGate", all_paths)))
+  expect_true(any(grepl("ChildGate", all_paths)))
+})
+
+test_that("add_population_node handles child nodes without parent path", {
+  # Lines 809-820: Processing children without parent path (builds from sanitized names)
+  # Also tests lines 903-906: child path processing for regular gates
+  data("GvHD", package = "flowCore")
+  gs <- GatingSet(flowSet(GvHD[[1]]))
+  gh <- gs[[1]]
+
+  # Create parent and child gates
+  parent_uuid <- "parent-uuid"
+  def_uuid <- "child-uuid-2"
+
+  parent_gate <- rectangleGate(`FSC-H` = c(100, 500), filterId = "parent")
+  child_gate <- rectangleGate(`SSC-H` = c(50, 300), filterId = "child")
+
+  gates <- list()
+  gates[[paste0(parent_uuid, "_sample-1")]] <- parent_gate
+  gates[[paste0(def_uuid, "_sample-1")]] <- child_gate
+
+  # For regular gates (non-logical), the child's parent field is expected to be
+  # a full path like "root/ParentGate", and line 903 strips the first component.
+  node <- list(
+    name = "ParentGate",
+    type = "rectangle",
+    definition_uuid = parent_uuid,
+    children = list(
+      list(
+        name = "ChildGate",
+        type = "rectangle",
+        definition_uuid = def_uuid,
+        # Parent path format expected by line 903: "root/ParentGate" -> strips to "ParentGate"
+        parent = "root/ParentGate",
+        children = list()
+      )
+    )
+  )
+
+  # Should process child with path stripping (line 903)
+  expect_no_error(
+    CyFj11:::add_population_node(
+      gh = gh,
+      node = node,
+      gates = gates,
+      sample_uuid = "sample-1",
+      parent = "root"
+    )
+  )
+
+  # Check that both populations were added
+  all_paths <- gs_get_pop_paths(gh)
+  expect_true(any(grepl("ParentGate", all_paths)))
+  expect_true(any(grepl("ChildGate", all_paths)))
 })
