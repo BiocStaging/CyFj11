@@ -42,7 +42,8 @@ Suggests:
     mockery,
     BiocStyle,
     qpdf,
-    rmarkdown
+    rmarkdown,
+    withr
 VignetteBuilder: knitr
 biocViews: FlowCytometry, DataImport, Infrastructure, Preprocessing
 URL: https://github.com/baj12/CyFj11
