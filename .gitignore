@@ -20,6 +20,8 @@ slurm_output/
 .rooignore
 plans/
 inst/dev
+*.gz
+*.zip
 
 # Derived manuscript outputs (source is .md)
 manuscript/~$*.docx

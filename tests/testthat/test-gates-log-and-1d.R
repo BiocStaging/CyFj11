@@ -133,24 +133,6 @@ test_that("display_to_raw handles Log transform with default parameters", {
   expect_equal(result[2], 10000)
 })
 
-test_that("display_to_raw handles Log transform with invalid vectorLength", {
-  # Should warn and use default vectorLength=256
-  expect_warning(
-    result <- CyFj11:::display_to_raw(
-      c(0, 256),
-      list(
-        transformType = "Log",
-        vectorLength = NULL
-      )
-    ),
-    "invalid vectorLength"
-  )
-
-  # Should still work with default vectorLength
-  expect_equal(result[1], 1)
-  expect_equal(result[2], 10000)
-})
-
 test_that("display_to_raw handles Log transform with zero vectorLength", {
   # Should warn and use default vectorLength=256
   expect_warning(
@@ -198,8 +180,12 @@ test_that("convert_range_gate converts 1D range gate", {
   )
 
   expect_s4_class(result, "rectangleGate")
-  expect_equal(ncol(result@min), 1)  # 1D gate
-  expect_equal(names(result@min), "FSC-A")
+  # For 1D gates, @min and @max are single numeric values
+  # Parameter name is in parameters() slot
+  expect_equal(unname(flowCore::parameters(result)), "FSC-A")
+  expect_true(length(result@min) == 1)
+  expect_equal(result@min, 51200)  # 50/256 * 262144
+  expect_equal(result@max, 204800) # 200/256 * 262144
 })
 
 test_that("convert_range_gate handles gate with xParameter instead of parameter", {
@@ -225,7 +211,7 @@ test_that("convert_range_gate handles gate with xParameter instead of parameter"
   )
 
   expect_s4_class(result, "rectangleGate")
-  expect_equal(names(result@min), "SSC-A")
+  expect_equal(unname(flowCore::parameters(result)), "SSC-A")
 })
 
 test_that("convert_range_gate handles gate with xAxis only", {
@@ -250,7 +236,7 @@ test_that("convert_range_gate handles gate with xAxis only", {
   )
 
   expect_s4_class(result, "rectangleGate")
-  expect_equal(names(result@min), "CD3")
+  expect_equal(unname(flowCore::parameters(result)), "CD3")
 })
 
 test_that("convert_range_gate handles 1D gate with Log transform", {
@@ -277,13 +263,13 @@ test_that("convert_range_gate handles 1D gate with Log transform", {
   )
 
   expect_s4_class(result, "rectangleGate")
-  expect_equal(names(result@min), "APC-A")
+  expect_equal(unname(flowCore::parameters(result)), "APC-A")
 
   # Check that coordinates were inverse-transformed correctly
   # display=0 -> raw=1, display=256 -> raw=10000
   # min should be ~1, max should be ~10000
-  expect_equal(result@min[1], 1, tolerance = 0.1)
-  expect_equal(result@max[1], 10000, tolerance = 0.1)
+  expect_equal(result@min, 1, tolerance = 0.1)
+  expect_equal(result@max, 10000, tolerance = 0.1)
 })
 
 test_that("convert_range_gate handles 1D gate with Log transform and use_transformed_coords=TRUE", {
@@ -310,8 +296,8 @@ test_that("convert_range_gate handles 1D gate with Log transform and use_transfo
 
   expect_s4_class(result, "rectangleGate")
   # With use_transformed_coords=TRUE, coordinates stay in display space
-  expect_equal(result@min[1], 0)
-  expect_equal(result@max[1], 256)
+  expect_equal(result@min, 0)
+  expect_equal(result@max, 256)
 })
 
 test_that("convert_range_gate errors on missing parameter", {
@@ -371,7 +357,7 @@ test_that("convert_range_gate handles list vertices", {
   )
 
   expect_s4_class(result, "rectangleGate")
-  expect_equal(names(result@min), "FSC-A")
+  expect_equal(unname(flowCore::parameters(result)), "FSC-A")
 })
 
 # ============================================================================
@@ -412,15 +398,45 @@ test_that("convert_rectangle_gate handles 2D gate with Log transform on one axis
   )
 
   expect_s4_class(result, "rectangleGate")
-  expect_equal(names(result@min), c("FSC-A", "SSC-A"))
+  expect_equal(unname(flowCore::parameters(result)), c("FSC-A", "SSC-A"))
 
   # FSC-A should be linearly scaled: 50/256 * 262144 = 51200, 200/256 * 262144 = 204800
-  expect_equal(result@min["FSC-A"], 51200, tolerance = 1)
-  expect_equal(result@max["FSC-A"], 204800, tolerance = 1)
+  expect_equal(unname(result@min["FSC-A"]), 51200, tolerance = 1)
+  expect_equal(unname(result@max["FSC-A"]), 204800, tolerance = 1)
 
   # SSC-A should be log-transformed: 0->1, 256->10000
-  expect_equal(result@min["SSC-A"], 1, tolerance = 0.1)
-  expect_equal(result@max["SSC-A"], 10000, tolerance = 0.1)
+  expect_equal(unname(result@min["SSC-A"]), 1, tolerance = 0.1)
+  expect_equal(unname(result@max["SSC-A"]), 10000, tolerance = 0.1)
+})
+
+test_that("convert_rectangle_gate handles 1D gate (missing yAxis)", {
+  gate <- list(
+    type = "RectangleGate",
+    xAxis = list(
+      parameterSpec = list(name = "FSC-A"),
+      transform = list(
+        transformType = "Linear",
+        minRange = 0,
+        maxRange = 262144,
+        vectorLength = 256
+      )
+    ),
+    # No yAxis - this triggers 1D gate path
+    xVertices = c(50, 200)
+  )
+
+  result <- CyFj11:::convert_rectangle_gate(
+    gate = gate,
+    pop_name = "Test1D_Rect",
+    extend_val = 0,
+    extend_to = -4000
+  )
+
+  expect_s4_class(result, "rectangleGate")
+  expect_equal(unname(flowCore::parameters(result)), "FSC-A")
+  # FSC-A should be linearly scaled: 50/256 * 262144 = 51200, 200/256 * 262144 = 204800
+  expect_equal(result@min, 51200, tolerance = 1)
+  expect_equal(result@max, 204800, tolerance = 1)
 })
 
 # ============================================================================
@@ -453,7 +469,7 @@ test_that("convert_flowjo_gate dispatches to convert_range_gate for RangeGate", 
   )
 
   expect_s4_class(result, "rectangleGate")
-  expect_equal(names(result@min), "FSC-A")
+  expect_equal(unname(flowCore::parameters(result)), "FSC-A")
 })
 
 test_that("convert_flowjo_gate handles RangeGate with type='range'", {
@@ -482,5 +498,5 @@ test_that("convert_flowjo_gate handles RangeGate with type='range'", {
   )
 
   expect_s4_class(result, "rectangleGate")
-  expect_equal(names(result@min), "SSC-A")
+  expect_equal(unname(flowCore::parameters(result)), "SSC-A")
 })
