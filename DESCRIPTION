@@ -1,12 +1,30 @@
 Package: CyFj11
 Type: Package
-Title: Parse FlowJo v11 Workspace Files and Export to FlowJo v10
+Title: Parse FlowJo V11 Workspace Files and Export to FlowJo V10
 Version: 0.99.96
 Authors@R: c(
-      person("Bernd", "Jagla", , "bernd.jagla@pasteur.fr", role = c("aut", "cre"),
-      comment = c(ORCID = "0000-0002-7696-0484")),
-      c(person("none", role="fnd", comment = "no external funding involved"))
-      )
+    person("Bernd",    "Jagla",
+           email   = "bernd.jagla@pasteur.fr",
+           role    = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-7696-0484",
+                       affiliation = "Institut Pasteur, scBiomarkers UTechS & Bioinformatics & Biostatistics Hub")),
+    person("Slobodan", "Culina",
+           email   = "Slobodan.culina@pasteur.fr",
+           role    = "aut",
+           comment = c(affiliation = "Institut Pasteur, scBiomarkers UTechS")),
+    person("Francois", "Le Guerroue",
+           email   = "francois.le-guerroue@pasteur.fr",
+           role    = "aut",
+           comment = c(affiliation = "Institut Pasteur, scBiomarkers UTechS")),
+    person("Esma",     "Karkeni",
+           email   = "esma.karkeni@pasteur.fr",
+           role    = "aut",
+           comment = c(affiliation = "Institut Pasteur, scBiomarkers UTechS")),
+    person("Milena",   "Hasan",
+           email   = "milena.hasan@pasteur.fr",
+           role    = "aut",
+           comment = c(affiliation = "Institut Pasteur, scBiomarkers UTechS"))
+    )
 Description: Provides functions to parse FlowJo v11 workspace files
     (.flowjo) and extract gating information, populations, and associated
     FCS files. Includes utilities for exporting data to FlowJo v10
@@ -46,8 +64,8 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 biocViews: FlowCytometry, DataImport, Infrastructure, Preprocessing
-URL: https://github.com/baj12/CyFj11
-BugReports: https://github.com/baj12/CyFj11/issues
+URL: https://github.com/C3BI-pasteur-fr/CyFj11
+BugReports: https://github.com/C3BI-pasteur-fr/CyFj11/issues
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.0.0
 Config/testthat/edition: 3
