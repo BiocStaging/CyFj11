@@ -97,7 +97,7 @@ process_zip_archive <- function(zip_path) {
 
 #' Read FlowJo v11 Workspace
 #'
-#' Main wrapper function to read and parse FlowJo v11 workspace files
+#' Main wrapper function to read and parse FlowJo v11 workspace files.
 #'
 #' @param workspace_path Path to the FlowJo workspace file (.flowjo)
 #' @return Parsed workspace object containing manifest and JSON data
