@@ -48,3 +48,5 @@ extract_flowjo_counts.R
 .codegraph
 \*\.gz$
 \*\.zip$
+vignettes/compensation-workflow.html
+vignettes/compensation-workflow.Rmd

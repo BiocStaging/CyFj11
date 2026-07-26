@@ -898,9 +898,9 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
       if (!is.null(node$children)) {
         for (child in node$children) {
           # child$parent is a full path built from sanitized names with '/' as the
-          # flowWorkspace separator.  Strip the leading "Ungated/" (or root) prefix
+          # flowWorkspace separator.  Strip the leading "Ungated/" or "root" prefix
           # so we get the parent path relative to the root of the GatingSet.
-          child_parent <- sub("^[^/]+/", "", child$parent)
+          child_parent <- sub("^(root|Ungated)/", "", child$parent)
           # The result is already sanitized; call sanitize_population_name only to
           # handle any stray name-level '/' that might remain.
           child_parent <- sanitize_path_with_separator(child_parent)

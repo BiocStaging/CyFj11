@@ -38,6 +38,15 @@ NULL
 #'        error; \code{TRUE} silently replaces existing files.
 #' @return Logical indicating success
 #' @export
+#' @examples
+#' \dontrun{
+#' # Export a GatingSet to FlowJo v10 XML format
+#' ws_path  <- system.file("extdata", "min_test.flowjo", package = "CyFj11")
+#' fcs_path <- system.file("extdata", package = "CyFj11")
+#' ws <- read_flowjo11_workspace(ws_path)
+#' gs <- fj11_to_gatingset(ws, group_name = 1, path = fcs_path)
+#' export_flowjo10_workspace(gs, "exported_workspace.xml")
+#' }
 export_flowjo10_workspace <- function(gating_set, output_path,
                                       workspace_name = NULL,
                                       fcs_root       = NULL,

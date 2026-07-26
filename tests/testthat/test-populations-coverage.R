@@ -276,25 +276,32 @@ test_that("add_population_node no gate - line 698 else branch when gs_get_pop_pa
 
 test_that("add_population_node children - sanitize_population_name called on parent", {
   # Line 807: sanitize_population_name(child$parent)
-  # Test that parent paths with "/" are sanitized to ":"
+  # Line 903-906: child path stripping and sanitization for regular gates
+  # Test that parent paths with "/" in population names are sanitized to ":"
   data("GvHD", package = "flowCore")
   gs <- GatingSet(flowSet(GvHD[[1]]))
   gh <- gs[[1]]
 
-  # Create parent and child gates
+  # Create parent and child gates using parameters that exist in GvHD data
   parent_uuid <- "parent-uuid-3"
   child_uuid <- "child-uuid-3"
 
-  parent_gate <- rectangleGate(`FSC-H` = c(100, 500), filterId = "parent")
-  child_gate <- rectangleGate(`SSC-H` = c(50, 300), filterId = "child")
+  # Use CD45 PE which exists in the GvHD data
+  parent_gate <- rectangleGate(`CD45 PE` = c(100, 500), filterId = "parent")
+  child_gate <- rectangleGate(`CD14 PerCP` = c(50, 300), filterId = "child")
 
   gates <- list()
   gates[[paste0(parent_uuid, "_sample-1")]] <- parent_gate
   gates[[paste0(child_uuid, "_sample-1")]] <- child_gate
 
-  # Parent node with child that has parent path containing "/" (needs sanitization)
+  # Parent node with a name containing "/" (gets sanitized to ":")
+  # In the real build_gating_tree() flow, node names are sanitized BEFORE
+  # being stored, and child$parent is built from sanitized names.
+  # So child$parent would be "root/Parent:WithSlash", not "root/Parent/WithSlash".
+  # This test verifies that sanitize_population_name() is called on child$parent
+  # (line 807 for logical gates, line 906 for regular gates).
   parent_node <- list(
-    name = "ParentGate",
+    name = "Parent/WithSlash",  # Name contains "/" -> sanitized to "Parent:WithSlash"
     type = "rectangle",
     definition_uuid = parent_uuid,
     children = list(
@@ -302,24 +309,33 @@ test_that("add_population_node children - sanitize_population_name called on par
         name = "ChildGate",
         type = "rectangle",
         definition_uuid = child_uuid,
-        parent = "ParentGate/WithSlash",  # Contains "/" that needs sanitization
+        # Path uses "/" as separator between sanitized names
+        # "root/Parent:WithSlash" -> strip "root/" -> "Parent:WithSlash"
+        parent = "root/Parent:WithSlash",
         children = list()
       )
     )
   )
 
-  # Should sanitize the parent path (replace "/" with ":")
-  # Note: This tests the code path - sanitization happens even if child addition fails
-  CyFj11:::add_population_node(
-    gh = gh,
-    node = parent_node,
-    gates = gates,
-    sample_uuid = "sample-1",
-    parent = "root"
+  # Should sanitize both the parent node name and the child's parent field
+  # "Parent/WithSlash" (node name) -> "Parent:WithSlash"
+  # "root/Parent:WithSlash" (child$parent) -> "Parent:WithSlash" after stripping
+  expect_no_warning(
+    CyFj11:::add_population_node(
+      gh = gh,
+      node = parent_node,
+      gates = gates,
+      sample_uuid = "sample-1",
+      parent = "root"
+    )
   )
 
-  # The key test is that the code path for line 807 was executed
-  expect_true(TRUE)  # If we got here, the sanitization code path was covered
+  # Verify parent was added with sanitized name
+  all_paths <- flowWorkspace::gs_get_pop_paths(gh)
+  expect_true(any(grepl("Parent:WithSlash", all_paths, fixed = TRUE)))
+
+  # Verify child was added under the sanitized parent path
+  expect_true(any(grepl("Parent:WithSlash/ChildGate", all_paths, fixed = TRUE)))
 })
 
 # ============================================================================
@@ -343,10 +359,10 @@ test_that("apply_transforms_to_gate polygonGate - verbose messages (lines 504-50
   on.exit(CyFj11:::set_verbose(old_verbose))
 
   # Should produce verbose messages about transformation
-  expect_message(
+  expect_message(expect_message(
     out <- CyFj11:::apply_transforms_to_gate(pg, trans_list),
     "Transformed.*polygon boundaries"
-  )
+  ),"Range")
 
   expect_s4_class(out, "polygonGate")
 })
@@ -455,3 +471,4 @@ test_that("apply_transforms_to_gate quadGate - verbose messages (lines 486-488)"
 
   expect_s4_class(out, "quadGate")
 })
+

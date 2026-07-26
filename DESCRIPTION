@@ -1,11 +1,12 @@
 Package: CyFj11
 Type: Package
 Title: Parse FlowJo v11 Workspace Files and Export to FlowJo v10
-Version: 0.99.95
-Authors@R: person("Bernd", "Jagla", , "bernd.jagla@pasteur.fr", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0002-7696-0484"))
-Author: Bernd Jagla [aut, cre] (<https://orcid.org/0000-0002-7696-0484>)
-Maintainer: Bernd Jagla <bernd.jagla@pasteur.fr>
+Version: 0.99.96
+Authors@R: c(
+      person("Bernd", "Jagla", , "bernd.jagla@pasteur.fr", role = c("aut", "cre"),
+      comment = c(ORCID = "0000-0002-7696-0484")),
+      c(person("none", role="fnd", comment = "no external funding involved"))
+      )
 Description: Provides functions to parse FlowJo v11 workspace files
     (.flowjo) and extract gating information, populations, and associated
     FCS files. Includes utilities for exporting data to FlowJo v10

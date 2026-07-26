@@ -37,29 +37,27 @@ NULL
 #' @name null-coalesce
 #' @rdname null-coalesce
 #' @keywords internal
-#' @examples
-#' NULL %||% "default"    # returns "default"
-#' "value" %||% "default" # returns "value"
-#' @export
+#' @keywords internal
 `%||%` <- function(x, y) {
   if (is.null(x)) y else x
 }
 
 #' Load Example FlowJo v11 Workspace
 #'
-#' Loads the example FlowJo v11 workspace from inst/extdata/test.data.flowjo
-#' for use in tests and examples.
+#' Loads the example FlowJo v11 workspace from inst/extdata/min_test.flowjo
+#' for use in tests and examples. This workspace contains a simple gating
+#' hierarchy (Ungated -> Lymphocytes -> CD8, CD3 subset) and references
+#' sample04.fcs.
 #'
 #' @return A flowjo11_workspace object
 #' @export
 #' @examples
-#' \donttest{
-#'   ws <- load_example_workspace()
-#' }
+#' ws <- load_example_workspace()
+#' length(ws$samples)  # Number of samples
 load_example_workspace <- function() {
-  test_file <- system.file("extdata", "test.data.flowjo", package = "CyFj11")
+  test_file <- system.file("extdata", "min_test.flowjo", package = "CyFj11")
   if (!file.exists(test_file)) {
-    stop("Example FlowJo v11 file not found. Please ensure the package is installed with inst/extdata/test.data.flowjo")
+    stop("Example FlowJo v11 file not found. Please ensure the package is installed with inst/extdata/min_test.flowjo")
   }
 
   return(read_flowjo11_workspace(test_file))

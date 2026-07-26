@@ -100,7 +100,7 @@ utils::globalVariables(c(
 #'
 #' @param preserve_slashes Logical. If TRUE, "/" characters in population names
 #'   are preserved instead of being replaced with "_". Default FALSE.
-#' @export
+#' @keywords internal
 extract_flowjo_stats <- function(wsp_files,
                                  csv_file = NULL,
                                  output_csv = "wsp_stat_mapping.csv",
@@ -300,7 +300,7 @@ extract_flowjo_stats <- function(wsp_files,
 #'   \item{covered}{Logical; \code{TRUE} if all signatures are in the CSV.}
 #' }
 #'
-#' @export
+#' @keywords internal
 check_wsp_csv_coverage <- function(wsp_files, csv_file) {
   if (!is.character(wsp_files) || length(wsp_files) == 0) {
     stop("'wsp_files' must be a non-empty character vector.")

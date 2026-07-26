@@ -95,12 +95,11 @@ NULL
 #'   call \code{flowWorkspace::merge_list_to_gs(gsList)} on the returned list.
 #'
 #' @examples
-#' \donttest{
-#'   ws_path  <- system.file("extdata", "test.data.flowjo", package = "CyFj11")
-#'   fcs_path <- system.file("extdata", package = "CyFj11")
-#'   ws       <- read_flowjo11_workspace(ws_path)
-#'   gsList   <- fj11_to_gatingset(ws, group_name = 1, path = fcs_path)
-#' }
+#' ws_path  <- system.file("extdata", "min_test.flowjo", package = "CyFj11")
+#' fcs_path <- system.file("extdata", package = "CyFj11")
+#' ws       <- read_flowjo11_workspace(ws_path)
+#' gsList   <- fj11_to_gatingset(ws, group_name = 1, path = fcs_path)
+#' length(gsList)  # Number of GatingSets created
 #'
 #' @param strip_comp_prefix Logical. Strip "Comp-" prefix from gate parameter names
 #'   when adding populations? Default TRUE. Set to FALSE if compensation has already

@@ -53,10 +53,9 @@ set_verbose <- function(v) {
 #' @return Logical. TRUE if verbose output is enabled, FALSE otherwise
 #' @export
 #' @examples
-#' \dontrun{
 #' # Check current verbose setting
 #' is_verbose <- get_verbose()
-#' }
+#' is_verbose  # Should be FALSE by default
 get_verbose <- function() {
   .pkgenv$verbose
 }
