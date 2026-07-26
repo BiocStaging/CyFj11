@@ -293,9 +293,12 @@ adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) 
 #' @param strip_comp_prefix Logical. Strip "Comp-" prefix from gate parameter names?
 #'   Default TRUE. Set to FALSE if compensation has already been applied with
 #'   matching parameter names.
+#' @param sanitize_slashes Logical. Replace "/" with "_" in parameter names?
+#'   Default TRUE (matches flowCore behavior). Set to FALSE if you want to preserve
+#'   "/" in marker names (e.g., "CD3/CD4" stays as-is).
 #' @return Named list mapping gate params to GatingSet params
 #' @keywords internal
-map_gate_params_to_gh <- function(gate_params, gh_param_names, strip_comp_prefix = TRUE) {
+map_gate_params_to_gh <- function(gate_params, gh_param_names, strip_comp_prefix = TRUE, sanitize_slashes = TRUE) {
   # Use unified parameter name mapping
   # Gate params may have "Comp-" prefix from flowCore compensation
   # and "/" may be sanitized to "_"
@@ -303,7 +306,8 @@ map_gate_params_to_gh <- function(gate_params, gh_param_names, strip_comp_prefix
     source_names = gate_params,
     target_names = gh_param_names,
     strip_comp_prefix = strip_comp_prefix,
-    case_insensitive = FALSE
+    case_insensitive = FALSE,
+    sanitize_slashes = sanitize_slashes
   )
 }
 
@@ -894,9 +898,9 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
       if (!is.null(node$children)) {
         for (child in node$children) {
           # child$parent is a full path built from sanitized names with '/' as the
-          # flowWorkspace separator.  Strip the leading "Ungated/" (or root) prefix
+          # flowWorkspace separator.  Strip the leading "Ungated/" or "root" prefix
           # so we get the parent path relative to the root of the GatingSet.
-          child_parent <- sub("^[^/]+/", "", child$parent)
+          child_parent <- sub("^(root|Ungated)/", "", child$parent)
           # The result is already sanitized; call sanitize_population_name only to
           # handle any stray name-level '/' that might remain.
           child_parent <- sanitize_path_with_separator(child_parent)

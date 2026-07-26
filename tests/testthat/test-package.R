@@ -41,16 +41,54 @@ test_that("Package loads correctly", {
 test_that("Verbose mode functions work", {
   # Don't assume initial state - set known state and restore on exit
   on.exit(set_verbose(FALSE))
-  
+
   # Test FALSE
   set_verbose(FALSE)
   expect_false(get_verbose())
-  
+
   # Test TRUE
   set_verbose(TRUE)
   expect_true(get_verbose())
-  
+
   # Test back to FALSE
   set_verbose(FALSE)
   expect_false(get_verbose())
+})
+
+test_that(".onLoad initializes package settings correctly", {
+  # Save current state
+  old_verbose <- get_verbose()
+  old_sanitize <- get_sanitize_slashes()
+  on.exit({
+    set_verbose(old_verbose)
+    set_sanitize_slashes(old_sanitize)
+  })
+
+  # Call .onLoad directly to test initialization
+  # This simulates package load behavior
+  CyFj11:::.onLoad("libname", "CyFj11")
+
+  # Check that .onLoad sets verbose to FALSE
+  expect_false(get_verbose())
+
+  # Check that .onLoad sets sanitize_slashes to TRUE
+  expect_true(get_sanitize_slashes())
+})
+
+test_that("set_sanitize_slashes and get_sanitize_slashes work correctly", {
+  # Save current state
+  old_sanitize <- get_sanitize_slashes()
+  on.exit(set_sanitize_slashes(old_sanitize))
+
+  # Test default (TRUE)
+  set_sanitize_slashes(TRUE)
+  expect_true(get_sanitize_slashes())
+
+  # Test FALSE
+  set_sanitize_slashes(FALSE)
+  expect_false(get_sanitize_slashes())
+
+  # Test back to TRUE
+  set_sanitize_slashes(TRUE)
+  expect_true(get_sanitize_slashes())
 })

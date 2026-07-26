@@ -20,6 +20,8 @@ slurm_output/
 .rooignore
 plans/
 inst/dev
+*.gz
+*.zip
 
 # Derived manuscript outputs (source is .md)
 manuscript/~$*.docx
@@ -43,3 +45,6 @@ manuscript/CyFj11_reference_manual.pdf
 
 .codegraph
 flowjo_export_tests2
+CyFj11.Rcheck/
+*.Rcheck/
+*.tar.gz

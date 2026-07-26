@@ -1,10 +1,14 @@
-citEntry(
-  entry = "Article",
-  title = "CyFj11: FlowJo v11 Workspace Import and Legacy Format Export for R-Based Flow Cytometry Analysis",
-  author = personList(
-    person("Bernd", "Jagla", email = "bernd.jagla@pasteur.fr")
+bibentry(
+  bibtype = "Article",
+  title   = "CyFj11: FlowJo v11 Workspace Import and Legacy Format Export for R-Based Flow Cytometry Analysis",
+  author  = c(
+    person("Bernd",     "Jagla",          email = "bernd.jagla@pasteur.fr"),
+    person("Slobodan",  "Culina",         email = "Slobodan.culina@pasteur.fr"),
+    person("Francois",  "Le Guerroue",    email = "francois.le-guerroue@pasteur.fr"),
+    person("Esma",      "Karkeni",        email = "esma.karkeni@pasteur.fr"),
+    person("Milena",    "Hasan",          email = "milena.hasan@pasteur.fr")
   ),
   journal = "Cytometry Part A",
-  year = "2026",
-  note = "Submitted for publication"
+  year    = "2026",
+  note    = "Submitted for publication"
 )

@@ -840,13 +840,41 @@ create_gatingset_from_cytoset <- function(cytoset,
 
     # Apply compensation (if available)
     if (!is.null(compensations[[sample_uuid]])) {
+      # Store original compensation names (with "Comp-" prefix) before mapping
+      comp_orig <- compensations[[sample_uuid]]
+      if (methods::is(comp_orig, "compensation")) {
+        comp_prefix_names <- colnames(comp_orig@spillover)
+      } else {
+        comp_prefix_names <- colnames(comp_orig)
+      }
+
       # Map compensation channel names to cytoframe parameter names
       # This handles cases where flowCore sanitizes names (e.g., "/" -> "_")
       comp_mapped <- map_compensation_names(
         compensations[[sample_uuid]],
         colnames(cf)
       )
-      cf <- compensate(cf, comp_mapped)
+      cf_comp <- compensate(cf, comp_mapped)
+
+      # After compensation, rename the compensated channels to have "Comp-" prefix.
+      # FlowJo 10/11 expects compensated channels to be named "Comp-<channel>"
+      # (e.g., "Comp-FITC-A" instead of "FITC-A").
+      if (!is.null(comp_prefix_names) && length(comp_prefix_names) > 0) {
+        # Get current column names and replace compensated ones with Comp- prefix
+        new_names <- as.character(colnames(cf_comp))
+        for (comp_name in comp_prefix_names) {
+          # Strip "Comp-" prefix to find the base name in the cytoframe
+          base_name <- sub("^Comp-", "", comp_name)
+          if (base_name %in% new_names) {
+            new_names[new_names == base_name] <- comp_name
+          }
+        }
+        # Use flowCore::colnames<- to avoid any S4 method issues
+        flowCore::colnames(cf_comp) <- new_names
+        cf <- cf_comp
+      } else {
+        cf <- cf_comp
+      }
     }
     
     cs = cytoset()

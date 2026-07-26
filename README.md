@@ -22,7 +22,7 @@ BiocManager::install("CyFj11", version = "devel")
 
 ```r
 # install.packages("devtools")
-devtools::install_github("baj12/CyFj11")
+devtools::install_github("C3BI-pasteur-fr/CyFj11")
 ```
 
 ## Overview

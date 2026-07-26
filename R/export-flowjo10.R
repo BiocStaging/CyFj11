@@ -38,6 +38,15 @@ NULL
 #'        error; \code{TRUE} silently replaces existing files.
 #' @return Logical indicating success
 #' @export
+#' @examples
+#' \dontrun{
+#' # Export a GatingSet to FlowJo v10 XML format
+#' ws_path  <- system.file("extdata", "min_test.flowjo", package = "CyFj11")
+#' fcs_path <- system.file("extdata", package = "CyFj11")
+#' ws <- read_flowjo11_workspace(ws_path)
+#' gs <- fj11_to_gatingset(ws, group_name = 1, path = fcs_path)
+#' export_flowjo10_workspace(gs, "exported_workspace.xml")
+#' }
 export_flowjo10_workspace <- function(gating_set, output_path,
                                       workspace_name = NULL,
                                       fcs_root       = NULL,
@@ -263,6 +272,8 @@ parse_spill_keyword <- function(keywords) {
 
 #' Build Sample Keywords from Original FCS Header and GatingSet Overlay
 #'
+#' Build FlowJo v10 Workspace Keywords
+#'
 #' @param fcs_keywords Keywords from the original FCS header.
 #' @param gs_keywords Keywords from the GatingSet.
 #' @param final_filename The value to set for FILENAME.
@@ -276,6 +287,9 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
   if (!is.null(fcs_keywords) && length(fcs_keywords) > 0) {
     fcs_list <- as.list(fcs_keywords)
     # Copy FCS keywords, but skip SPILL (we'll handle it specially below)
+    # NOTE: We do NOT sanitize $PnS channel labels here - FlowJo uses these
+    # exact values to match against descriptive names in population definitions.
+    # Changing them (e.g., NK1/1 -> NK1_1) breaks FlowJo's ability to read the file.
     for (k in names(fcs_list)) {
       if (k != "SPILL") {
         keywords[[k]] <- fcs_list[[k]]
@@ -295,8 +309,12 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
     par_val <- suppressWarnings(as.integer(keywords[["$PAR"]]))
     if (length(par_val) == 0L || is.na(par_val)) par_val <- n_orig
 
-    # TODO verify that comp name has to be changed.
-    # Add $P{par_val + i}N/S/R entries for each compensated channel
+    # Add $P{par_val + i}N/S/R entries for each compensated channel.
+    # flowWorkspace adds "Comp-" prefix to compensated channel names.
+    # We add another "Comp-" prefix here, resulting in "Comp-Comp-<channel>".
+    # NOTE: This double prefix appears to be required by FlowJo 11.2 (and FlowJo 10)
+    # to read the exported WSP file correctly. Without it, FlowJo fails to parse
+    # the workspace. This may be a FlowJo bug, but for now we keep the double prefix.
     for (i in seq_along(comp_names)) {
       orig_name <- comp_names[i]
       comp_name <- paste0("Comp-", orig_name)
@@ -694,7 +712,6 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
   
   # --- log (includes logtGml2) ---
   if (type %in% c("log", "logtGml2", "flowJo_log")) {
-    # browser() # nocov
     fn_env <- tryCatch(environment(trans), error = function(e) new.env())
     
     decade <- p$decade %||% p$n %||%
@@ -847,7 +864,6 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
     .apply_inverse_val <- function(val, param_name) {
       spec <- get_transform_spec(gh, param_name)
       if (is.null(spec)) return(val)
-      # browser() # nocov
       switch(
         spec$transformType,
         "Linear" = val,

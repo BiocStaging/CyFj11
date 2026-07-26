@@ -28,7 +28,8 @@ test_that("extract_compensation_from_platforms extracts from compSpec", {
         compSpec = list(
           CompensationSpec = list(
             coefficients = list(c(100, 10), c(20, 100)),
-            detectors = list(list(name = "FSC-A"), list(name = "SSC-A"))
+            detectors = list(list(name = "FSC-A"), list(name = "SSC-A")),
+            parameters = list(list(name = "Comp-FSC-A"), list(name = "Comp-SSC-A"))
           )
         )
       )
@@ -36,7 +37,8 @@ test_that("extract_compensation_from_platforms extracts from compSpec", {
   )
   out <- CyFj11:::extract_compensation_from_platforms(spill)
   expect_s4_class(out, "compensation")
-  expect_equal(colnames(out@spillover), c("FSC-A", "SSC-A"))
+  # Compensation matrices now have "Comp-" prefix to match flowWorkspace expectations
+  expect_equal(colnames(out@spillover), c("Comp-FSC-A", "Comp-SSC-A"))
 })
 
 test_that("extract_compensation_from_platforms extracts from spillover", {
@@ -100,22 +102,22 @@ test_that("extract_compensation applies custom compensation per sample", {
                       dimnames = list(c("A", "B"), c("A", "B")))
   )
   out <- expect_warning(
-    CyFj11:::extract_compensation(
+    out_extract <- CyFj11:::extract_compensation(
       dataSources, c("sample_1", "sample_2"), custom_compensation = custom
     ),
     "No compensation found for sample"
   )
-  expect_s4_class(out[["sample_1"]], "compensation")
+  expect_s4_class(out_extract[["sample_1"]], "compensation")
   expect_null(out[["sample_2"]])
 
-  expect_warning(
+  out <- testthat::capture_warnings(
     out2 <- CyFj11:::extract_compensation(
       dataSources, c("sample_1", "sample_2"), custom_compensation = list()
-    ),
-    "No compensation found for sample"
+    )
   )
   expect_null(out2[["sample_1"]])
   expect_null(out2[["sample_2"]])
+  expect_true(any(grepl("No compensation found for sample", out)))
 })
 
 test_that("adjust_gate_transformations updates parameter names", {

@@ -516,14 +516,15 @@ map_transformation_names <- function(trans_list, param_names) {
   
   # Get transformation channel names
   trans_names <- names(trans_list)
-  
+
   # Use unified parameter name mapping
   # Transformations may have "Comp-" prefix and "/" sanitization
   name_mapping <- map_param_names(
     source_names = trans_names,
     target_names = param_names,
     strip_comp_prefix = TRUE,   # Transformations may have "Comp-" prefix
-    case_insensitive = FALSE
+    case_insensitive = FALSE,
+    sanitize_slashes = TRUE
   )
   
   # Create mapped transformation list
