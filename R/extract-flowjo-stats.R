@@ -98,12 +98,15 @@ utils::globalVariables(c(
 #' )
 #' }
 #'
-#' @export
+#' @param preserve_slashes Logical. If TRUE, "/" characters in population names
+#'   are preserved instead of being replaced with "_". Default FALSE.
+#' @keywords internal
 extract_flowjo_stats <- function(wsp_files,
                                  csv_file = NULL,
                                  output_csv = "wsp_stat_mapping.csv",
                                  write_csv = TRUE,
-                                 value_as_numeric = TRUE) {
+                                 value_as_numeric = TRUE,
+                                 preserve_slashes = FALSE) {
 
   # ---- Input validation ----
   if (!is.character(wsp_files) || length(wsp_files) == 0) {
@@ -136,7 +139,8 @@ extract_flowjo_stats <- function(wsp_files,
     mapping <- long_table %>%
       distinct(population_path, population, id, stat_name, stat_ancestor) %>%
       mutate(
-        better_name = make_better_names(population, stat_name, stat_ancestor),
+        better_name = make_better_names(population, stat_name, stat_ancestor,
+                                        preserve_slashes = preserve_slashes),
         description = case_when(
           stat_name == "PopulationCount" ~
             paste0("Event count for population '", population_path, "'"),
@@ -179,7 +183,8 @@ extract_flowjo_stats <- function(wsp_files,
     mapping <- mapping %>%
       mutate(
         population = coalesce(population, get_leaf_population(population_path)),
-        better_name = make_better_names(population, stat_name, stat_ancestor)
+        better_name = make_better_names(population, stat_name, stat_ancestor,
+                                        preserve_slashes = preserve_slashes)
       )
   }
 
@@ -295,7 +300,7 @@ extract_flowjo_stats <- function(wsp_files,
 #'   \item{covered}{Logical; \code{TRUE} if all signatures are in the CSV.}
 #' }
 #'
-#' @export
+#' @keywords internal
 check_wsp_csv_coverage <- function(wsp_files, csv_file) {
   if (!is.character(wsp_files) || length(wsp_files) == 0) {
     stop("'wsp_files' must be a non-empty character vector.")
@@ -488,13 +493,28 @@ shorten_stat_name <- function(stat_name) {
 #' Keeps alphanumeric characters, plus/minus signs, and underscores. Replaces
 #' everything else with underscores, collapses repeated separators, and makes
 #' sure the name does not start with a digit.
+#'
+#' @param x Character vector to sanitize
+#' @param preserve_slashes Logical. If TRUE, "/" characters are preserved
+#'   instead of being replaced with "_". Default FALSE (replaces "/" with "_").
+#' @return Character vector of sanitized names
 #' @noRd
-sanitize_name <- function(x) {
+sanitize_name <- function(x, preserve_slashes = FALSE) {
   x <- as.character(x)
   x[is.na(x)] <- ""
 
-  # Keep only allowed characters (preserve +/- distinction)
-  x <- gsub("[^A-Za-z0-9+_-]", "_", x)
+  # Handle slashes: either preserve or replace
+  if (!preserve_slashes) {
+    x <- gsub("/", "_", x)
+  }
+
+  # Keep only allowed characters (preserve +/- distinction and optionally /)
+  if (preserve_slashes) {
+    x <- gsub("[^A-Za-z0-9+/_-]", "_", x)
+  } else {
+    x <- gsub("[^A-Za-z0-9+_-]", "_", x)
+  }
+
   # Collapse repeated separators
   x <- gsub("_+", "_", x)
   x <- gsub("(^_|_$)", "", x)
@@ -508,17 +528,24 @@ sanitize_name <- function(x) {
 #'
 #' The names are guaranteed to be unique. If the sanitized combination is not
 #' unique, a minimal numeric suffix is appended.
+#'
+#' @param population Population name
+#' @param stat_name Statistic name
+#' @param stat_ancestor Ancestor population name (if any)
+#' @param preserve_slashes Logical. If TRUE, "/" characters are preserved.
+#'   Default FALSE (replaces "/" with "_").
+#' @return Character vector of sanitized names
 #' @noRd
-make_better_names <- function(population, stat_name, stat_ancestor) {
-  pop <- sanitize_name(population)
+make_better_names <- function(population, stat_name, stat_ancestor, preserve_slashes = FALSE) {
+  pop <- sanitize_name(population, preserve_slashes = preserve_slashes)
   short <- shorten_stat_name(stat_name)
-  anc <- sanitize_name(stat_ancestor)
+  anc <- sanitize_name(stat_ancestor, preserve_slashes = preserve_slashes)
 
   has_ancestor <- !is.na(anc) & anc != ""
   anc_part <- ifelse(has_ancestor, paste0("_rel_", anc), "")
 
   candidates <- paste0(pop, "_", short, anc_part)
-  candidates <- sanitize_name(candidates)
+  candidates <- sanitize_name(candidates, preserve_slashes = preserve_slashes)
 
   # Resolve collisions by appending a numeric suffix
   seen <- character()

@@ -25,6 +25,9 @@
 .onLoad <- function(libname, pkgname) {
   # Initialize verbose to FALSE when package loads
   .pkgenv$verbose <- FALSE
+  # Initialize sanitize_slashes to TRUE (default behavior: replace "/" with "_")
+  # This matches flowCore's behavior for parameter names
+  .pkgenv$sanitize_slashes <- TRUE
 }
 
 #' Set verbose mode
@@ -50,10 +53,44 @@ set_verbose <- function(v) {
 #' @return Logical. TRUE if verbose output is enabled, FALSE otherwise
 #' @export
 #' @examples
-#' \dontrun{
 #' # Check current verbose setting
 #' is_verbose <- get_verbose()
-#' }
+#' is_verbose  # Should be FALSE by default
 get_verbose <- function() {
   .pkgenv$verbose
+}
+
+#' Set parameter name slash sanitization behavior
+#'
+#' Control whether "/" characters in parameter/marker names are automatically
+#' replaced with "_". This is important because flowCore sanitizes parameter
+#' names by replacing "/" with "_" when reading FCS files.
+#'
+#' By default, this is TRUE to match flowCore's behavior, ensuring that gate
+#' parameter names match the flowFrame column names. Set to FALSE if you want
+#' to preserve "/" in marker names (e.g., "CD3/CD4" stays as-is).
+#'
+#' @param v Logical. TRUE to replace "/" with "_" (default), FALSE to preserve "/"
+#' @return Invisible NULL. Called for side effects.
+#' @export
+#' @examples
+#' # Preserve "/" in marker names
+#' set_sanitize_slashes(FALSE)
+#' # Use default behavior (replace "/" with "_")
+#' set_sanitize_slashes(TRUE)
+set_sanitize_slashes <- function(v) {
+  .pkgenv$sanitize_slashes <- v
+}
+
+#' Get slash sanitization mode
+#'
+#' Check whether "/" characters in parameter names are being replaced with "_".
+#'
+#' @return Logical. TRUE if "/" is replaced with "_", FALSE if preserved
+#' @export
+#' @examples
+#' # Check current setting
+#' is_sanitize_slashes <- get_sanitize_slashes()
+get_sanitize_slashes <- function() {
+  .pkgenv$sanitize_slashes
 }

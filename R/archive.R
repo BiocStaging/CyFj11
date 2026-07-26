@@ -102,11 +102,10 @@ process_zip_archive <- function(zip_path) {
 #' @param workspace_path Path to the FlowJo workspace file (.flowjo)
 #' @return Parsed workspace object containing manifest and JSON data
 #' @examples
-#' \donttest{
-#'   ws_path <- system.file("extdata", "test.data.flowjo", package = "CyFj11")
-#'   ws <- read_flowjo11_workspace(ws_path)
-#'   print(ws)
-#' }
+#' ws_path <- system.file("extdata", "min_test.flowjo", package = "CyFj11")
+#' ws <- read_flowjo11_workspace(ws_path)
+#' length(ws$samples)  # Number of samples in workspace
+#' names(ws$groups)    # Group names
 #' @export
 read_flowjo11_workspace <- function(workspace_path) {
   # Validate input

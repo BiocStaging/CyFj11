@@ -124,7 +124,7 @@ head(stats)
 
 plot(gs)
 autoplot(gs, "cells", bins = 80)
-autoplot(gs, "cd8Pos", bins = 80, axis_inverse_trans = T)
+autoplot(gs, "cd8Pos", bins = 80, axis_inverse_trans = TRUE)
 
 gate = gh_pop_get_gate(gs, "cd8Pos")
 gh = gs[[1]][[1]]
@@ -179,4 +179,8 @@ ggcyto::autoplot(gs_back, "cells", bins = 80)
 autoplot(gs_back, "cd8Pos", bins = 80)
 
 
+```
+
+```{r sessioninfo}
+sessionInfo()
 ```

@@ -29,9 +29,12 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' pretty_print_flowjo("large.mi.flowjo")
-#' }
+#' # Pretty print a FlowJo workspace to readable JSON
+#' ws_path <- system.file("extdata", "min_test.flowjo", package = "CyFj11")
+#' out_file <- pretty_print_flowjo(ws_path)
+#' file.exists(out_file)  # Verify output was created
+#' # Clean up
+#' unlink(out_file)
 pretty_print_flowjo <- function(flowjo_file) {
   # Check if the file exists
   if (!file.exists(flowjo_file)) {
@@ -44,8 +47,7 @@ pretty_print_flowjo <- function(flowjo_file) {
   on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
   
   # Extract the zip file
-  unzip_cmd <- paste("unzip", shQuote(flowjo_file), "-d", shQuote(temp_dir))
-  system(unzip_cmd)
+  system2("unzip", args = c(flowjo_file, "-d", temp_dir))
   
   # Find the analysis JSON file
   json_files <- list.files(file.path(temp_dir, "analyses"), pattern = "\\.json$", recursive = TRUE, full.names = TRUE)

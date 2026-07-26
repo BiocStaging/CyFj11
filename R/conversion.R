@@ -95,16 +95,18 @@ NULL
 #'   call \code{flowWorkspace::merge_list_to_gs(gsList)} on the returned list.
 #'
 #' @examples
-#' \donttest{
-#'   ws_path  <- system.file("extdata", "test.data.flowjo", package = "CyFj11")
-#'   fcs_path <- system.file("extdata", package = "CyFj11")
-#'   ws       <- read_flowjo11_workspace(ws_path)
-#'   gsList   <- fj11_to_gatingset(ws, group_name = 1, path = fcs_path)
-#' }
+#' ws_path  <- system.file("extdata", "min_test.flowjo", package = "CyFj11")
+#' fcs_path <- system.file("extdata", package = "CyFj11")
+#' ws       <- read_flowjo11_workspace(ws_path)
+#' gsList   <- fj11_to_gatingset(ws, group_name = 1, path = fcs_path)
+#' length(gsList)  # Number of GatingSets created
 #'
 #' @param strip_comp_prefix Logical. Strip "Comp-" prefix from gate parameter names
 #'   when adding populations? Default TRUE. Set to FALSE if compensation has already
 #'   been applied and gate names should match the compensated parameter names.
+#' @param sanitize_slashes Logical. Replace "/" with "_" in parameter names?
+#'   Default TRUE (matches flowCore behavior). Set to FALSE if you want to preserve
+#'   "/" in marker names (e.g., "CD3/CD4" stays as-is).
 #' @export
 #' @importFrom flowWorkspace GatingSet cytoset load_cytoset_from_fcs gs_pop_add gs_get_pop_paths recompute
 #' @importFrom dplyr filter enquo
@@ -135,6 +137,7 @@ fj11_to_gatingset <- function(fj11_workspace,
                               stop_on_multiple = TRUE,
                               mc.cores = 1,
                               strip_comp_prefix = TRUE,
+                              sanitize_slashes = TRUE,
                               ...) {
   backend <- match.arg(backend)
   # Extract workspace components

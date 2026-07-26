@@ -207,3 +207,54 @@ test_that("get_display_range returns numeric range", {
   expect_length(out, 2)
   expect_true(is.numeric(out))
 })
+
+# Tests for build_sample_keywords() - channel labels are preserved unchanged
+# FlowJo uses $PnS values to match against descriptive names in population definitions,
+# so we must preserve them exactly (e.g., "NK1/1" not "NK1_1")
+test_that("build_sample_keywords preserves $PnS channel labels unchanged", {
+  fcs_kw <- list(
+    `$TOT` = "10000",
+    `$P1S` = "NK1/1",      # preserve as-is for FlowJo compatibility
+    `$P2S` = "CD4/CD8",    # preserve as-is
+    `$P3S` = "normal"
+  )
+  gs_kw <- list()
+  out <- CyFj11:::build_sample_keywords(fcs_kw, gs_kw, "sample.fcs")
+
+  expect_equal(out$`$P1S`, "NK1/1")
+  expect_equal(out$`$P2S`, "CD4/CD8")
+  expect_equal(out$`$P3S`, "normal")
+  expect_equal(out$FILENAME, "sample.fcs")
+})
+
+test_that("build_sample_keywords handles compensated channels correctly", {
+  skip_if_not_installed("flowCore")
+  library(flowCore)
+
+  # Create a simple spillover matrix
+  spill_mat <- matrix(c(1, 0.1, 0.1, 1), nrow = 2,
+                      dimnames = list(c("FITC-A", "PE-A"), c("FITC-A", "PE-A")))
+
+  fcs_kw <- list(
+    `$PAR` = "2",
+    `$P1N` = "FITC-A",
+    `$P1S` = "NK1/1",        # preserve original label
+    `$P1R` = "262144",
+    `$P2N` = "PE-A",
+    `$P2S` = "CD4/CD8",      # preserve original label
+    `$P2R` = "262144",
+    SPILL = "2,FITC-A,PE-A,1,0.1,0.1,1"
+  )
+  gs_kw <- list(SPILL = spill_mat)
+  out <- CyFj11:::build_sample_keywords(fcs_kw, gs_kw, "sample.fcs")
+
+  # Original channels should be preserved unchanged
+  expect_equal(out$`$P1S`, "NK1/1")
+  expect_equal(out$`$P2S`, "CD4/CD8")
+
+  # Compensated channels (P3, P4) should have Comp- prefix on names but preserve $PnS
+  expect_equal(out$`$P3N`, "Comp-FITC-A")
+  expect_equal(out$`$P4N`, "Comp-PE-A")
+  expect_equal(out$`$P3S`, "NK1/1")  # same as P1S
+  expect_equal(out$`$P4S`, "CD4/CD8")  # same as P2S, preserved
+})
