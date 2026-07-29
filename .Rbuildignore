@@ -50,3 +50,4 @@ extract_flowjo_counts.R
 \*\.zip$
 vignettes/compensation-workflow.html
 vignettes/compensation-workflow.Rmd
+^\.claude$

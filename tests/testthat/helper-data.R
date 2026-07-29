@@ -226,9 +226,6 @@ create_mock_fcs_files <- function(dir) {
     return(character(0))
   }
   
-  library(flowCore)
-  library(stats)
-  
   # Create mock flow data
   set.seed(123)
   
@@ -247,15 +244,15 @@ create_mock_fcs_files <- function(dir) {
   )
   colnames(mat1) <- c("FSC-A", "SSC-A", "CD3-FITC", "CD4-PE", "CD8-APC")
   
-  ff1 <- flowFrame(mat1)
-  keyword(ff1) <- list(
+  ff1 <- flowCore::flowFrame(mat1)
+  flowCore::keyword(ff1) <- list(
     `$TOT` = ncells1,
     `$DATE` = "01-Jan-2024",
     `PATIENT ID` = "P001",
     TUBE = "1"
   )
   
-  write.FCS(ff1, file.path(dir, "sample1.fcs"))
+  flowCore::write.FCS(ff1, file.path(dir, "sample1.fcs"))
   
   # Sample 2
   ncells2 <- 1500
@@ -272,15 +269,15 @@ create_mock_fcs_files <- function(dir) {
   )
   colnames(mat2) <- c("FSC-A", "SSC-A", "CD3-FITC", "CD4-PE", "CD8-APC")
   
-  ff2 <- flowFrame(mat2)
-  keyword(ff2) <- list(
+  ff2 <- flowCore::flowFrame(mat2)
+  flowCore::keyword(ff2) <- list(
     `$TOT` = ncells2,
     `$DATE` = "01-Jan-2024",
     `PATIENT ID` = "P001",
     TUBE = "2"
   )
   
-  write.FCS(ff2, file.path(dir, "sample2.fcs"))
+  flowCore::write.FCS(ff2, file.path(dir, "sample2.fcs"))
   
   # Sample 3
   ncells3 <- 2000
@@ -297,15 +294,15 @@ create_mock_fcs_files <- function(dir) {
   )
   colnames(mat3) <- c("FSC-A", "SSC-A", "CD3-FITC", "CD4-PE", "CD8-APC")
   
-  ff3 <- flowFrame(mat3)
-  keyword(ff3) <- list(
+  ff3 <- flowCore::flowFrame(mat3)
+  flowCore::keyword(ff3) <- list(
     `$TOT` = ncells3,
     `$DATE` = "02-Jan-2024",
     `PATIENT ID` = "P002",
     TUBE = "1"
   )
   
-  write.FCS(ff3, file.path(dir, "sample3.fcs"))
+  flowCore::write.FCS(ff3, file.path(dir, "sample3.fcs"))
   
   return(c("sample1.fcs", "sample2.fcs", "sample3.fcs"))
 }
