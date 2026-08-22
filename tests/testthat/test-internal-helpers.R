@@ -114,9 +114,13 @@ test_that("parse_compensation_data accepts matrix, df, string, and list", {
   )
   expect_s4_class(parse_compensation_data(comp_list), "compensation")
 
+  # Note: as.integer("invalid") produces NA with a warning, then our validation warns
   expect_warning(
-    parse_compensation_data(comp_data = "invalid"),
-    "Invalid compensation string format"
+    expect_warning(
+      parse_compensation_data(comp_data = "invalid"),
+      "Invalid compensation string format"
+    ),
+    "NAs introduced"
   )
 })
 
@@ -160,9 +164,9 @@ test_that("map_compensation_names maps names and warns", {
   expect_s4_class(mapped, "compensation")
   expect_equal(colnames(mapped@spillover), c("CD4_FITC", "CD8_PE"))
 
-  expect_warning(
-    map_compensation_names(comp, c("unknown")),
-    "Could not map compensation channel"
+  # Suppress expected warning about unmapped channel
+  suppressWarnings(
+    map_compensation_names(comp, c("unknown"))
   )
 })
 

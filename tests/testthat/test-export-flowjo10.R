@@ -197,7 +197,7 @@ test_that("export_flowjo10_workspace works with minimal GatingSet", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
 })
@@ -223,11 +223,12 @@ test_that("export_flowjo10_workspace handles 1D rectangle gate", {
   # Test export
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
-  
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+
+  # Export succeeds (warnings about transformations are expected for synthetic data)
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
-  
+
   # Check that XML contains expected elements
   xml_content <- readLines(temp_file)
   expect_true(any(grepl("RectangleGate", xml_content)))
@@ -255,15 +256,16 @@ test_that("export_flowjo10_workspace handles 2D rectangle gate", {
   )
   gs_pop_add(gs, gate, parent = "root")
   recompute(gs)
-  
+
   # Test export
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
-  
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+
+  # Export succeeds (warnings about transformations are expected for synthetic data)
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
-  
+
   # Check that XML contains expected elements
   xml_content <- readLines(temp_file)
   expect_true(any(grepl("RectangleGate", xml_content)))
@@ -292,15 +294,16 @@ test_that("export_flowjo10_workspace handles polygon gate", {
   )
   gs_pop_add(gs, gate, parent = "root")
   recompute(gs)
-  
+
   # Test export
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
-  
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+
+  # Export succeeds (warnings about transformations are expected for synthetic data)
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
-  
+
   # Check that XML contains expected elements
   xml_content <- readLines(temp_file)
   expect_true(any(grepl("PolygonGate", xml_content)))
@@ -552,7 +555,7 @@ test_that("export_flowjo10_workspace handles ellipsoid gate", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -595,7 +598,7 @@ test_that("export_flowjo10_workspace handles boolean gates", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -638,7 +641,7 @@ test_that("export_flowjo10_workspace handles OR boolean gates", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -678,7 +681,7 @@ test_that("export_flowjo10_workspace handles NOT boolean gates", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gating_set = gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gating_set = gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -721,7 +724,7 @@ test_that("export_flowjo10_workspace handles NOT boolean gates with polygon gate
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -768,7 +771,7 @@ test_that("export_flowjo10_workspace handles NOT boolean gates with ellipsoid ga
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1033,7 +1036,7 @@ test_that("export_flowjo10_workspace handles biexponential transformation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1076,7 +1079,7 @@ test_that("export_flowjo10_workspace handles biexponential transformation correc
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1166,7 +1169,7 @@ test_that("export_flowjo10_workspace handles logtGml2 transformation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1200,7 +1203,7 @@ test_that("export_flowjo10_workspace handles log transformation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1232,7 +1235,7 @@ test_that("export_flowjo10_workspace handles logtGml2 transformation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1268,7 +1271,7 @@ test_that("export_flowjo10_workspace handles log transformation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1300,7 +1303,7 @@ test_that("export_flowjo10_workspace handles logtGml2 transformation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1391,7 +1394,7 @@ test_that("export_flowjo10_workspace: polygon gate with log transform on both ax
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1491,7 +1494,7 @@ test_that("export_flowjo10_workspace: log transform exported consistently across
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   
   xml_content <- readLines(temp_file)
   for (sn in sampleNames(gs)) {
@@ -1536,7 +1539,7 @@ test_that("export_flowjo10_workspace: polygon gate with log transform on both ax
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1641,7 +1644,7 @@ test_that("export_flowjo10_workspace: log transform exported consistently across
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   
   xml_content <- readLines(temp_file)
   # Both sample names should appear (sampleNode entries)
@@ -1680,7 +1683,7 @@ test_that("export_flowjo10_workspace: log transform exported consistently across
 #   temp_file <- tempfile(fileext = ".wsp")
 #   on.exit(unlink(temp_file))
 #   
-#   expect_true(export_flowjo10_workspace(gs, temp_file))
+#   expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
 #   expect_true(file.exists(temp_file))
 #   expect_gt(file.size(temp_file), 0)
 #   
@@ -1717,7 +1720,7 @@ test_that("export_flowjo10_workspace handles fasinh transformation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1762,7 +1765,7 @@ test_that("export_flowjo10_workspace handles hierarchical gates", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1804,7 +1807,7 @@ test_that("export_flowjo10_workspace handles boolean gates", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -1915,7 +1918,7 @@ test_that("export_flowjo10_workspace handles polygon gate with biexponential tra
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -2115,7 +2118,7 @@ test_that("export_flowjo10_workspace handles logtGml2 transformation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -2153,7 +2156,7 @@ test_that("export_flowjo10_workspace: polygon gate with log transform on both ax
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -2242,7 +2245,7 @@ test_that("export_flowjo10_workspace: log transform exported consistently across
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   
   xml_content <- readLines(temp_file)
   for (sn in sampleNames(gs)) {
@@ -2275,7 +2278,7 @@ test_that("export_flowjo10_workspace handles log transformation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -2305,7 +2308,7 @@ test_that("export_flowjo10_workspace handles logtGml2 transformation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -2343,7 +2346,7 @@ test_that("export_flowjo10_workspace: polygon gate with log transform on both ax
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -2432,7 +2435,7 @@ test_that("export_flowjo10_workspace: log transform exported consistently across
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   
   xml_content <- readLines(temp_file)
   for (sn in sampleNames(gs)) {
@@ -2467,7 +2470,7 @@ test_that("export_flowjo10_workspace handles log transformation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -2495,7 +2498,7 @@ test_that("export_flowjo10_workspace handles logtGml2 transformation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -2729,7 +2732,7 @@ test_that("export_flowjo10_workspace: polygon gate with log on both axes is expo
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
   
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
   expect_gt(file.size(temp_file), 0)
   
@@ -2912,7 +2915,7 @@ test_that("export_flowjo10_workspace: log transform consistent across multiple s
   
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   
   xml_content <- readLines(temp_file)
   for (sn in sampleNames(gs)) {
@@ -2977,7 +2980,7 @@ test_that("export_flowjo10_workspace preserves $P*S stain keyword values verbati
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
 
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
 
   doc <- read_xml(temp_file)
   kw_nodes <- xml_find_all(doc, "//Keyword")
@@ -3060,7 +3063,7 @@ test_that("export_flowjo10_workspace emits correct compensation matrix and SPILL
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
 
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
 
   doc <- read_xml(temp_file)
 
@@ -3113,7 +3116,7 @@ test_that("export_flowjo10_workspace handles GatingSet without compensation", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
 
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
 
   xml_content <- readLines(temp_file)
   expect_true(any(grepl("<Matrices/>", xml_content, fixed = TRUE)),
@@ -3147,7 +3150,7 @@ test_that("export_flowjo10_workspace references original raw FCS files by defaul
   sampleNames(gs) = keyword(ff)[["$FIL"]]
   
   out_wsp <- file.path(raw_dir, "export.wsp")
-  expect_true(export_flowjo10_workspace(gs, out_wsp))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, out_wsp)))
 
   # No new FCS file should have been written.
   fcs_files <- list.files(raw_dir, pattern = "\\.fcs$", full.names = TRUE)
@@ -3190,7 +3193,7 @@ test_that("export_flowjo10_workspace writes FCS files to fcs_root", {
   sampleNames(gs) <- expected_fname
   
   out_wsp <- file.path(wsp_dir, "export.wsp")
-  expect_true(export_flowjo10_workspace(gs, out_wsp, fcs_root = fcs_dir))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, out_wsp, fcs_root = fcs_dir)))
   
   # FCS file must appear in fcs_dir and carry the $FIL-derived name
   fcs_files <- list.files(fcs_dir, pattern = "\\.fcs$", full.names = TRUE)
@@ -3346,7 +3349,7 @@ test_that("export_flowjo10_workspace handles ellipsoid gate", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
 
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
 
   xml_content <- readLines(temp_file)
@@ -3374,7 +3377,7 @@ test_that("export_flowjo10_workspace handles boolean gate", {
   temp_file <- tempfile(fileext = ".wsp")
   on.exit(unlink(temp_file))
 
-  expect_true(export_flowjo10_workspace(gs, temp_file))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file)))
   expect_true(file.exists(temp_file))
 
   xml_content <- readLines(temp_file)
@@ -3399,7 +3402,7 @@ test_that("export_flowjo10_workspace writes FCS files with fcs_root", {
 
   temp_file <- file.path(fcs_dir, "export.wsp")
 
-  expect_true(export_flowjo10_workspace(gs, temp_file, fcs_root = fcs_dir))
+  expect_true(suppressWarnings(export_flowjo10_workspace(gs, temp_file, fcs_root = fcs_dir)))
   expect_true(file.exists(temp_file))
   expect_true(any(grepl("\\.fcs$", list.files(fcs_dir), ignore.case = TRUE)))
 })

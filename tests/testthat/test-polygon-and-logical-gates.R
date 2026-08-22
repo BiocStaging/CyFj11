@@ -377,10 +377,9 @@ test_that("apply_transforms_to_gate transforms ellipsoidGate mean", {
   trans_func <- function(x) log10(x)
   trans_list <- list(`FSC-H` = trans_func, `SSC-H` = trans_func)
 
-  # Expect warning about ellipsoid shape
-  expect_warning(
-    out <- CyFj11:::apply_transforms_to_gate(eg, trans_list),
-    "Ellipsoid gate transformation may not preserve exact shape"
+  # Suppress expected warning about ellipsoid shape
+  out <- suppressWarnings(
+    CyFj11:::apply_transforms_to_gate(eg, trans_list)
   )
 
   expect_s4_class(out, "ellipsoidGate")

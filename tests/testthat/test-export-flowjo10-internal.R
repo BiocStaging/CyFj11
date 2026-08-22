@@ -616,7 +616,10 @@ test_that("generate_sample_subpopulations_xml recurses for nested gates", {
              parent = "parent")
   recompute(gs)
 
-  gates <- CyFj11:::extract_gates_from_gatingset_v10(gs)
+  # Suppress warnings about no transformations found (normal for synthetic data)
+  gates <- suppressWarnings(
+    CyFj11:::extract_gates_from_gatingset_v10(gs)
+  )
   pops <- CyFj11:::extract_populations_from_gatingset_v10(
     gs,
     CyFj11:::extract_samples_from_gatingset_v10(gs),
@@ -796,7 +799,10 @@ test_that("generate_sample_subpopulations_xml handles polygon and ellipsoid gate
   gs_pop_add(gs, eg, parent = "root")
   recompute(gs)
 
-  gates <- CyFj11:::extract_gates_from_gatingset_v10(gs)
+  # Expect warnings about no transformations and ellipsoid transformation
+  gates <- suppressWarnings(
+    CyFj11:::extract_gates_from_gatingset_v10(gs)
+  )
   pops <- CyFj11:::extract_populations_from_gatingset_v10(
     gs,
     CyFj11:::extract_samples_from_gatingset_v10(gs),

@@ -656,7 +656,10 @@ test_that("get_transform_spec returns NULL for missing transform (triggers Linea
 
   # get_transform_spec returns NULL when no transform found
   # The caller (convert_rectangle_to_flowjo10) then uses Linear passthrough
-  result <- CyFj11:::get_transform_spec(gh, "FSC-A")
+  expect_warning(
+    result <- CyFj11:::get_transform_spec(gh, "FSC-A"),
+    "No transformations found"
+  )
 
   # Returns NULL, which triggers Linear passthrough in caller
   expect_null(result)
@@ -756,11 +759,14 @@ test_that("export_flowjo10_workspace with fcs_root triggers write_fcs_files_to_d
   dir.create(fcs_root, showWarnings = FALSE, recursive = TRUE)
 
   # Export with fcs_root - this triggers line 71
-  result <- export_flowjo10_workspace(
-    gating_set = gs,
-    output_path = output_path,
-    fcs_root = fcs_root,
-    overwrite = TRUE
+  # Suppress warning about no transformations found (normal for synthetic data)
+  result <- suppressWarnings(
+    export_flowjo10_workspace(
+      gating_set = gs,
+      output_path = output_path,
+      fcs_root = fcs_root,
+      overwrite = TRUE
+    )
   )
 
   expect_true(result)
