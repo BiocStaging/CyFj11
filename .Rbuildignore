@@ -51,3 +51,4 @@ extract_flowjo_counts.R
 vignettes/compensation-workflow.html
 vignettes/compensation-workflow.Rmd
 ^\.claude$
+hoos.txt

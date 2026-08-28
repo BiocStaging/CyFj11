@@ -9,7 +9,6 @@
 *.pdf
 *.html
 *.RData
-man
 lib
 ..Rcheck
 data/*

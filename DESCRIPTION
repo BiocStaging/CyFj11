@@ -1,7 +1,7 @@
 Package: CyFj11
 Type: Package
 Title: Parse FlowJo V11 Workspace Files and Export to FlowJo V10
-Version: 0.99.105
+Version: 0.99.106
 Authors@R: c(
     person("Bernd",    "Jagla",
            email   = "bernd.jagla@pasteur.fr",
@@ -67,5 +67,5 @@ biocViews: FlowCytometry, DataImport, Infrastructure, Preprocessing
 URL: https://github.com/C3BI-pasteur-fr/CyFj11
 BugReports: https://github.com/C3BI-pasteur-fr/CyFj11/issues
 Roxygen: list(markdown = TRUE)
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0
 Config/testthat/edition: 3
