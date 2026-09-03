@@ -438,67 +438,64 @@ identify_logical_gates <- function(populations, populationDefinitions) {
   }
   
   # Process each population to find logical gates
-  results <- list()
-  
-  for (i in seq_along(populations)) {
-    pop <- populations[[i]]
-    
-    # Get the population definition
+  # First, identify which populations are logical gates
+  logical_gate_indices <- which(vapply(populations, function(pop) {
     pop_def_uuid <- unlist(pop$parents$populationDefinitions)
-    if (is.null(pop_def_uuid) || length(pop_def_uuid) == 0) {
-      next
-    }
-    
+    if (is.null(pop_def_uuid) || length(pop_def_uuid) == 0) return(FALSE)
     pop_def <- find_pop_def_by_uuid(pop_def_uuid[1])
-    if (is.null(pop_def)) {
-      next
-    }
-    
-    # Check if this is a logical gate
+    if (is.null(pop_def)) return(FALSE)
+    !is.null(pop_def$definition$type) && pop_def$definition$type %in% c("and", "or", "not")
+  }, logical(1)))
+
+  # Process logical gates and collect results
+  results_list <- lapply(logical_gate_indices, function(i) {
+    pop <- populations[[i]]
+    pop_def_uuid <- unlist(pop$parents$populationDefinitions)[1]
+    pop_def <- find_pop_def_by_uuid(pop_def_uuid)
     gate_type <- pop_def$definition$type
-    
-    if (!is.null(gate_type) && gate_type %in% c("and", "or", "not")) {
-      gate_name <- unlist(pop_def$definition$name)
-      if (.pkgenv$verbose) message(sprintf("Found logical gate: %s (type: %s, uuid: %s)", # nocov
-                                           gate_name, gate_type, pop$uuid))
-      
-      # Find combined populations
-      combined <- find_combined_populations(pop)
-      
-      if (!is.null(combined) && length(combined) > 0) {
-        combined_names <- sapply(combined, function(x) x$name)
-        if (.pkgenv$verbose) message(sprintf("  - Combines: %s", paste(combined_names, collapse = ", "))) # nocov
-        
-        # Add gateDefinition if missing
-        if (is.null(pop_def$definition$gateDefinition)) {
-          if (.pkgenv$verbose) message(sprintf("  - Adding gateDefinition to populationDefinitions")) # nocov
-          populationDefinitions[[pop_def$uuid]]$definition$gateDefinition <- list(
-            type = "logical",
-            operator = gate_type,
-            components = combined_names,
-            component_uuids = sapply(combined, function(x) x$population_uuid)
-          )
-        }
-        
-        result <- list(
-          population_uuid = pop$uuid,
-          definition_uuid = pop_def$uuid,
-          gate_name = gate_name,
-          gate_type = gate_type,
-          combined_populations = combined_names,
-          combined_population_uuids = sapply(combined, function(x) x$population_uuid),
-          combined_definition_uuids = sapply(combined, function(x) x$definition_uuid),
-          num_components = length(combined)
+    gate_name <- unlist(pop_def$definition$name)
+
+    if (.pkgenv$verbose) message(sprintf("Found logical gate: %s (type: %s, uuid: %s)", # nocov
+                                         gate_name, gate_type, pop$uuid))
+
+    # Find combined populations
+    combined <- find_combined_populations(pop)
+
+    if (!is.null(combined) && length(combined) > 0) {
+      combined_names <- sapply(combined, function(x) x$name)
+      if (.pkgenv$verbose) message(sprintf("  - Combines: %s", paste(combined_names, collapse = ", "))) # nocov
+
+      # Add gateDefinition if missing
+      if (is.null(pop_def$definition$gateDefinition)) {
+        if (.pkgenv$verbose) message(sprintf("  - Adding gateDefinition to populationDefinitions")) # nocov
+        populationDefinitions[[pop_def$uuid]]$definition$gateDefinition <<- list(
+          type = "logical",
+          operator = gate_type,
+          components = combined_names,
+          component_uuids = sapply(combined, function(x) x$population_uuid)
         )
-        
-        results <- c(results, list(result))
-      } else {
-        message("  - Warning: No combined populations found!")
-        message(sprintf("  - parents$populations: %s", 
-                        paste(unlist(pop$parents$populations), collapse = ", ")))
       }
+
+      list(
+        population_uuid = pop$uuid,
+        definition_uuid = pop_def$uuid,
+        gate_name = gate_name,
+        gate_type = gate_type,
+        combined_populations = combined_names,
+        combined_population_uuids = sapply(combined, function(x) x$population_uuid),
+        combined_definition_uuids = sapply(combined, function(x) x$definition_uuid),
+        num_components = length(combined)
+      )
+    } else {
+      message("  - Warning: No combined populations found!")
+      message(sprintf("  - parents$populations: %s",
+                      paste(unlist(pop$parents$populations), collapse = ", ")))
+      NULL
     }
-  }
+  })
+
+  # Remove NULL entries
+  results <- results_list[!vapply(results_list, is.null, logical(1))]
   
   # Return both the gate info AND the updated populationDefinitions
   return(list(
@@ -509,48 +506,56 @@ identify_logical_gates <- function(populations, populationDefinitions) {
 
 # Remove duplicate children at each level based on UUID
 deduplicate_tree <- function(tree) {
-  
+
   deduplicate_node <- function(node) {
     if (!is.list(node)) {
       return(node)
     }
-    
+
     # Process children if they exist
     if (!is.null(node$children) && length(node$children) > 0) {
-      
-      # Track seen UUIDs at this level
+
+      # Use Filter to keep only first occurrence of each UUID
+      # For non-list children or children with unique UUIDs, keep them
       seen_uuids <- character()
-      unique_children <- list()
-      
-      for (child in node$children) {
+      keep_indices <- logical(length(node$children))
+
+      for (i in seq_along(node$children)) {
+        child <- node$children[[i]]
         if (!is.list(child)) {
-          unique_children <- c(unique_children, list(child))
-          next
-        }
-        
-        child_uuid <- child$uuid
-        
-        if (is.null(child_uuid) || !(child_uuid %in% seen_uuids)) {
-          # First time seeing this UUID - keep it
-          if (!is.null(child_uuid)) {
-            seen_uuids <- c(seen_uuids, child_uuid)
+          # Keep non-list children
+          keep_indices[i] <- TRUE
+        } else {
+          child_uuid <- child$uuid
+          if (is.null(child_uuid) || !(child_uuid %in% seen_uuids)) {
+            # First time seeing this UUID - keep it
+            if (!is.null(child_uuid)) {
+              seen_uuids <- c(seen_uuids, child_uuid)
+            }
+            keep_indices[i] <- TRUE
           }
-          
-          # Recursively deduplicate this child's children
-          child <- deduplicate_node(child)
-          unique_children <- c(unique_children, list(child))
         }
       }
-      
+
+      # Filter to unique children, then recursively deduplicate
+      unique_children <- node$children[keep_indices]
+      unique_children <- lapply(unique_children, function(child) {
+        if (is.list(child)) {
+          deduplicate_node(child)
+        } else {
+          child
+        }
+      })
+
       node$children <- unique_children
       if (length(node$children) == 0) {
         node$children <- NULL
       }
     }
-    
+
     return(node)
   }
-  
+
   deduplicate_node(tree)
 }
 
@@ -590,14 +595,14 @@ create_logical_gate_summary <- function(logical_gates) {
 
 # Summarize logical gates in tree
 summarize_logical_gates <- function(tree) {
-  
+
   collect_logical_gates <- function(node, path = "") {
-    gates <- list()
-    
+    gates_list <- list()
+
     if (!is.list(node)) {
-      return(gates)
+      return(gates_list)
     }
-    
+
     # Build current_path handling vector cases
     current_path <- if (!is.null(node$name)) {
       node_names <- unlist(node$name)
@@ -611,8 +616,8 @@ summarize_logical_gates <- function(tree) {
     } else {
       path
     }
-    
-    
+
+
     if (!is.null(node$type) && node$type %in% c("and", "or", "not")) {
       gate_info <- list(
         path = current_path,
@@ -620,24 +625,25 @@ summarize_logical_gates <- function(tree) {
         type = node$type,
         uuid = node$uuid
       )
-      
+
       if (!is.null(node$logical_gate_info)) {
         gate_info$combined_populations <- node$logical_gate_info$combined_populations
         gate_info$num_components <- length(node$logical_gate_info$combined_populations)
       } else {
         gate_info$num_components <- 0
       }
-      
-      gates <- c(gates, list(gate_info))
+
+      gates_list <- list(gate_info)
     }
-    
+
     if (!is.null(node$children) && is.list(node$children)) {
-      for (child in node$children) {
-        gates <- c(gates, collect_logical_gates(child, current_path))
-      }
+      child_gates <- lapply(node$children, function(child) {
+        collect_logical_gates(child, current_path)
+      })
+      gates_list <- c(gates_list, unlist(child_gates, recursive = FALSE))
     }
-    
-    return(gates)
+
+    return(gates_list)
   }
   
   gates <- collect_logical_gates(tree)

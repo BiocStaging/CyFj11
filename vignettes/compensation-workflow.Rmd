@@ -14,8 +14,6 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 
-# Only evaluate data-dependent chunks when FlowSOM is available.
-has_flowsom <- requireNamespace("FlowSOM", quietly = TRUE)
 ```
 
 ```{r setup}
@@ -23,6 +21,7 @@ library(CyFj11)
 library(flowCore)
 library(flowWorkspace)
 library(ggcyto)
+library(FlowSOM)
 ```
 
 ## Introduction
@@ -51,7 +50,7 @@ BiocManager::install("FlowSOM")
 
 Locate the files:
 
-```{r locate-flowsom, eval=has_flowsom}
+```{r locate-flowsom, eval=TRUE}
 flowsom_fcs <- system.file("extdata", "68983.fcs", package = "FlowSOM")
 flowsom_wsp <- system.file("extdata", "gating.wsp", package = "FlowSOM")
 
@@ -63,7 +62,7 @@ cat("WSP:", flowsom_wsp, "\n")
 Copy the FCS file into a clean temporary directory so the workspace can find it
 by its original name:
 
-```{r prepare-temp, eval=has_flowsom}
+```{r prepare-temp, eval=TRUE}
 test_dir <- tempfile("cyfj11_flowsom_")
 dir.create(test_dir, showWarnings = FALSE)
 file.copy(flowsom_fcs, file.path(test_dir, "68983.fcs"), overwrite = TRUE)
@@ -74,7 +73,7 @@ cat("Working directory:", test_dir, "\n")
 
 Use `CytoML` to read the FlowJo v10 XML workspace and build a `GatingSet`.
 
-```{r import-v10, eval=has_flowsom}
+```{r import-v10, eval=TRUE}
 library(CytoML)
 
 ws <- CytoML::open_flowjo_xml(flowsom_wsp)
@@ -93,7 +92,7 @@ print(flowWorkspace::gs_get_pop_paths(gs))
 
 Inspect the population counts:
 
-```{r counts-before, eval=has_flowsom}
+```{r counts-before, eval=TRUE}
 stats_before <- flowWorkspace::gs_pop_get_count_fast(gs)
 head(stats_before[, c("Population", "Count")])
 ```
@@ -103,7 +102,7 @@ head(stats_before[, c("Population", "Count")])
 Now export the same `GatingSet` to a new FlowJo v10 `.wsp` file using
 `CyFj11::export_flowjo10_workspace()`.
 
-```{r export-v10, eval=has_flowsom}
+```{r export-v10, eval=TRUE}
 export_path <- file.path(test_dir, "test14_export.wsp")
 CyFj11::export_flowjo10_workspace(gs[[1]], export_path)
 
@@ -116,7 +115,7 @@ cat("Exported workspace:", export_path, "\n")
 Read the exported workspace back with `CytoML` and compare the population
 counts. They should match the original import.
 
-```{r reimport, eval=has_flowsom}
+```{r reimport, eval=TRUE}
 ws2 <- CytoML::open_flowjo_xml(export_path)
 gs2 <- CytoML::flowjo_to_gatingset(
   ws2,
@@ -147,7 +146,7 @@ Plot a gate from the imported `GatingSet`. Because the original FlowSOM
 workspace uses linear scaling, the default axes are appropriate here. For
 biexponential channels you may prefer `ggcyto_par_set(limits = "data")`.
 
-```{r plot, eval=has_flowsom, fig.width=7, fig.height=6}
+```{r plot, eval=TRUE, fig.width=7, fig.height=6}
 pops <- flowWorkspace::gs_get_pop_paths(gs)
 plot_pop <- if (length(pops) > 1) pops[2] else pops[1]
 

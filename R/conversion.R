@@ -171,8 +171,8 @@ fj11_to_gatingset <- function(fj11_workspace,
   selected_group <- groups[[selected_group_uuid]]
   
   if (.pkgenv$verbose) {
-    cat("Selected group:", group_info$name[group_idx], "\n")
-    cat("Contains", length(selected_group$results$dataSources), "samples\n")
+    message("Selected group:", group_info$name[group_idx], "\n")
+    message("Contains", length(selected_group$results$dataSources), "samples\n")
   }
   # Step 2: Get samples in group ----
   sample_uuids <- selected_group$results$dataSources
@@ -180,7 +180,7 @@ fj11_to_gatingset <- function(fj11_workspace,
   # Filter samples based on subset argument
   sample_uuids <- filter_samples(sample_uuids, subset, dataSources, keywords)
   
-  if (.pkgenv$verbose) cat("Processing", length(sample_uuids), "samples\n\n")
+  if (.pkgenv$verbose) message("Processing", length(sample_uuids), "samples\n\n")
   
   # Step 3: Resolve FCS file paths ----
   if (is.null(cytoset)) {
@@ -188,7 +188,7 @@ fj11_to_gatingset <- function(fj11_workspace,
       stop("Either 'path' or 'cytoset' must be provided")
     }
     
-    if (.pkgenv$verbose) cat("Resolving FCS file paths...\n")
+    if (.pkgenv$verbose) message("Resolving FCS file paths...\n")
     path_resolution <- resolve_all_fcs_paths(
       dataSources = dataSources,
       root_dir = path,
@@ -239,7 +239,7 @@ fj11_to_gatingset <- function(fj11_workspace,
   
   # Step 4: Load data into cytoset ----
   if (is.null(cytoset)) {
-    if (.pkgenv$verbose) cat("\nLoading FCS files into cytoset...\n")
+    if (.pkgenv$verbose) message("\nLoading FCS files into cytoset...\n")
     fcs_files <- sample_file_map[unlist(sample_uuids)]
     
     # Create cytoset from FCS files
@@ -253,7 +253,7 @@ fj11_to_gatingset <- function(fj11_workspace,
   }
   
   # Step 5: Build gating hierarchy ----
-  if (.pkgenv$verbose) cat("\nBuilding gating hierarchy...\n")
+  if (.pkgenv$verbose) message("\nBuilding gating hierarchy...\n")
   
   # Get root population (usually the ungated data)
   root_pop_uuid <- find_root_population(populations, populationDefinitions, sample_uuids[1])
@@ -269,7 +269,7 @@ fj11_to_gatingset <- function(fj11_workspace,
     )
   })
   # Step 8: Extract transformations ----
-  if (.pkgenv$verbose) cat("\nExtracting transformations...\n")
+  if (.pkgenv$verbose) message("\nExtracting transformations...\n")
   trans_list <- extract_transformations(
     populationDefinitions = populationDefinitions,
     sample_uuids = sample_uuids
@@ -277,7 +277,7 @@ fj11_to_gatingset <- function(fj11_workspace,
   
   # Step 6: Extract gates ----
   if (include_gates) {
-    if (.pkgenv$verbose) cat("\nExtracting gates...\n")
+    if (.pkgenv$verbose) message("\nExtracting gates...\n")
 
     # save(file = "extract_all_gates.Rdata", list = ls())
     # load("extract_all_gates.Rdata")
@@ -293,7 +293,7 @@ fj11_to_gatingset <- function(fj11_workspace,
   }
   # browser()
   # Step 7: Extract compensation ----
-  if (.pkgenv$verbose) cat("\nExtracting compensation matrices...\n")
+  if (.pkgenv$verbose) message("\nExtracting compensation matrices...\n")
   comp_list <- extract_compensation(
     dataSources = dataSources,
     sample_uuids = sample_uuids,
@@ -303,7 +303,7 @@ fj11_to_gatingset <- function(fj11_workspace,
   
   # browser()
   # Step 9: Create per-sample GatingSet list ----
-  if (.pkgenv$verbose) cat("\nCreating GatingSet list...\n")
+  if (.pkgenv$verbose) message("\nCreating GatingSet list...\n")
   gsList <- create_gatingset_from_cytoset(
     cytoset = cytoset,
     gating_trees = gating_trees,
@@ -322,36 +322,36 @@ fj11_to_gatingset <- function(fj11_workspace,
   # browser()
   # Step 10: Execute gating ----
   if (execute && include_gates) {
-    if (.pkgenv$verbose) cat("\nExecuting gates...\n")
+    if (.pkgenv$verbose) message("\nExecuting gates...\n")
 
     lapply(gsList, flowWorkspace::recompute)
 
-    if (.pkgenv$verbose) cat("Gating complete\n")
+    if (.pkgenv$verbose) message("Gating complete\n")
   } else {
-    if (.pkgenv$verbose) cat("Gating not executed (set execute=TRUE to compute cell counts)\n")
+    if (.pkgenv$verbose) message("Gating not executed (set execute=TRUE to compute cell counts)\n")
   }
 
   # # Step 11: Compute boolean gates ----
   if (.pkgenv$verbose) {
-    cat("\n")
-    cat("========================================\n")
-    cat("  GatingSet List Created Successfully\n")
-    cat("========================================\n")
-    cat("Samples:     ", length(gsList), "\n")
+    message("\n")
+    message("========================================\n")
+    message("  GatingSet List Created Successfully\n")
+    message("========================================\n")
+    message("Samples:     ", length(gsList), "\n")
 
     # Safely get population count
     if (!is.null(gsList) && length(gsList) > 0 && !is.null(gsList[[1]])) {
-      cat("Populations: ", length(flowWorkspace::gs_get_pop_paths(gsList[[1]])), "\n")
+      message("Populations: ", length(flowWorkspace::gs_get_pop_paths(gsList[[1]])), "\n")
     } else {
-      cat("Populations: 0 (GatingSet list is empty)\n")
+      message("Populations: 0 (GatingSet list is empty)\n")
     }
 
-    cat("Execute:     ", execute, "\n")
-    cat("======================================\n\n")
+    message("Execute:     ", execute, "\n")
+    message("======================================\n\n")
 
     # Debug information before returning
-    cat("DEBUG: About to return GatingSet\n")
-    cat("DEBUG: gsList is null:", is.null(gsList), "\n")
+    message("DEBUG: About to return GatingSet\n")
+    message("DEBUG: gsList is null:", is.null(gsList), "\n")
   }
   return(gsList)
 }

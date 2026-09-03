@@ -46,17 +46,17 @@ process_zip_archive <- function(zip_path) {
   on.exit({
     if(dir.exists(work_dir)) {
       unlink(work_dir, recursive = TRUE)
-      if (.pkgenv$verbose) cat("Cleaned up temporary directory:", work_dir, "\n") # nocov
+      if (.pkgenv$verbose) message("Cleaned up temporary directory:", work_dir, "\n") # nocov
     }
   })
   
-  if (.pkgenv$verbose) cat("Created temporary directory:", work_dir, "\n") # nocov
+  if (.pkgenv$verbose) message("Created temporary directory:", work_dir, "\n") # nocov
   
   # Extract all files from the ZIP archive
   unzip(zip_path, exdir = work_dir)
   zip_info <- list.files(work_dir, recursive = TRUE, full.names = TRUE)
   if (.pkgenv$verbose) { # nocov
-    cat("Archive contains", length(zip_info), "files:\n")
+    message("Archive contains", length(zip_info), "files:\n")
   print(zip_info)
   }
   # Find target files (manifest and JSON)
@@ -64,8 +64,8 @@ process_zip_archive <- function(zip_path) {
   json_files <- grep("\\.json$", zip_info, value = TRUE)
   
   if (.pkgenv$verbose) { # nocov
-    cat("\nFound", length(manifest_files), "manifest file(s)\n")
-  cat("Found", length(json_files), "JSON file(s)\n")
+    message("\nFound", length(manifest_files), "manifest file(s)\n")
+  message("Found", length(json_files), "JSON file(s)\n")
   }
   # Initialize results structure
   results = list(
@@ -157,16 +157,16 @@ read_flowjo11_workspace <- function(workspace_path) {
   # Add class attribute for S3 methods
   class(workspace) <- "flowjo11_workspace"
   if (.pkgenv$verbose) { # nocov
-    cat("Successfully parsed FlowJo v11 workspace\n")
-    cat("  - Manifest files:", length(workspace$manifest), "\n")
-    cat("  - JSON files:", length(workspace$json), "\n")
-    cat("  - Groups:", length(workspace$groups), "\n")
-    cat("  - DataSources:", length(workspace$dataSources), "\n")
-    cat("  - PopulationDefinitions:", length(workspace$populationDefinitions), "\n")
-    cat("  - Populations:", length(workspace$populations), "\n")
-    cat("  - Reports:", length(workspace$reports), "\n")
-    cat("  - Platforms:", length(workspace$platforms), "\n")
-    cat("  - Cytometers:", length(workspace$cytometers), "\n")
+    message("Successfully parsed FlowJo v11 workspace\n")
+    message("  - Manifest files:", length(workspace$manifest), "\n")
+    message("  - JSON files:", length(workspace$json), "\n")
+    message("  - Groups:", length(workspace$groups), "\n")
+    message("  - DataSources:", length(workspace$dataSources), "\n")
+    message("  - PopulationDefinitions:", length(workspace$populationDefinitions), "\n")
+    message("  - Populations:", length(workspace$populations), "\n")
+    message("  - Reports:", length(workspace$reports), "\n")
+    message("  - Platforms:", length(workspace$platforms), "\n")
+    message("  - Cytometers:", length(workspace$cytometers), "\n")
   }
   return(workspace)
 }

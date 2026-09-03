@@ -382,20 +382,11 @@ build_spillover_matrix_xml <- function(spill_matrix, matrix_id, indent = "     "
   # "compensation parameter 'Comp-FITC-A' not found in cytoframe parameters".
   param_names <- sub("^Comp-", "", param_names)
 
-  lines <- c(
-    sprintf('%s<transforms:spilloverMatrix spectral="0" weightOptAlgorithmType="OLS" prefix="Comp-" name="Acquisition-defined" editable="0" matrixType="wizardDefined" color="#c0c0c0" version="FlowJo-10.10.1" status="FINALIZED" transforms:id="%s" suffix="" >',
-            indent, xml_encode(matrix_id)),
-    sprintf('%s  <data-type:parameters>', indent)
-  )
-
-  for (p in param_names) {
-    lines <- c(lines,
-               sprintf('%s    <data-type:parameter data-type:name="%s" userProvidedCompInfix="Comp-%s" />',
-                       indent, xml_encode(p), xml_encode(p)))
-  }
-
-  lines <- c(lines,
-             sprintf('%s  </data-type:parameters>', indent))
+  # Build parameter lines using vapply (vectorized)
+  param_lines <- vapply(param_names, function(p) {
+    sprintf('%s    <data-type:parameter data-type:name="%s" userProvidedCompInfix="Comp-%s" />',
+            indent, xml_encode(p), xml_encode(p))
+  }, character(1))
 
   if (is.null(rownames(spill_matrix))) {
     rownames(spill_matrix) <- param_names
@@ -408,21 +399,32 @@ build_spillover_matrix_xml <- function(spill_matrix, matrix_id, indent = "     "
     colnames(spill_matrix) <- sub("^Comp-", "", colnames(spill_matrix))
   }
 
-  for (p in param_names) {
-    lines <- c(lines,
-               sprintf('%s  <transforms:spillover data-type:parameter="%s" userProvidedCompInfix="Comp-%s" >',
-                       indent, xml_encode(p), xml_encode(p)))
-    for (q in param_names) {
+  # Build spillover coefficient lines using nested vapply
+  spillover_lines <- vapply(param_names, function(p) {
+    coef_lines <- vapply(param_names, function(q) {
       val <- spill_matrix[q, p]
       if (is.na(val)) val <- 0
-      lines <- c(lines,
-                 sprintf('%s    <transforms:coefficient data-type:parameter="%s" transforms:value="%.10g" />',
-                         indent, xml_encode(q), val))
-    }
-    lines <- c(lines, sprintf('%s  </transforms:spillover>', indent))
-  }
+      sprintf('%s    <transforms:coefficient data-type:parameter="%s" transforms:value="%.10g" />',
+              indent, xml_encode(q), val)
+    }, character(1))
+    paste(c(
+      sprintf('%s  <transforms:spillover data-type:parameter="%s" userProvidedCompInfix="Comp-%s" >',
+              indent, xml_encode(p), xml_encode(p)),
+      coef_lines,
+      sprintf('%s  </transforms:spillover>', indent)
+    ), collapse = "\n")
+  }, character(1))
 
-  lines <- c(lines, sprintf('%s</transforms:spilloverMatrix>', indent))
+  # Combine all lines
+  lines <- c(
+    sprintf('%s<transforms:spilloverMatrix spectral="0" weightOptAlgorithmType="OLS" prefix="Comp-" name="Acquisition-defined" editable="0" matrixType="wizardDefined" color="#c0c0c0" version="FlowJo-10.10.1" status="FINALIZED" transforms:id="%s" suffix="" >',
+            indent, xml_encode(matrix_id)),
+    sprintf('%s  <data-type:parameters>', indent),
+    param_lines,
+    sprintf('%s  </data-type:parameters>', indent),
+    spillover_lines,
+    sprintf('%s</transforms:spilloverMatrix>', indent)
+  )
   lines
 }
 #' Extract Gates from GatingSet for FlowJo v10
@@ -435,21 +437,25 @@ extract_gates_from_gatingset_v10 <- function(gating_set) {
   gates <- list()
   id_lookup <- list()  # Maps pop_path to FlowJo ID
   id_counter <- as.integer(Sys.time())  # Starting point for IDs
-  
+
   # Helper function to generate FlowJo-style ID
+  # Returns new ID and updates counter by reference (using environment)
+  id_env <- new.env(parent = emptyenv())
+  id_env$counter <- id_counter
+
   generate_flowjo_id <- function() {
-    id_counter <<- id_counter + 1
-    return(paste0("ID", id_counter))
+    id_env$counter <- id_env$counter + 1L
+    return(paste0("ID", id_env$counter))
   }
-  
+
   # Helper function to get or create FlowJo ID for a sample/population combination
   get_or_create_flowjo_id <- function(sample_name, pop_path) {
     lookup_key <- paste0(sample_name, "::", pop_path)
-    
-    if (!lookup_key %in% names(id_lookup)) {
-      id_lookup[[lookup_key]] <<- generate_flowjo_id()
+
+    if (is.null(id_lookup[[lookup_key]])) {
+      id_lookup[[lookup_key]] <- generate_flowjo_id()
     }
-    
+
     return(id_lookup[[lookup_key]])
   }
   
@@ -761,25 +767,30 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
 #' @return Character vector of unique channel names referenced by gates.
 #' @keywords internal
 get_referenced_channels <- function(gates) {
-  channels <- character(0)
   if (is.null(gates) || is.null(gates$gates)) {
-    return(channels)
+    return(character(0))
   }
-  for (gate in gates$gates) {
+
+  # Extract all channel names using lapply and unlist (vectorized)
+  all_channels <- unlist(lapply(gates$gates, function(gate) {
     def <- gate$definition
-    if (is.null(def)) next
+    if (is.null(def)) return(character(0))
+
     dims <- def$dimensions
-    if (!is.null(dims)) {
-      for (dim in dims) {
-        if (!is.null(dim$parameter)) {
-          channels <- c(channels, dim$parameter)
-        }
-      }
+    dim_params <- if (!is.null(dims)) {
+      vapply(dims, function(dim) dim$parameter, character(1))
+    } else {
+      character(0)
     }
-    if (!is.null(def$x_param)) channels <- c(channels, def$x_param)
-    if (!is.null(def$y_param)) channels <- c(channels, def$y_param)
-  }
-  unique(channels)
+
+    c(
+      dim_params[!is.na(dim_params)],
+      if (!is.null(def$x_param)) def$x_param else character(0),
+      if (!is.null(def$y_param)) def$y_param else character(0)
+    )
+  }), use.names = FALSE)
+
+  unique(all_channels)
 }
 
 
@@ -1529,12 +1540,12 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
         }
         
         if (length(ts_transforms) > 0) {
-          transform_store_lines <- c('       <TransformStore>', '         <MatrixID matrixId="18405cb6-3c7f-485d-a690-1690f98d59a8" >', '           <Transforms>')
-          for (tr_idx in seq_along(ts_transforms)) {
+          # Build transform lines using lapply (vectorized)
+          transform_xml_lines <- lapply(seq_along(ts_transforms), function(tr_idx) {
             channel <- names(ts_transforms)[tr_idx]
             atr_tr <- attributes(ts_transforms[[tr_idx]])
             if (is.null(atr_tr$type)) atr_tr$type <- "Linear"
-            
+
             data_range <- tryCatch({
               fr <- gh_pop_get_data(sample_gh_for_ts, "root")
               kw <- flowCore::keyword(fr)
@@ -1557,11 +1568,19 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                 c(0, 262144)
               }
             }, error = function(e) c(0, 262144))
-            
-            transform_store_lines <- c(transform_store_lines,
-                                       emit_transform_xml(atr_tr$type, channel, ts_transforms[[tr_idx]], atr_tr, data_range, indent = "             "))
-          }
-          transform_store_lines <- c(transform_store_lines, '           </Transforms>', '         </MatrixID>', '       </TransformStore>')
+
+            emit_transform_xml(atr_tr$type, channel, ts_transforms[[tr_idx]], atr_tr, data_range, indent = "             ")
+          })
+
+          transform_store_lines <- c(
+            '       <TransformStore>',
+            '         <MatrixID matrixId="18405cb6-3c7f-485d-a690-1690f98d59a8" >',
+            '           <Transforms>',
+            unlist(transform_xml_lines),
+            '           </Transforms>',
+            '         </MatrixID>',
+            '       </TransformStore>'
+          )
         }
       }
     }
@@ -2206,7 +2225,7 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
   
   # Check if we've already visited this parent_path (cycle detection)
   if (parent_path %in% visited_paths) {
-    # cat(file = stderr(), "WARNING: Cycle detected in population hierarchy at parent_path='", parent_path, "'\n")
+    # message("WARNING: Cycle detected in population hierarchy at parent_path='", parent_path, "'\n")
     return(character(0))
   }
   
@@ -2401,12 +2420,12 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
       
       # Prevent a population from being its own parent (cycle detection)
       if (population$name == parent_path) {
-        cat(file = stderr(), "WARNING: Population '", population$name, 
+        message("WARNING: Population '", population$name, 
             "' cannot be its own parent. Skipping recursion.\n")
       } else {
         # Check if we've already visited this population
         if (population$name %in% visited_paths) {
-          cat(file = stderr(), "WARNING: Cycle detected - population '", 
+          message("WARNING: Cycle detected - population '", 
               population$name, "' already visited. Skipping recursion.\n")
         } else {
           new_visited_paths <- unique(c(visited_paths, population$name))
