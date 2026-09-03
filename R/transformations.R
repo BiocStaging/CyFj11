@@ -482,8 +482,8 @@ create_linear_transform <- function(spec) {
     domain = c(0, gateResolution)  # Add this - input range
   )
   # browser() # nocov
-  attr(trans_obj, "type") = "linear"
-  attr(trans_obj, "parameters") = list(
+  attr(trans_obj, "type") <- "linear"
+  attr(trans_obj, "parameters") <- list(
     minRange = spec[["b"]] %||% 0,
     maxRange = spec[["a"]] %||% 1,
     gateResolution = gateResolution

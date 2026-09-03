@@ -236,13 +236,14 @@ apply_param_mapping <- function(source_names, mapping, on_no_match = "keep") {
 #'   }
 #' @keywords internal
 verify_gate_marker_names <- function(gate_obj, flowframe_params, gate_source = "") {
-  warnings <- character()
+  # Collect warnings in a list, then combine at the end
+  warnings_vec <- character()
 
   # Get gate parameters
   gate_params <- tryCatch({
     flowCore::parameters(gate_obj)
   }, error = function(e) {
-    warnings <<- c(warnings, paste("Could not extract parameters from gate:", e$message))
+    warnings_vec <- c(warnings_vec, paste("Could not extract parameters from gate:", e$message))
     return(character())
   })
 
@@ -250,7 +251,7 @@ verify_gate_marker_names <- function(gate_obj, flowframe_params, gate_source = "
     return(list(
       valid = FALSE,
       mapping = list(),
-      warnings = warnings
+      warnings = warnings_vec
     ))
   }
 
@@ -266,21 +267,26 @@ verify_gate_marker_names <- function(gate_obj, flowframe_params, gate_source = "
     sanitize_slashes = TRUE
   )
 
-  # Check for unmapped parameters
-  for (param in gate_params) {
-    if (is.null(name_mapping[[param]])) {
+  # Check for unmapped parameters - collect all warnings at once
+  unmapped_params <- gate_params[vapply(gate_params, function(param) {
+    is.null(name_mapping[[param]])
+  }, logical(1))]
+
+  if (length(unmapped_params) > 0) {
+    additional_warnings <- vapply(unmapped_params, function(param) {
       msg <- paste0("Gate parameter '", param, "' does not match any flowFrame parameter")
       if (gate_source != "") {
         msg <- paste0(msg, " (gate: ", gate_source, ")")
       }
-      warnings <- c(warnings, msg)
-    }
+      msg
+    }, character(1))
+    warnings_vec <- c(warnings_vec, additional_warnings)
   }
 
   list(
-    valid = length(warnings) == 0,
+    valid = length(warnings_vec) == 0,
     mapping = name_mapping,
-    warnings = warnings
+    warnings = warnings_vec
   )
 }
 

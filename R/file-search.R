@@ -54,13 +54,13 @@ search_fcs_files <- function(root_dir, pattern = "\\.fcs$") {
   
   # Search for FCS files
   if (.pkgenv$verbose) { # nocov
-    cat("Searching for FCS files in", length(root_dir), "directories...\n")
+    message("Searching for FCS files in", length(root_dir), "directories...\n")
   }
   
   # Find all FCS files
   all_files <- unlist(lapply(root_dir, function(root) {
     if (.pkgenv$verbose) { # nocov
-      cat("  Searching in:", root, "\n")
+      message("  Searching in:", root, "\n")
     }
     list.files(
       path = root,
@@ -73,7 +73,7 @@ search_fcs_files <- function(root_dir, pattern = "\\.fcs$") {
   
   if (length(all_files) == 0) {
     if (.pkgenv$verbose) { # nocov
-      cat("Found 0 FCS files\n")
+      message("Found 0 FCS files\n")
     }
     return(data.frame(
       filename = character(),
@@ -101,11 +101,11 @@ search_fcs_files <- function(root_dir, pattern = "\\.fcs$") {
   
   n_dupes <- sum(duplicated(results$filename))
   if (n_dupes > 0 && .pkgenv$verbose) { # nocov
-    cat("  Note:", n_dupes, "duplicate filename(s) found in different directories\n")
+    message("  Note:", n_dupes, "duplicate filename(s) found in different directories\n")
   }
   
   if (.pkgenv$verbose) { # nocov
-    cat("Found", nrow(results), "FCS files\n")
+    message("Found", nrow(results), "FCS files\n")
   }
   
   return(results)
@@ -127,9 +127,9 @@ resolve_all_fcs_paths <- function(dataSources,
                                   stop_on_multiple = FALSE,
                                   stop_on_missing = TRUE) {
   
-  cat("===========================================\n")
-  cat("  Resolving FCS File Paths\n")
-  cat("===========================================\n\n")
+  message("===========================================\n")
+  message("  Resolving FCS File Paths\n")
+  message("===========================================\n\n")
   
   # Build FCS file index once
   fcs_index <- search_fcs_files(root_dir)
@@ -143,7 +143,7 @@ resolve_all_fcs_paths <- function(dataSources,
   n_missing <- 0
   n_multiple <- 0
   
-  cat("\nResolving", n_total, "sample paths...\n\n")
+  message("\nResolving", n_total, "sample paths...\n\n")
   
   # Process each data source
   for (i in seq_along(dataSources)) {
@@ -176,7 +176,7 @@ resolve_all_fcs_paths <- function(dataSources,
     
     if (length(match_idx) == 0) {
       # Not found
-      cat("x ", filename, " - NOT FOUND\n", sep = "")
+      message("x ", filename, " - NOT FOUND\n", sep = "")
       resolution_results[[i]] <- data.frame(
         sample_id = sample_id,
         flowjo_uri = flowjo_uri,
@@ -189,7 +189,7 @@ resolve_all_fcs_paths <- function(dataSources,
       
     } else if (length(match_idx) == 1) {
       # Single match
-      cat("OK ", filename, "\n", sep = "")
+      message("OK ", filename, "\n", sep = "")
       resolution_results[[i]] <- data.frame(
         sample_id = sample_id,
         flowjo_uri = flowjo_uri,
@@ -202,7 +202,7 @@ resolve_all_fcs_paths <- function(dataSources,
       
     } else {
       # Multiple matches
-      cat("!! ", filename, " - MULTIPLE MATCHES (", length(match_idx), ")\n", sep = "")
+      message("!! ", filename, " - MULTIPLE MATCHES (", length(match_idx), ")\n", sep = "")
       resolution_results[[i]] <- data.frame(
         sample_id = sample_id,
         flowjo_uri = flowjo_uri,
@@ -219,14 +219,14 @@ resolve_all_fcs_paths <- function(dataSources,
   resolution_results <- do.call(rbind, resolution_results)
   
   # Print summary
-  cat("\n===========================================\n")
-  cat("  Resolution Summary\n")
-  cat("===========================================\n")
-  cat("Total samples:  ", n_total, "\n")
-  cat("  Found:        ", n_found, sprintf(" (%.1f%%)\n", n_found/n_total*100))
-  cat("  Missing:      ", n_missing, sprintf(" (%.1f%%)\n", n_missing/n_total*100))
-  cat("  Multiple:     ", n_multiple, sprintf(" (%.1f%%)\n", n_multiple/n_total*100))
-  cat("===========================================\n\n")
+  message("\n===========================================\n")
+  message("  Resolution Summary\n")
+  message("===========================================\n")
+  message("Total samples:  ", n_total, "\n")
+  message("  Found:        ", n_found, sprintf(" (%.1f%%)\n", n_found/n_total*100))
+  message("  Missing:      ", n_missing, sprintf(" (%.1f%%)\n", n_missing/n_total*100))
+  message("  Multiple:     ", n_multiple, sprintf(" (%.1f%%)\n", n_multiple/n_total*100))
+  message("===========================================\n\n")
   
   # Handle errors based on settings
   if (stop_on_missing && n_missing > 0) {
@@ -256,7 +256,7 @@ get_sample_file_map <- function(resolution_results, include_status = "FOUND") {
   # Create named vector
   file_map <- setNames(filtered$resolved_path, filtered$sample_id)
   
-  cat("Created mapping for", length(file_map), "samples\n")
+  message("Created mapping for", length(file_map), "samples\n")
   
   return(file_map)
 }

@@ -32,6 +32,34 @@ CyFj11 is an R package designed to bridge the gap between FlowJo v11 workspaces 
 
 This asymmetric design reflects the technical realities of developing against proprietary formats without vendor documentation. While FlowJo v11 uses a complex JSON schema with extensive UUID cross-referencing that makes direct export impractical, the v10 XML format follows the documented Gating-ML 2.0 standard, making it feasible to generate valid workspaces.
 
+## Comparison with Other FlowJo Import Packages
+
+Several Bioconductor packages can import FlowJo workspaces. Here's how CyFj11 compares:
+
+| Package | FlowJo Version | Input Format | Output | Key Features |
+|---------|---------------|--------------|--------|--------------|
+| **CyFj11** | v11 | `.flowjo` (ZIP/JSON) | `GatingSet` | Native v11 support, preserves hierarchy, extracts compensation |
+| **CytoML** | v10 | `.wsp` (XML) | `GatingSet` | Gating-ML 2.0 standard, well-established |
+| **flowWorkspace** | v10 | `.wsp` (XML) | `GatingSet` | Basic v10 import |
+| **flowWorkspaceData** | v10 | `.wsp` (XML) | `GatingSet` | Example datasets |
+
+**Key advantages of CyFj11:**
+
+1. **Native FlowJo v11 support**: CyFj11 is the only Bioconductor package that directly parses FlowJo v11's `.flowjo` format (ZIP archive with JSON)
+2. **No intermediate conversion needed**: Unlike CytoML which requires FlowJo v10 XML, CyFj11 reads v11 workspaces directly
+3. **Preserves v11-specific features**: Handles compensation matrices, transformations, and population definitions from v11
+4. **Export capability**: Can export `GatingSet` objects back to FlowJo v10 `.wsp` format for round-trip workflows
+
+**When to use CyFj11:**
+- You have FlowJo v11 workspace files (`.flowjo` extension)
+- You want to import workspaces without manually exporting to v10 format in FlowJo
+- You need to preserve v11-specific compensation and transformation information
+
+**When to use CytoML:**
+- You have FlowJo v10 workspace files (`.wsp` XML format)
+- You need Gating-ML 2.0 standard compliance
+- You're working with legacy v10 workflows
+
 ## Installation
 
 To install CyFj11, ensure you have the required dependencies:

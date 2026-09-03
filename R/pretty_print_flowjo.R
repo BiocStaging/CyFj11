@@ -68,7 +68,7 @@ pretty_print_flowjo <- function(flowjo_file) {
   # Write the pretty printed JSON to file
   jsonlite::write_json(path = output_file, x = json_data, auto_unbox = TRUE, pretty = TRUE, always_decimal = TRUE)
 
-  cat("Pretty printed JSON saved to:", output_file, "\n")
+  message("Pretty printed JSON saved to:", output_file, "\n")
   
   return(output_file)
 }
