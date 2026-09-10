@@ -37,7 +37,7 @@ process_zip_archive <- function(zip_path) {
     # Validate input
     if (!file.exists(zip_path)) {
         stop("Workspace file does not exist: ", zip_path)
-    }
+        }
     # Create unique temporary directory for extraction
     work_dir <- file.path(tempdir(), paste0("processing_", Sys.getpid(), "_", round(runif(1, 10000, 99999))))
     dir.create(work_dir, recursive = TRUE)
@@ -47,8 +47,8 @@ process_zip_archive <- function(zip_path) {
         if (dir.exists(work_dir)) {
             unlink(work_dir, recursive = TRUE)
             if (.pkgenv$verbose) message("Cleaned up temporary directory:", work_dir, "\n") # nocov
-        }
-    })
+            }
+        })
 
     if (.pkgenv$verbose) message("Created temporary directory:", work_dir, "\n") # nocov
 
@@ -58,7 +58,7 @@ process_zip_archive <- function(zip_path) {
     if (.pkgenv$verbose) { # nocov
         message("Archive contains ", length(zip_info), " files:")
         if (length(zip_info)) message(paste(zip_info, collapse = "\n"))
-    }
+        }
     # Find target files (manifest and JSON)
     manifest_files <- grep("manifest\\.txt$", zip_info, value = TRUE)
     json_files <- grep("\\.json$", zip_info, value = TRUE)
@@ -66,19 +66,19 @@ process_zip_archive <- function(zip_path) {
     if (.pkgenv$verbose) { # nocov
         message("\nFound", length(manifest_files), "manifest file(s)\n")
         message("Found", length(json_files), "JSON file(s)\n")
-    }
+        }
     # Initialize results structure
     results <- list(
         manifests = list(),
         json = list()
-    )
+        )
 
     # Read manifest files (plain text)
     for (manifest_file in manifest_files) {
         if (file.exists(manifest_file)) {
             results$manifests[[basename(manifest_file)]] <- readLines(manifest_file, warn = FALSE)
+            }
         }
-    }
 
     # Read and parse JSON files
     for (json_file in json_files) {
@@ -86,17 +86,17 @@ process_zip_archive <- function(zip_path) {
             results$json[[basename(json_file)]] <- tryCatch(
                 {
                     jsonlite::fromJSON(json_file, simplifyVector = FALSE, simplifyMatrix = FALSE) # Parse JSON
-                },
+                    },
                 error = function(e) {
                     # If parsing fails, return error and raw content for debugging
                     list(error = e$message, raw_content = readLines(json_file, warn = FALSE))
-                }
-            )
+                    }
+                )
+            }
         }
-    }
 
     return(results)
-}
+    }
 
 #' Read FlowJo v11 Workspace
 #'
@@ -114,12 +114,12 @@ read_flowjo11_workspace <- function(workspace_path) {
     # Validate input
     if (!file.exists(workspace_path)) {
         stop("Workspace file does not exist: ", workspace_path)
-    }
+        }
 
     # Check file extension
     if (!grepl("\\.(fjw|flowjo)$", workspace_path)) {
         warning("Workspace file does not have expected .flowjo or .flowjo extension")
-    }
+        }
 
     # Process the ZIP archive
     if (.pkgenv$verbose) message("Reading FlowJo v11 workspace:", workspace_path, "\n") # nocov
@@ -129,7 +129,7 @@ read_flowjo11_workspace <- function(workspace_path) {
     main_json_name <- grep("^analysis-.*\\.json$", names(results$json), value = TRUE)
     if (length(main_json_name) == 0) {
         stop("No analysis JSON file found in workspace")
-    }
+        }
 
     main_json <- results$json[[main_json_name[1]]]
 
@@ -155,7 +155,7 @@ read_flowjo11_workspace <- function(workspace_path) {
         cytometers = main_json$cytometers,
         analysisRoot = main_json$analysisRoot,
         timestamp = Sys.time()
-    )
+        )
 
     # Add class attribute for S3 methods
     class(workspace) <- "flowjo11_workspace"
@@ -170,6 +170,6 @@ read_flowjo11_workspace <- function(workspace_path) {
         message("  - Reports:", length(workspace$reports), "\n")
         message("  - Platforms:", length(workspace$platforms), "\n")
         message("  - Cytometers:", length(workspace$cytometers), "\n")
-    }
+        }
     return(workspace)
-}
+    }

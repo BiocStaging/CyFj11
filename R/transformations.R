@@ -49,11 +49,11 @@ extract_transformations <- function(populationDefinitions, sample_uuids) {
             # Convert to flowWorkspace transformation objects
             trans_obj <- create_transformation_list(trans_spec = trans_spec)
             trans_list[[sample_uuid]] <- trans_obj
+            }
         }
-    }
     # browser() # nocov
     return(trans_list)
-}
+    }
 
 
 #' Extract Transformation Specification
@@ -77,11 +77,11 @@ extract_transformation_spec <- function(sample_uuid, populationDefinitions) {
         gate_def <- NULL
         if (!is.null(pop_def$definition$desyncTable) &&
             sample_uuid %in% names(pop_def$definition$desyncTable)) {
-            gate_def <- pop_def$definition$desyncTable[[sample_uuid]]
-        } else if (!is.null(pop_def$definition$gateDefinition)) {
+                gate_def <- pop_def$definition$desyncTable[[sample_uuid]]
+                } else if (!is.null(pop_def$definition$gateDefinition)) {
             # Check master gate definition
             gate_def <- pop_def$definition$gateDefinition
-        }
+            }
 
         if (is.null(gate_def)) next
 
@@ -95,9 +95,9 @@ extract_transformation_spec <- function(sample_uuid, populationDefinitions) {
                 if (!is.null(channel_name) && !(channel_name %in% names(trans_spec))) {
                     trans_spec[[channel_name]] <- parse_transformation_info(transform_info)
                     trans_spec[[channel_name]]$channel <- channel_name
+                    }
                 }
             }
-        }
 
         # Extract transformations from y-axis parameter
         if (!is.null(gate_def$yAxis) && is.list(gate_def$yAxis)) {
@@ -109,17 +109,17 @@ extract_transformation_spec <- function(sample_uuid, populationDefinitions) {
                 if (!is.null(channel_name) && !(channel_name %in% names(trans_spec))) {
                     trans_spec[[channel_name]] <- parse_transformation_info(transform_info)
                     trans_spec[[channel_name]]$channel <- channel_name
+                    }
                 }
             }
         }
-    }
 
     if (length(trans_spec) == 0) {
         return(NULL)
-    }
+        }
 
     return(trans_spec)
-}
+    }
 
 
 #' Parse Transformation Info
@@ -145,19 +145,19 @@ parse_transformation_info <- function(trans_info) {
         # "arcsinh" = "arcsinh",
         # "hyperlog" = "biexponential",  # Replace hyperlog with biexponential
         trans_type
-    )
+        )
 
     # If the transformation type is still not recognized, replace with biexponential
     if (!(normalized_type %in% c("biexponential", "logicle", "arcsinh", "log", "linear"))) {
         warning("Unknown transformation type '", trans_type, "' replaced with biexponential")
         normalized_type <- "biexponential"
-    }
+        }
 
     params <- list(
         type = normalized_type,
         channel = trans_info$channel %||% trans_info$parameter,
         vectorLength = trans_info$vectorLength %||% 256
-    )
+        )
 
     # Extract type-specific parameters
     switch(normalized_type,
@@ -174,7 +174,7 @@ parse_transformation_info <- function(trans_info) {
             params$a <- trans_info[["a"]] %||% trans_info[["A"]] %||% 0
             params$m <- trans_info[["m"]] %||% trans_info[["M"]] %||% 3.55
             params$w <- trans_info[["w"]] %||% trans_info[["W"]] %||% -25.11886
-        },
+            },
         # "arcsinh" = {
         #   browser() # nocov
         #   params$a = trans_info[["a"]] %||% trans_info[["A"]] %||% 0
@@ -190,15 +190,15 @@ parse_transformation_info <- function(trans_info) {
             params$shift <- trans_info[["shift"]] %||% trans_info[["shift"]] %||% 0
             params$base <- trans_info[["base"]] %||% trans_info[["Base"]] %||% 10
             params$vectorLength <- trans_info[["vectorLength"]] %||% 256
-        },
+            },
         "linear" = {
             params$a <- trans_info[["a"]] %||% trans_info[["A"]] %||% trans_info[["maxRange"]] %||% 1
             params$b <- trans_info[["b"]] %||% trans_info[["B"]] %||% trans_info[["minRange"]] %||% 0
-        }
-    )
+            }
+        )
 
     return(params)
-}
+    }
 
 
 #' Create Transformation List
@@ -221,15 +221,15 @@ create_transformation_list <- function(trans_spec) {
             "log" = create_log_transform(spec),
             "linear" = create_linear_transform(spec),
             NULL
-        )
+            )
 
         if (!is.null(trans_obj)) {
             trans_list[[channel]] <- trans_obj
+            }
         }
-    }
 
     return(trans_list)
-}
+    }
 
 
 #' Create Biexponential Transform (FlowJo version)
@@ -240,11 +240,11 @@ create_biexponential_transform <- function(spec) {
     # Verify spec is provided and is a list
     if (missing(spec) || is.null(spec)) {
         stop("spec argument is required")
-    }
+        }
 
     if (!is.list(spec)) {
         stop("spec must be a list")
-    }
+        }
 
     # Define valid arguments (including aliases)
     valid_args <- c(
@@ -260,7 +260,7 @@ create_biexponential_transform <- function(spec) {
         "vectorLength", "channelRange",
         # flowjo_biexp_trans specific arguments
         "n", "equal.space"
-    )
+        )
 
     # Get arguments present in spec
     spec_args <- names(spec)
@@ -286,27 +286,27 @@ create_biexponential_transform <- function(spec) {
     maxValue_params <- c("t", "T", "maxValue")
     if (sum(maxValue_params %in% spec_args) > 1) {
         warning("Multiple aliases for 'maxValue' detected (t/T/maxValue). Using first available.")
-    }
+        }
 
     pos_params <- c("m", "M", "pos")
     if (sum(pos_params %in% spec_args) > 1) {
         warning("Multiple aliases for 'pos' detected (m/M/pos). Using first available.")
-    }
+        }
 
     widthBasis_params <- c("w", "W", "widthBasis")
     if (sum(widthBasis_params %in% spec_args) > 1) {
         warning("Multiple aliases for 'widthBasis' detected (w/W/widthBasis). Using first available.")
-    }
+        }
 
     neg_params <- c("a", "A", "neg")
     if (sum(neg_params %in% spec_args) > 1) {
         warning("Multiple aliases for 'neg' detected (a/A/neg). Using first available.")
-    }
+        }
 
     channelRange_params <- c("vectorLength", "channelRange")
     if (sum(channelRange_params %in% spec_args) > 1) {
         warning("Multiple aliases for 'channelRange' detected (vectorLength/channelRange). Using first available.")
-    }
+        }
 
     # Build arguments list for flowJoTrans (via ...)
     flowJoTrans_args <- list(
@@ -315,16 +315,16 @@ create_biexponential_transform <- function(spec) {
         pos = pos,
         neg = neg,
         widthBasis = widthBasis
-    )
+        )
 
     # Extract flowjo_biexp_trans specific arguments
     biexp_args <- list()
     if ("n" %in% spec_args) {
         biexp_args$n <- spec$n
-    }
+        }
     if ("equal.space" %in% spec_args) {
         biexp_args$equal.space <- spec$equal.space
-    }
+        }
 
     # Combine all arguments
     all_args <- c(flowJoTrans_args, biexp_args)
@@ -333,10 +333,10 @@ create_biexponential_transform <- function(spec) {
     biexpTrans <- do.call(
         flowWorkspace::flowjo_biexp_trans,
         all_args
-    )
+        )
 
     biexpTrans
-}
+    }
 #' Create Log Transform (FlowJo / flowWorkspace compatible)
 #'
 #' Builds a scales::trans_new object that mirrors FlowJo's Log transform.
@@ -354,11 +354,11 @@ create_log_transform <- function(spec) {
     # Verify spec is provided and is a list
     if (missing(spec) || is.null(spec)) {
         stop("spec argument is required")
-    }
+        }
 
     if (!is.list(spec)) {
         stop("spec must be a list")
-    }
+        }
 
     # Detect parameterisation.  flowWorkspace / FlowJo v10 uses decade/offset/scale;
     # FlowJo v11 parsed metadata uses numberDecades/decadesOffset/vectorLength.
@@ -371,7 +371,7 @@ create_log_transform <- function(spec) {
         offset <- spec[["offset"]] %||% 1
         scale <- spec[["scale"]] %||% 1
         shift <- spec[["shift"]] %||% 0
-    } else {
+        } else {
         # FlowJo v11 parameterisation
         number_decades <- spec[["numberDecades"]] %||% 4
         decades_offset <- spec[["decadesOffset"]] %||% 1
@@ -381,29 +381,29 @@ create_log_transform <- function(spec) {
         if (is.null(vector_length) || length(vector_length) == 0 || vector_length == 0) {
             warning("Log transform has invalid vectorLength (", vector_length, "). Using 256.")
             vector_length <- 256
-        }
+            }
 
         decade <- number_decades
         scale <- vector_length
         offset <- 10^(decades_offset - 1)
-    }
+        }
 
     # Forward: raw -> display
     transform <- function(r) {
         (log10(pmax(r + shift, offset)) - log10(offset)) * scale / decade
-    }
+        }
 
     # Inverse: display -> raw
     inverse <- function(d) {
         10^(d * decade / scale + log10(offset)) - shift
-    }
+        }
 
     trans_obj <- scales::trans_new(
         name      = paste0("flowjo_log_", decade, "dec"),
         transform = transform,
         inverse   = inverse,
         domain    = c(0, Inf)
-    )
+        )
 
     attr(trans_obj, "type") <- "log"
     attr(trans_obj, "parameters") <- list(
@@ -411,10 +411,10 @@ create_log_transform <- function(spec) {
         offset = offset,
         scale  = scale,
         shift  = shift
-    )
+        )
 
     trans_obj
-}
+    }
 
 #' Create Linear Transform
 #' @keywords internal
@@ -422,11 +422,11 @@ create_linear_transform <- function(spec) {
     # Verify spec is provided and is a list
     if (missing(spec) || is.null(spec)) {
         stop("spec argument is required")
-    }
+        }
 
     if (!is.list(spec)) {
         stop("spec must be a list")
-    }
+        }
 
     # Define valid arguments for linear transform
     valid_args <- c("a", "b", "channel")
@@ -454,11 +454,11 @@ create_linear_transform <- function(spec) {
     # Validate numeric parameters
     if (!is.numeric(a) || length(a) != 1) {
         stop("Parameter 'a' must be a single numeric value")
-    }
+        }
 
     if (!is.numeric(b) || length(b) != 1) {
         stop("Parameter 'b' must be a single numeric value")
-    }
+        }
 
     # if (a == 0) {
     #   # browser() # nocov
@@ -475,17 +475,17 @@ create_linear_transform <- function(spec) {
         transform = function(x) b + a * x,
         inverse = function(y) (y - b) / a,
         domain = c(0, gateResolution) # Add this - input range
-    )
+        )
     # browser() # nocov
     attr(trans_obj, "type") <- "linear"
     attr(trans_obj, "parameters") <- list(
         minRange = spec[["b"]] %||% 0,
         maxRange = spec[["a"]] %||% 1,
         gateResolution = gateResolution
-    )
+        )
     attributes(trans_obj)
     trans_obj
-}
+    }
 
 
 #' Map Transformation Channel Names to flowFrame Parameter Names
@@ -502,11 +502,11 @@ create_linear_transform <- function(spec) {
 map_transformation_names <- function(trans_list, param_names) {
     if (is.null(trans_list) || length(trans_list) == 0) {
         return(list())
-    }
+        }
 
     if (is.null(param_names) || length(param_names) == 0) {
         return(trans_list)
-    }
+        }
 
     # Get transformation channel names
     trans_names <- names(trans_list)
@@ -519,7 +519,7 @@ map_transformation_names <- function(trans_list, param_names) {
         strip_comp_prefix = TRUE, # Transformations may have "Comp-" prefix
         case_insensitive = FALSE,
         sanitize_slashes = TRUE
-    )
+        )
 
     # Create mapped transformation list
     mapped_trans <- list()
@@ -530,11 +530,11 @@ map_transformation_names <- function(trans_list, param_names) {
         if (!is.null(mapped_name)) {
             # Use the original parameter name from flowFrame
             mapped_trans[[mapped_name]] <- trans_list[[trans_name]]
-        } else {
+            } else {
             # No match found - skip this transformation with warning
             warning("Could not map transformation channel '", trans_name, "' to any parameter")
+            }
         }
-    }
 
     return(mapped_trans)
-}
+    }

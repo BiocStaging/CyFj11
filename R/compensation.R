@@ -39,17 +39,17 @@ NULL
 #' @importFrom flowCore compensation
 extract_compensation <- function(dataSources,
     sample_uuids,
-        custom_compensation = NULL,
-            platforms = NULL) {
-    comp_list <- list()
+    custom_compensation = NULL,
+    platforms = NULL) {
+                comp_list <- list()
 
     # First, build a map of sample UUID to compensation matrix from platforms
-    sample_comp_map <- NULL
-    if (!is.null(platforms) && !is.null(platforms$spilloverMatrix)) {
+                sample_comp_map <- NULL
+                if (!is.null(platforms) && !is.null(platforms$spilloverMatrix)) {
         sample_comp_map <- extract_compensation_from_platforms(platforms$spilloverMatrix, dataSources, sample_uuids)
-    }
+        }
 
-    for (sample_uuid in sample_uuids) {
+                for (sample_uuid in sample_uuids) {
         ds <- dataSources[[sample_uuid]]
 
         # Check for custom compensation first
@@ -59,34 +59,34 @@ extract_compensation <- function(dataSources,
                 if (sample_uuid %in% names(custom_compensation)) {
                     comp_list[[sample_uuid]] <- validate_compensation(
                         custom_compensation[[sample_uuid]]
-                    )
+                        )
                     next
-                }
-            } else {
+                    }
+                } else {
                 # Single compensation for all samples
                 comp_list[[sample_uuid]] <- validate_compensation(custom_compensation)
                 next
+                }
             }
-        }
 
         # Try compensation from platforms first (sample-specific)
         if (!is.null(sample_comp_map) && !is.null(sample_comp_map[[sample_uuid]])) {
             comp_list[[sample_uuid]] <- sample_comp_map[[sample_uuid]]
             next
-        }
+            }
 
         # Extract from workspace (legacy method)
         comp_matrix <- extract_workspace_compensation(ds)
 
         if (!is.null(comp_matrix)) {
             comp_list[[sample_uuid]] <- comp_matrix
-        } else {
+            } else {
             warning("No compensation found for sample: ", sample_uuid)
+            }
         }
-    }
 
-    return(comp_list)
-}
+                return(comp_list)
+                }
 
 
 #' Extract Compensation from Platforms Section
@@ -99,7 +99,7 @@ extract_compensation_from_platforms <- function(spillover_matrices, dataSources 
     # Return NULL if no spillover matrices
     if (length(spillover_matrices) == 0) {
         return(NULL)
-    }
+        }
 
     # Build a map of compensation UUID to compensation matrix
     comp_map <- list()
@@ -115,14 +115,14 @@ extract_compensation_from_platforms <- function(spillover_matrices, dataSources 
             coefficients <- comp_spec$coefficients
             if (is.list(coefficients)) {
                 coefficients <- do.call(rbind, coefficients)
-            }
+                }
 
             # Get compensated channel names from parameters (e.g., "Comp-FITC-A", not "FITC-A")
             # FlowJo 11 stores the compensated names in the parameters list
             comp_names <- vapply(
                 comp_spec$parameters, function(p) p$name %||% NA_character_,
                 character(1)
-            )
+                )
 
             # Create matrix
             comp_matrix <- as.matrix(coefficients)
@@ -133,15 +133,15 @@ extract_compensation_from_platforms <- function(spillover_matrices, dataSources 
                 nrow      = nrow(comp_matrix),
                 ncol      = ncol(comp_matrix),
                 dimnames  = dimnames(comp_matrix)
-            )
+                )
             # FlowJo v11 platform matrices are often scaled so that the diagonal is 100
             # (i.e. they are 100 * the spillover matrix). flowCore::compensation()
             # expects a true spillover matrix with a diagonal of 1, so normalize.
             if (all(diag(comp_matrix) > 50)) {
                 comp_matrix <- comp_matrix / 100
-            }
+                }
             comp_matrix <- flowCore::compensation(comp_matrix)
-        }
+            }
 
         # Try spillover section if compSpec didn't work
         if (is.null(comp_matrix) && !is.null(comp_data$spillover)) {
@@ -149,7 +149,7 @@ extract_compensation_from_platforms <- function(spillover_matrices, dataSources 
             values <- spillover$values
             if (is.list(values)) {
                 values <- do.call(rbind, values)
-            }
+                }
 
             columns <- spillover$columns
 
@@ -160,27 +160,27 @@ extract_compensation_from_platforms <- function(spillover_matrices, dataSources 
                 nrow      = nrow(comp_matrix),
                 ncol      = ncol(comp_matrix),
                 dimnames  = dimnames(comp_matrix)
-            )
+                )
             # Normalize FlowJo's 100-diagonal platform matrices to true spillover units.
             if (all(diag(comp_matrix) > 50)) {
                 comp_matrix <- comp_matrix / 100
-            }
+                }
             comp_matrix <- flowCore::compensation(comp_matrix)
-        }
+            }
 
         if (!is.null(comp_matrix)) {
             comp_map[[comp_uuid]] <- comp_matrix
+            }
         }
-    }
 
     # If no dataSources provided, return the comp_map
     if (is.null(dataSources) || is.null(sample_uuids)) {
         # If only one compensation, return it for all samples
         if (length(comp_map) == 1) {
             return(comp_map[[1]])
-        }
+            }
         return(comp_map)
-    }
+        }
 
     # Map each sample to its compensation based on dataSources' parent references
     sample_comp_map <- list()
@@ -193,21 +193,21 @@ extract_compensation_from_platforms <- function(spillover_matrices, dataSources 
                 comp_uuid <- comp_uuids[[1]]
                 if (!is.null(comp_map[[comp_uuid]])) {
                     sample_comp_map[[sample_uuid]] <- comp_map[[comp_uuid]]
+                    }
                 }
             }
         }
-    }
 
     # If no sample-specific mappings found but we have compensations, use the first one for all
     if (length(sample_comp_map) == 0 && length(comp_map) > 0) {
         first_comp <- comp_map[[1]]
         for (sample_uuid in sample_uuids) {
             sample_comp_map[[sample_uuid]] <- first_comp
+            }
         }
-    }
 
     sample_comp_map
-}
+    }
 
 
 #' Extract Compensation from Data Source
@@ -221,28 +221,28 @@ extract_workspace_compensation <- function(ds) {
         comp_ref <- ds$compensationReference
         # This would reference a compensation definition elsewhere in workspace
         # For now, we'll look for inline compensation
-    }
+        }
 
     # Check definition$compensation
     if (!is.null(ds$definition$compensation)) {
         comp_data <- ds$definition$compensation
-    }
+        }
 
     # Check customKeywords for SPILL or SPILLOVER
     if (is.null(comp_data) && !is.null(ds$definition$customKeywords)) {
         kw <- ds$definition$customKeywords
         comp_data <- kw$SPILL %||% kw$SPILLOVER %||% kw$`$SPILLOVER`
-    }
+        }
 
     if (is.null(comp_data)) {
         return(NULL)
-    }
+        }
 
     # Parse compensation data
     comp_matrix <- parse_compensation_data(comp_data)
 
     return(comp_matrix)
-}
+    }
 
 
 #' Parse Compensation Data
@@ -251,11 +251,11 @@ extract_workspace_compensation <- function(ds) {
 parse_compensation_data <- function(comp_data) {
     if (is.matrix(comp_data)) {
         return(flowCore::compensation(comp_data))
-    }
+        }
 
     if (is.data.frame(comp_data)) {
         return(flowCore::compensation(as.matrix(comp_data)))
-    }
+        }
 
     if (is.character(comp_data)) {
         # Parse from string format (common in FCS files)
@@ -266,7 +266,7 @@ parse_compensation_data <- function(comp_data) {
         if (is.na(n) | length(parts) != (n + n * n + 1)) {
             warning("Invalid compensation string format")
             return(NULL)
-        }
+            }
 
         channels <- parts[2:(n + 1)]
         values <- as.numeric(parts[(n + 2):length(parts)])
@@ -276,7 +276,7 @@ parse_compensation_data <- function(comp_data) {
         colnames(comp_matrix) <- channels
 
         return(flowCore::compensation(comp_matrix))
-    }
+        }
 
     if (is.list(comp_data)) {
         # FlowJo v11 JSON format
@@ -286,19 +286,19 @@ parse_compensation_data <- function(comp_data) {
 
             if (is.list(matrix_data)) {
                 matrix_data <- do.call(rbind, matrix_data)
-            }
+                }
 
             comp_matrix <- as.matrix(matrix_data)
             rownames(comp_matrix) <- params
             colnames(comp_matrix) <- params
 
             return(flowCore::compensation(comp_matrix))
+            }
         }
-    }
 
     warning("Unrecognized compensation format")
     return(NULL)
-}
+    }
 
 
 #' Validate Compensation Object
@@ -308,21 +308,21 @@ parse_compensation_data <- function(comp_data) {
 validate_compensation <- function(comp) {
     if (is(comp, "compensation")) {
         return(comp)
-    }
+        }
 
     if (is.matrix(comp)) {
         if (is.null(rownames(comp)) || is.null(colnames(comp))) {
             stop("Compensation matrix must have row and column names (channel names)")
-        }
+            }
         return(flowCore::compensation(comp))
-    }
+        }
 
     if (is.data.frame(comp)) {
         return(flowCore::compensation(as.matrix(comp)))
-    }
+        }
 
     stop("Invalid compensation object. Must be compensation, matrix, or data.frame")
-}
+    }
 
 
 #' Map Compensation Channel Names to Cytoframe Parameter Names
@@ -339,12 +339,12 @@ validate_compensation <- function(comp) {
 map_compensation_names <- function(comp_matrix, param_names) {
     if (is.null(comp_matrix)) {
         return(NULL)
-    }
+        }
 
     # Convert to matrix if compensation object
     if (methods::is(comp_matrix, "compensation")) {
         comp_matrix <- comp_matrix@spillover
-    }
+        }
 
     # Get current compensation channel names
     comp_names <- colnames(comp_matrix)
@@ -352,7 +352,7 @@ map_compensation_names <- function(comp_matrix, param_names) {
     if (is.null(comp_names)) {
         warning("Compensation matrix has no column names")
         return(comp_matrix)
-    }
+        }
 
     # Strip "Comp-" prefix for matching against cytoframe parameters
     # The compensation matrix now has "Comp-" prefixed names (e.g., "Comp-FITC-A")
@@ -367,14 +367,14 @@ map_compensation_names <- function(comp_matrix, param_names) {
         strip_comp_prefix = FALSE,
         case_insensitive = FALSE,
         sanitize_slashes = TRUE
-    )
+        )
 
     # Check for unmapped names and warn
     for (i in seq_along(comp_names_base)) {
         if (is.null(name_mapping[[comp_names_base[i]]])) {
             warning("Could not map compensation channel '", comp_names_base[i], "' to any parameter")
+            }
         }
-    }
 
     # Apply mapping to create new compensation matrix with cytoframe parameter names
     # (without "Comp-" prefix, so flowCore::compensate can match them)
@@ -386,4 +386,4 @@ map_compensation_names <- function(comp_matrix, param_names) {
     rownames(mapped_comp) <- mapped_names
 
     flowCore::compensation(mapped_comp)
-}
+    }

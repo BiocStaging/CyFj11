@@ -39,7 +39,7 @@ pretty_print_flowjo <- function(flowjo_file) {
     # Check if the file exists
     if (!file.exists(flowjo_file)) {
         stop("File not found: ", flowjo_file)
-    }
+        }
 
     # Create temporary directory for extraction
     temp_dir <- tempfile(pattern = "flowjo_extract_")
@@ -53,7 +53,7 @@ pretty_print_flowjo <- function(flowjo_file) {
     json_files <- list.files(file.path(temp_dir, "analyses"), pattern = "\\.json$", recursive = TRUE, full.names = TRUE)
     if (length(json_files) == 0) {
         stop("No JSON files found in the FlowJo workspace")
-    }
+        }
 
     # Use the first JSON file (assuming there's only one main analysis file)
     json_file <- json_files[1]
@@ -70,7 +70,7 @@ pretty_print_flowjo <- function(flowjo_file) {
     message("Pretty printed JSON saved to:", output_file, "\n")
 
     return(output_file)
-}
+    }
 
 # Example usage:
 # pretty_print_flowjo("large.mi.flowjo")

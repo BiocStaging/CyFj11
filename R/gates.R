@@ -39,14 +39,14 @@ NULL
 #' @keywords internal
 extract_all_gates <- function(populationDefinitions,
     sample_uuids,
-        channel.ignore.case = FALSE,
-            extend_val = 0,
-                extend_to = -4000,
-                    correct_faulty_gate = 0,
-                        use_transformed_coords = FALSE) {
-    gates_list <- list()
+    channel.ignore.case = FALSE,
+    extend_val = 0,
+    extend_to = -4000,
+    correct_faulty_gate = 0,
+    use_transformed_coords = FALSE) {
+                            gates_list <- list()
 
-    for (pop_uuid in names(populationDefinitions)) {
+                            for (pop_uuid in names(populationDefinitions)) {
         pop_def <- populationDefinitions[[pop_uuid]]
 
         # Skip if no gate definition
@@ -63,9 +63,9 @@ extract_all_gates <- function(populationDefinitions,
             # Use desync gate if available, otherwise master gate
             if (has_desync && sample_uuid %in% names(desync_table)) {
                 gate_to_use <- desync_table[[sample_uuid]]
-            } else {
+                } else {
                 gate_to_use <- gate_def
-            }
+                }
             if (.pkgenv$verbose) message("pop_def: ", pop_def, " ", sample_uuid) # nocov
             # browser() # nocov
             if (is.null(gate_to_use)) next
@@ -80,50 +80,50 @@ extract_all_gates <- function(populationDefinitions,
                 extend_to = extend_to,
                 correct_faulty_gate = correct_faulty_gate,
                 use_transformed_coords = use_transformed_coords
-            )
+                )
 
             if (!is.null(gate_obj)) {
                 key <- paste0(pop_uuid, "_", sample_uuid)
                 gates_list[[key]] <- gate_obj
-            } else {
+                } else {
                 warning(
                     "Failed to convert gate for population: ", pop_def$definition$name,
                     " (", pop_uuid, "), sample: ", sample_uuid
-                )
+                    )
+                }
             }
         }
-    }
 
-    return(gates_list)
-}
+                            return(gates_list)
+                            }
 
 #' Convert FlowJo Gate to flowCore Gate Object
 #'
 #' @keywords internal
 convert_flowjo_gate <- function(gate,
-                                pop_name,
-                                pop_type,
-                                channel.ignore.case = FALSE,
-                                extend_val = 0,
-                                extend_to = -4000,
-                                correct_faulty_gate = 0,
-                                use_transformed_coords = FALSE) {
-    gate_type <- gate$type %||% pop_type
+    pop_name,
+    pop_type,
+    channel.ignore.case = FALSE,
+    extend_val = 0,
+    extend_to = -4000,
+    correct_faulty_gate = 0,
+    use_transformed_coords = FALSE) {
+                                    gate_type <- gate$type %||% pop_type
 
     # Infer gate type from structure if needed
-    if (is.null(gate_type) || gate_type == "gate") {
+                                    if (is.null(gate_type) || gate_type == "gate") {
         if (!is.null(gate$xVertices) && !is.null(gate$yVertices)) {
             gate_type <- "PolygonGate"
-        } else if (!is.null(gate$xMin) || !is.null(gate$x$max) || !is.null(gate$yMin) || !is.null(gate$y$max)) {
+            } else if (!is.null(gate$xMin) || !is.null(gate$x$max) || !is.null(gate$yMin) || !is.null(gate$y$max)) {
             gate_type <- "RectangleGate"
-        } else if (!is.null(gate$centerX) || !is.null(gate$centerY)) {
+            } else if (!is.null(gate$centerX) || !is.null(gate$centerY)) {
             gate_type <- "EllipsoidGate"
+            }
         }
-    }
 
-    if (.pkgenv$verbose) message("Converting gate: ", gate_type, " - ", pop_name) # nocov
+                                    if (.pkgenv$verbose) message("Converting gate: ", gate_type, " - ", pop_name) # nocov
 
-    tryCatch(
+                                    tryCatch(
         {
             switch(gate_type,
                 "RectangleGate" = ,
@@ -140,15 +140,15 @@ convert_flowjo_gate <- function(gate,
                 {
                     warning("Unsupported gate type: ", gate_type, " for population: ", pop_name)
                     NULL
-                }
-            )
-        },
+                    }
+                )
+            },
         error = function(e) {
             warning("Failed to convert gate ", gate_type, " for ", pop_name, ": ", e$message)
             NULL
-        }
-    )
-}
+            }
+        )
+                                    }
 
 
 #' Transform coordinates from FlowJo display space to raw data space
@@ -171,18 +171,18 @@ display_to_raw <- function(display_coords, transform_spec, gate_resolution = NUL
     # Handle NULL or empty input
     if (is.null(display_coords) || length(display_coords) == 0) {
         return(numeric(0))
-    }
+        }
 
     # Unlist if needed
     if (is.list(display_coords)) {
         display_coords <- unlist(display_coords)
-    }
+        }
     display_coords <- as.numeric(display_coords)
 
     # If no transform spec, return as-is
     if (is.null(transform_spec)) {
         return(display_coords)
-    }
+        }
 
     # Get transform type
     trans_type <- transform_spec$transformType %||% "Linear"
@@ -199,28 +199,28 @@ display_to_raw <- function(display_coords, transform_spec, gate_resolution = NUL
         # Handle faulty gates with maxRange=0
         if (max_range == 0 && correct_faulty_gate != 0) {
             max_range <- correct_faulty_gate
-        }
+            }
 
         if (max_range == 0) {
             stop("Linear transform has maxRange=0. Set correct_faulty_gate parameter or fix workspace.")
-        }
+            }
 
         # Linear scaling
         raw_coords <- (display_coords / vector_length) * (max_range - min_range) + min_range
         return(raw_coords)
-    } else if (trans_type == "Biex") {
+        } else if (trans_type == "Biex") {
         if (isTRUE(use_transformed_coords)) {
             # Data will be in transformed space (0-channelRange).
             # FlowJo display coords ARE the transformed coords. Return as-is.
             return(display_coords)
-        }
+            }
 
         # Default: convert to raw space (no transform on data)
         trans_spec <- parse_transformation_info(transform_spec)
         trans_obj <- create_biexponential_transform(trans_spec)
         raw_coords <- trans_obj$inverse(display_coords)
         return(raw_coords)
-    } else if (trans_type == "Log") {
+        } else if (trans_type == "Log") {
         decades_offset <- transform_spec$decadesOffset %||% 1
         number_decades <- transform_spec$numberDecades %||% 4
         shift <- transform_spec$shift %||% 0
@@ -229,7 +229,7 @@ display_to_raw <- function(display_coords, transform_spec, gate_resolution = NUL
         if (is.null(vector_length) || length(vector_length) == 0 || vector_length == 0) {
             warning("Log transform has invalid vectorLength (", vector_length, "). Using 256.")
             vector_length <- 256
-        }
+            }
 
         if (isTRUE(use_transformed_coords)) {
             # Data will be in transformed (display) space, but the scale applied to the
@@ -239,17 +239,17 @@ display_to_raw <- function(display_coords, transform_spec, gate_resolution = NUL
             source_scale <- gate_resolution %||% target_scale
             scale_factor <- target_scale / source_scale
             return(display_coords * scale_factor)
-        }
+            }
 
         # FlowJo Log transform: display coords are log-scaled.
         # Inverse: raw = 10^(display * numberDecades / vectorLength + decadesOffset - 1) - shift
         raw_coords <- 10^(display_coords * number_decades / vector_length + decades_offset - 1) - shift
         return(raw_coords)
-    } else {
+        } else {
         warning("Unsupported transform type: ", trans_type, ". Returning coordinates as-is.")
         return(display_coords)
+        }
     }
-}
 
 #' Apply extension to coordinates
 #'
@@ -261,11 +261,11 @@ display_to_raw <- function(display_coords, transform_spec, gate_resolution = NUL
 apply_extension <- function(coords, extend_val = 0, extend_to = -4000) {
     if (extend_val == 0 && extend_to == -4000) {
         return(coords) # No extension requested
-    }
+        }
 
     coords[!is.infinite(coords) & coords < extend_val] <- extend_to
     return(coords)
-}
+    }
 
 
 #' Convert Rectangle Gate
@@ -279,7 +279,7 @@ convert_rectangle_gate <- function(gate, pop_name, extend_val, extend_to, correc
 
     if (is.null(x_param)) {
         stop("Rectangle gate missing x parameter for: ", pop_name)
-    }
+        }
 
     # Get gate resolution
     gate_resolution <- gate$gateResolution %||% gate$resolution
@@ -299,9 +299,9 @@ convert_rectangle_gate <- function(gate, pop_name, extend_val, extend_to, correc
             .gate = matrix(c(x_min, x_max),
                 nrow = 2, ncol = 1,
                 dimnames = list(c("min", "max"), x_param)
+                )
             )
-        )
-    } else {
+        } else {
         # 2D gate
         y_display <- unlist(gate$yVertices)
         y_raw <- display_to_raw(y_display, gate$yAxis$transform, gate_resolution, correct_faulty_gate, use_transformed_coords)
@@ -315,12 +315,12 @@ convert_rectangle_gate <- function(gate, pop_name, extend_val, extend_to, correc
             .gate = matrix(c(x_min, y_min, x_max, y_max),
                 nrow = 2, ncol = 2, byrow = TRUE,
                 dimnames = list(c("min", "max"), c(x_param, y_param))
+                )
             )
-        )
-    }
+        }
 
     return(gate_obj)
-}
+    }
 
 #' Convert Polygon Gate
 #' @keywords internal
@@ -328,19 +328,19 @@ convert_rectangle_gate <- function(gate, pop_name, extend_val, extend_to, correc
 convert_polygon_gate <- function(gate, pop_name, extend_val, extend_to, correct_faulty_gate = 0, use_transformed_coords = FALSE) {
     # Extract parameters
     x_param <- gate$xParameter %||%
-        gate$xAxis$parameterSpec$name %||%
-        gate$xAxis
+    gate$xAxis$parameterSpec$name %||%
+    gate$xAxis
 
     y_param <- gate$yParameter %||%
-        gate$yAxis$parameterSpec$name %||%
-        gate$yAxis
+    gate$yAxis$parameterSpec$name %||%
+    gate$yAxis
 
     # Validate parameters
     if (is.null(x_param) || is.null(y_param) ||
         (is.character(x_param) && nchar(x_param) == 0) ||
         (is.character(y_param) && nchar(y_param) == 0)) {
-        stop("Polygon gate missing valid parameters for: ", pop_name)
-    }
+            stop("Polygon gate missing valid parameters for: ", pop_name)
+            }
 
     # Get vertices
     x_display <- unlist(gate$xVertices)
@@ -348,11 +348,11 @@ convert_polygon_gate <- function(gate, pop_name, extend_val, extend_to, correct_
 
     if (length(x_display) < 3 || length(y_display) < 3) {
         stop("Polygon must have at least 3 vertices for: ", pop_name)
-    }
+        }
 
     if (length(x_display) != length(y_display)) {
         stop("X and Y coordinates must have same length for: ", pop_name)
-    }
+        }
 
     # Get gate resolution
     gate_resolution <- gate$gateResolution %||% gate$resolution
@@ -369,23 +369,23 @@ convert_polygon_gate <- function(gate, pop_name, extend_val, extend_to, correct_
     if (x_raw[1] != x_raw[length(x_raw)] || y_raw[1] != y_raw[length(y_raw)]) {
         x_raw <- c(x_raw, x_raw[1])
         y_raw <- c(y_raw, y_raw[1])
-    }
+        }
 
     # Create boundary matrix
     boundaries <- matrix(
         c(x_raw, y_raw),
         ncol = 2,
         dimnames = list(NULL, c(x_param, y_param))
-    )
+        )
 
     # Create polygon gate
     gate_obj <- flowCore::polygonGate(
         filterId = unlist(pop_name)[1],
         .gate = boundaries
-    )
+        )
 
     return(gate_obj)
-}
+    }
 
 #' Convert Ellipse Gate
 #' @keywords internal
@@ -422,7 +422,7 @@ convert_ellipse_gate <- function(gate, pop_name, extend_val, extend_to, correct_
             (a_display^2 - b_display^2) * sin_a * cos_a,
             (a_display^2 - b_display^2) * sin_a * cos_a,
             a_display^2 * cos_a^2 + b_display^2 * sin_a^2
-        ), nrow = 2, ncol = 2)
+            ), nrow = 2, ncol = 2)
 
         # Transform center to raw data space
         center_x_raw <- display_to_raw(center_x_display, gate$xAxis$transform, gate_resolution, correct_faulty_gate, use_transformed_coords)
@@ -442,25 +442,25 @@ convert_ellipse_gate <- function(gate, pop_name, extend_val, extend_to, correct_
             max_range_x <- gate$xAxis$transform$maxRange %||% 262144
             if (max_range_x == 0 && correct_faulty_gate != 0) max_range_x <- correct_faulty_gate
             scale_x <- max_range_x / vector_length
-        } else {
+            } else {
             # For Biex, scaling is approximately 1 near the center (simplified)
             scale_x <- 1
-        }
+            }
 
         if (y_trans_type == "Linear") {
             max_range_y <- gate$yAxis$transform$maxRange %||% 262144
             if (max_range_y == 0 && correct_faulty_gate != 0) max_range_y <- correct_faulty_gate
             scale_y <- max_range_y / vector_length
-        } else {
+            } else {
             scale_y <- 1
-        }
+            }
 
         # Scale covariance matrix: Cov_raw = S * Cov_display * S^T
         scale_matrix <- diag(c(scale_x, scale_y))
         cov_raw <- scale_matrix %*% cov_display %*% t(scale_matrix)
-    } else {
+        } else {
         stop("Ellipse gate has unexpected number of vertices for: ", pop_name)
-    }
+        }
 
     # Set names for covariance matrix
     colnames(cov_raw) <- c(x_param, y_param)
@@ -475,12 +475,12 @@ convert_ellipse_gate <- function(gate, pop_name, extend_val, extend_to, correct_
         .gate = cov_raw,
         mean = c(center_x_raw, center_y_raw),
         distance = distance
-    )
+        )
 
     flowCore::parameters(gate_obj) <- c(x_param, y_param)
 
     return(gate_obj)
-}
+    }
 
 #' Convert Range Gate (1D)
 #' @keywords internal
@@ -488,29 +488,29 @@ convert_ellipse_gate <- function(gate, pop_name, extend_val, extend_to, correct_
 convert_range_gate <- function(gate, pop_name, extend_val, extend_to, correct_faulty_gate = 0, use_transformed_coords = FALSE) {
     # Extract parameter
     param <- gate$parameter %||%
-        gate$xParameter %||%
-        gate$xAxis$parameterSpec$name %||%
-        gate$xAxis %||%
-        NULL
+    gate$xParameter %||%
+    gate$xAxis$parameterSpec$name %||%
+    gate$xAxis %||%
+    NULL
 
     if (is.null(param) || (is.character(param) && nchar(param) == 0)) {
         stop("Range gate missing valid parameter for: ", pop_name)
-    }
+        }
 
     # Get vertices
     x_display <- gate$xVertices %||%
-        c(gate$min, gate$max) %||%
-        c(gate$xMin, gate$xMax) %||%
-        gate$vertices
+    c(gate$min, gate$max) %||%
+    c(gate$xMin, gate$xMax) %||%
+    gate$vertices
 
     if (is.null(x_display) || length(x_display) == 0) {
         stop("Range gate missing vertices for: ", pop_name)
-    }
+        }
 
     # Ensure numeric and unlisted - IMPORTANT ORDER
     if (is.list(x_display)) {
         x_display <- unlist(x_display)
-    }
+        }
     x_display <- as.numeric(x_display)
 
     # Get gate resolution
@@ -529,10 +529,10 @@ convert_range_gate <- function(gate, pop_name, extend_val, extend_to, correct_fa
     # Apply extension to the min/max values
     if (!is.infinite(min_val) && min_val < extend_val) {
         min_val <- extend_to
-    }
+        }
     if (!is.infinite(max_val) && max_val < extend_val) {
         max_val <- extend_to
-    }
+        }
 
     # Create rectangle gate for 1D range
     gate_obj <- flowCore::rectangleGate(
@@ -540,12 +540,12 @@ convert_range_gate <- function(gate, pop_name, extend_val, extend_to, correct_fa
         .gate = matrix(c(min_val, max_val),
             nrow = 2, ncol = 1,
             dimnames = list(c("min", "max"), param)
+            )
         )
-    )
     # message("convert_range_gate: ", pop_name, "  ", min_val, "  ", max_val)
 
     return(gate_obj)
-}
+    }
 #' Convert Quadrant Gate
 #' @keywords internal
 #' @importFrom flowCore quadGate
@@ -557,17 +557,17 @@ convert_quadrant_gate <- function(gate, pop_name, extend_val, extend_to, correct
     if (is.null(x_param) || is.null(y_param) ||
         (is.character(x_param) && nchar(x_param) == 0) ||
         (is.character(y_param) && nchar(y_param) == 0)) {
-        stop("Quadrant gate missing valid parameters for: ", paste(pop_name, collapse = ", "))
-    }
+            stop("Quadrant gate missing valid parameters for: ", paste(pop_name, collapse = ", "))
+            }
 
     # Extract divider position
     x_div_display <- gate$xDivider %||% gate$divider$x %||%
-        (if (!is.null(gate$xVertices)) unlist(gate$xVertices)[[1]] else NULL) %||%
-        gate$x %||% 0
+    (if (!is.null(gate$xVertices)) unlist(gate$xVertices)[[1]] else NULL) %||%
+    gate$x %||% 0
 
     y_div_display <- gate$yDivider %||% gate$divider$y %||%
-        (if (!is.null(gate$yVertices)) unlist(gate$yVertices)[[1]] else NULL) %||%
-        gate$y %||% 0
+    (if (!is.null(gate$yVertices)) unlist(gate$yVertices)[[1]] else NULL) %||%
+    gate$y %||% 0
 
     x_div_display <- as.numeric(x_div_display)
     y_div_display <- as.numeric(y_div_display)
@@ -586,7 +586,7 @@ convert_quadrant_gate <- function(gate, pop_name, extend_val, extend_to, correct
     # Validate population names
     if (length(pop_name) != 4) {
         stop("Quadrant gate must define exactly 4 populations, got: ", length(pop_name))
-    }
+        }
 
     # Create boundary
     boundary <- c(x_div_raw, y_div_raw)
@@ -598,13 +598,13 @@ convert_quadrant_gate <- function(gate, pop_name, extend_val, extend_to, correct
     gate_obj <- flowCore::quadGate(
         filterId = base_name,
         .gate = boundary
-    )
+        )
 
     # Store population names
     attr(gate_obj, "pop_names") <- unlist(pop_name) %>% rev()
 
     return(gate_obj)
-}
+    }
 
 #' Convert Boolean Gate
 #' @keywords internal
@@ -613,20 +613,20 @@ convert_quadrant_gate <- function(gate, pop_name, extend_val, extend_to, correct
 convert_boolean_gate <- function(gate, pop_name) {
     # Boolean gates reference other populations
     specification <- gate$specification %||%
-        gate$definition %||%
-        gate$expression %||%
-        gate$booleanDefinition %||%
-        gate$gateDefinition
+    gate$definition %||%
+    gate$expression %||%
+    gate$booleanDefinition %||%
+    gate$gateDefinition
 
     if (is.null(specification) || specification == "") {
         warning("Boolean gate missing specification for: ", pop_name)
         return(NULL)
-    }
+        }
 
     if (length(specification) > 1) {
         specification <- specification[1]
         warning("Boolean gate specification had multiple values for: ", pop_name, ". Using first value.")
-    }
+        }
 
     # Parse boolean expression
     expr <- tryCatch(
@@ -635,50 +635,50 @@ convert_boolean_gate <- function(gate, pop_name) {
             warning(
                 "Failed to parse boolean expression '", specification,
                 "' for gate: ", pop_name, ": ", e$message
-            )
+                )
             return(NULL)
-        }
-    )
+            }
+        )
 
     if (is.null(expr)) {
         return(NULL)
-    }
+        }
 
     gate_obj <- tryCatch(
         flowWorkspace::booleanFilter(
             expr = expr,
             filterId = pop_name[[1]]
-        ),
+            ),
         error = function(e) {
             warning(
                 "Failed to create boolean filter for: ", pop_name,
                 ": ", e$message
-            )
+                )
             return(NULL)
-        }
-    )
+            }
+        )
 
     return(gate_obj)
-}
+    }
 
 #' Parse Boolean Expression
 #' @keywords internal
 parse_boolean_expression <- function(spec) {
     if (is.null(spec)) {
         stop("Boolean expression specification is NULL")
-    }
+        }
 
     if (length(spec) > 1) {
         spec <- spec[1]
-    }
+        }
 
     if (!is.character(spec)) {
         spec <- as.character(spec)
-    }
+        }
 
     if (spec == "") {
         stop("Boolean expression specification is empty")
-    }
+        }
 
     # Replace FlowJo operators with R operators
     expr_string <- spec
@@ -690,15 +690,15 @@ parse_boolean_expression <- function(spec) {
 
     if (expr_string == "") {
         stop("Boolean expression is empty after cleaning")
-    }
+        }
 
     # Parse as expression
     expr <- tryCatch(
         parse(text = expr_string),
         error = function(e) {
             stop("Failed to parse boolean expression '", expr_string, "': ", e$message)
-        }
-    )
+            }
+        )
 
     return(expr)
-}
+    }

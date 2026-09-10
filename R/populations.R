@@ -39,17 +39,17 @@ sanitize_population_name <- function(name) {
     sanitize_one <- function(x) {
         if (is.character(x)) {
             gsub("/", ":", x, fixed = TRUE)
-        } else {
+            } else {
             x
+            }
         }
-    }
 
     if (is.list(name)) {
         lapply(name, sanitize_one)
-    } else {
+        } else {
         sanitize_one(name)
+        }
     }
-}
 
 #' Sanitize Path While Preserving flowWorkspace Separator
 #'
@@ -63,14 +63,14 @@ sanitize_population_name <- function(name) {
 sanitize_path_with_separator <- function(path) {
     if (is.null(path)) {
         return(NULL)
-    }
+        }
     # Split on the path separator, sanitize each component, then rejoin.
     vapply(path, function(p) {
         parts <- strsplit(p, "/", fixed = TRUE)[[1]]
         parts <- sanitize_population_name(parts)
         paste(parts, collapse = "/")
-    }, character(1))
-}
+        }, character(1))
+    }
 
 #' Add Populations to GatingSet
 #'
@@ -87,7 +87,7 @@ sanitize_path_with_separator <- function(path) {
 #' @importFrom flowWorkspace gs_pop_add
 add_populations_to_gatingset <- function(gs, gating_trees, gates, sample_uuids,
     strip_comp_prefix = TRUE, verbose = FALSE) {
-    for (i in seq_along(sample_uuids)) {
+        for (i in seq_along(sample_uuids)) {
         sample_uuid <- sample_uuids[i]
         tree <- gating_trees[[i]]
         gh <- gs[[i]]
@@ -98,7 +98,7 @@ add_populations_to_gatingset <- function(gs, gating_trees, gates, sample_uuids,
         add_population_node(gh, tree, gates, sample_uuid,
             strip_comp_prefix = strip_comp_prefix,
             verbose = verbose, deferred = deferred
-        )
+            )
 
         # Retry loop: keep trying until no more progress (handles chained logic gates)
         repeat {
@@ -112,12 +112,12 @@ add_populations_to_gatingset <- function(gs, gating_trees, gates, sample_uuids,
                     parent = lg$parent,
                     strip_comp_prefix = strip_comp_prefix,
                     verbose = verbose, deferred = new_deferred
-                )
-            }
+                    )
+                }
 
             deferred <- new_deferred
             if (length(deferred$gates) == n_before) break # no progress <U+2014> give up
-        }
+            }
 
         # Warn only about permanently unresolvable logical gates
         for (lg in deferred$gates) {
@@ -128,10 +128,10 @@ add_populations_to_gatingset <- function(gs, gating_trees, gates, sample_uuids,
             warning(
                 "Could not resolve all component paths for logical gate: ", node_name, "\n",
                 "  Missing components: ", paste(missing, collapse = ", ")
-            )
+                )
+            }
         }
-    }
-}
+        }
 
 #' Compare and Adjust Gate Parameter Names to Match a GatingHierarchy
 #'
@@ -216,7 +216,7 @@ adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) 
     gh_param_names <- unique(c(
         gh_param_names,
         colnames(flowWorkspace::gh_pop_get_data(gh, "root"))
-    ))
+        ))
 
     # Map gate parameter names to GatingSet parameter names
     # Gate params may have "Comp-" prefix or different sanitization
@@ -239,7 +239,7 @@ adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) 
             if (is.null(gh_param)) {
                 warning("Could not map gate parameter '", gate_param, "' to GatingSet parameters")
                 next
-            }
+                }
 
             # Get transformation from hierarchy using mapped name
             gh_trans_func <- gh_trans[[gh_param]]
@@ -247,7 +247,7 @@ adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) 
             # Skip if no transformation in hierarchy
             if (is.null(gh_trans_func)) {
                 next
-            }
+                }
 
             # Get transformation type from hierarchy
             gh_trans_type <- attr(gh_trans_func, "type")
@@ -262,15 +262,15 @@ adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) 
                     message("Parameter '", gate_param, "' -> '", gh_param, "' needs adjustment:")
                     message("  Gate coords in: raw data space")
                     message("  Hierarchy expects: ", gh_trans_type, " transformed space")
+                    }
                 }
             }
-        }
-    } # nocov end
+        } # nocov end
 
     # If no mapping found at all, return original gate
     if (length(mapped_params) == 0 || all(vapply(mapped_params, is.null, logical(1)))) {
         return(gate_obj)
-    }
+        }
 
     # Always update parameter names to match flowFrame (critical for compensated data)
     gate_obj <- update_gate_param_names(gate_obj, mapped_params)
@@ -278,13 +278,13 @@ adjust_gate_transformations <- function(gh, gate_obj, strip_comp_prefix = TRUE) 
     # If no transformation adjustment needed, return gate with updated names
     if (!needs_adjustment) {
         return(gate_obj)
-    }
+        }
 
     # Apply transformations to convert from raw space to transformed space
     gate_obj_adjusted <- apply_transforms_to_gate(gate_obj, trans_to_apply)
 
     return(gate_obj_adjusted)
-}
+    }
 
 
 #' Map gate parameter names to GatingSet parameter names
@@ -312,8 +312,8 @@ map_gate_params_to_gh <- function(gate_params, gh_param_names, strip_comp_prefix
         strip_comp_prefix = strip_comp_prefix,
         case_insensitive = FALSE,
         sanitize_slashes = sanitize_slashes
-    )
-}
+        )
+    }
 
 #' Update gate parameter names to match flowFrame
 #'
@@ -330,7 +330,7 @@ update_gate_param_names <- function(gate_obj, mapped_params) {
 
     if (length(valid_mapping) == 0) {
         return(gate_obj)
-    }
+        }
 
     # Handle different gate types
     if (inherits(gate_obj, "rectangleGate")) {
@@ -338,46 +338,46 @@ update_gate_param_names <- function(gate_obj, mapped_params) {
         old_names <- names(gate_obj@min)
         new_names <- vapply(old_names, function(n) {
             if (n %in% names(valid_mapping)) valid_mapping[[n]] else n
-        }, character(1))
+            }, character(1))
         names(gate_obj@min) <- new_names
         names(gate_obj@max) <- new_names
-    } else if (inherits(gate_obj, "quadGate")) {
+        } else if (inherits(gate_obj, "quadGate")) {
         # Update boundary names - critical for quadGate!
         old_names <- names(gate_obj@boundary)
         new_names <- vapply(old_names, function(n) {
             if (n %in% names(valid_mapping)) valid_mapping[[n]] else n
-        }, character(1))
+            }, character(1))
         names(gate_obj@boundary) <- new_names
 
         if (.pkgenv$verbose) {
             message(
                 "  Updated quadGate boundary names: ", paste(old_names, collapse = ", "),
                 " -> ", paste(new_names, collapse = ", ")
-            )
-        }
-    } else if (inherits(gate_obj, "polygonGate")) {
+                )
+            }
+        } else if (inherits(gate_obj, "polygonGate")) {
         # Update boundary column names
         old_names <- colnames(gate_obj@boundaries)
         new_names <- vapply(old_names, function(n) {
             if (n %in% names(valid_mapping)) valid_mapping[[n]] else n
-        }, character(1))
+            }, character(1))
         colnames(gate_obj@boundaries) <- new_names
-    } else if (inherits(gate_obj, "ellipsoidGate")) {
+        } else if (inherits(gate_obj, "ellipsoidGate")) {
         # Update mean and covariance names
         old_names <- names(gate_obj@mean)
         new_names <- vapply(old_names, function(n) {
             if (n %in% names(valid_mapping)) valid_mapping[[n]] else n
-        }, character(1))
+            }, character(1))
         names(gate_obj@mean) <- new_names
         colnames(gate_obj@cov) <- new_names
         rownames(gate_obj@cov) <- new_names
-    }
+        }
 
     # Update the parameters slot
     flowCore::parameters(gate_obj) <- unlist(valid_mapping)
 
     return(gate_obj)
-}
+    }
 
 #' Apply Transformation Functions to Gate Coordinates
 #'
@@ -446,7 +446,7 @@ update_gate_param_names <- function(gate_obj, mapped_params) {
 apply_transforms_to_gate <- function(gate_obj, trans_list) {
     if (length(trans_list) == 0) {
         return(gate_obj)
-    }
+        }
 
     # Handle rectangleGate
     if (inherits(gate_obj, "rectangleGate")) {
@@ -459,18 +459,18 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
                 gate_obj@min[param] <- trans_func(old_val)
                 if (.pkgenv$verbose) {
                     message("  Transformed ", param, " min: ", old_val, " -> ", gate_obj@min[param])
+                    }
                 }
-            }
 
             if (param %in% names(gate_obj@max)) {
                 old_val <- gate_obj@max[param]
                 gate_obj@max[param] <- trans_func(old_val)
                 if (.pkgenv$verbose) {
                     message("  Transformed ", param, " max: ", old_val, " -> ", gate_obj@max[param])
+                    }
                 }
             }
-        }
-    } else if (inherits(gate_obj, "quadGate")) {
+        } else if (inherits(gate_obj, "quadGate")) {
         # browser() # nocov
         # Quadrant gates have boundary (divider positions) that need transformation
         # Note: slot is "boundary" (singular), not "boundaries"
@@ -484,12 +484,12 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
 
                 if (.pkgenv$verbose) {
                     message("  Transformed ", param, " quad divider: ", old_val, " -> ", boundary[param])
+                    }
                 }
             }
-        }
 
         gate_obj@boundary <- boundary
-    } else if (inherits(gate_obj, "polygonGate")) {
+        } else if (inherits(gate_obj, "polygonGate")) {
         boundaries <- gate_obj@boundaries
 
         for (param in names(trans_list)) {
@@ -503,13 +503,13 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
                     message(
                         "    Range: ", min(old_vals), "-", max(old_vals),
                         " -> ", min(boundaries[, param]), "-", max(boundaries[, param])
-                    )
+                        )
+                    }
                 }
             }
-        }
 
         gate_obj@boundaries <- boundaries
-    } else if (inherits(gate_obj, "ellipsoidGate")) {
+        } else if (inherits(gate_obj, "ellipsoidGate")) {
         # For ellipsoid gates, need to transform mean and possibly adjust covariance
         for (param in names(trans_list)) {
             param_idx <- which(names(gate_obj@mean) == param)
@@ -521,17 +521,17 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
 
                 if (.pkgenv$verbose) {
                     message("  Transformed ", param, " ellipse mean: ", old_val, " -> ", gate_obj@mean[param_idx])
-                }
+                    }
 
                 # Note: transforming an ellipsoid properly requires transforming the covariance matrix
                 # This is complex and may not preserve the ellipsoid shape
                 warning("Ellipsoid gate transformation may not preserve exact shape")
+                }
             }
         }
-    }
 
     return(gate_obj)
-}
+    }
 
 #' Add Population Node Recursively to a GatingHierarchy
 #'
@@ -623,31 +623,31 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
 #' @importFrom flowCore parameters
 #' @importFrom magrittr %>%
 add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
-                                strip_comp_prefix = TRUE, verbose = FALSE,
-                                deferred = NULL) {
-    if (.pkgenv$verbose) message(node$name, "\n")
+    strip_comp_prefix = TRUE, verbose = FALSE,
+    deferred = NULL) {
+                                    if (.pkgenv$verbose) message(node$name, "\n")
     # if(stringr::str_starts(node$name, "TNF")) {
     # browser() # nocov
     # }
     # Extract node name correctly (it's a list in FlowJo v11)
-    node_name <- if (is.list(node$name) && length(node$name) > 0) {
+                                    node_name <- if (is.list(node$name) && length(node$name) > 0) {
         node$name %>% unlist()
-    } else if (is.character(node$name)) {
+        } else if (is.character(node$name)) {
         node$name
-    } else {
+        } else {
         "Unnamed"
-    }
+        }
     # flowWorkspace uses '/' as the path separator, so population names containing
     # '/' get rewritten inconsistently.  Sanitize once here so parent/child paths
     # built later match the node names actually created in the GatingSet.
-    node_name <- sanitize_population_name(node_name)
-    if (.pkgenv$verbose) message(node$type)
+                                    node_name <- sanitize_population_name(node_name)
+                                    if (.pkgenv$verbose) message(node$type)
     # browser() # nocov
     # Skip root node (already exists).  The incoming parent may be a sanitized
     # path (with '/' as path separator) or the literal string 'root'.
-    parent_sanitized <- if (identical(parent, "root")) parent else sanitize_path_with_separator(parent)
-    if (.pkgenv$verbose) message("parent: ", paste(parent_sanitized, collapse = " : "), "\n")
-    if (parent_sanitized[1] == "root" && (node_name[1] == "root" || node_name[1] == "Ungated")) {
+                                    parent_sanitized <- if (identical(parent, "root")) parent else sanitize_path_with_separator(parent)
+                                    if (.pkgenv$verbose) message("parent: ", paste(parent_sanitized, collapse = " : "), "\n")
+                                    if (parent_sanitized[1] == "root" && (node_name[1] == "root" || node_name[1] == "Ungated")) {
         if (!is.null(node$children)) {
             for (child in node$children) {
                 add_population_node(
@@ -659,50 +659,50 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
                     strip_comp_prefix = strip_comp_prefix,
                     verbose = verbose,
                     deferred = deferred
-                )
+                    )
+                }
             }
-        }
         return()
-    }
+        }
 
     # Get gate for this population-sample combination
     # Extract definition_uuid correctly (it's also a list)
-    definition_uuid <- if (is.list(node$definition_uuid) && length(node$definition_uuid) > 0) {
+                                    definition_uuid <- if (is.list(node$definition_uuid) && length(node$definition_uuid) > 0) {
         node$definition_uuid[[1]]
-    } else if (is.character(node$definition_uuid)) {
+        } else if (is.character(node$definition_uuid)) {
         node$definition_uuid
-    } else {
+        } else {
         NULL
-    }
+        }
 
-    if (is.null(definition_uuid)) {
+                                    if (is.null(definition_uuid)) {
         warning("No definition UUID found for population: ", node_name)
         return()
-    }
+        }
 
-    gate_key <- paste0(definition_uuid, "_", sample_uuid)
-    gate_obj <- gates[[gate_key]]
-    is_logica_gate <- !is.null(node$logical_gate_info)
-    if (.pkgenv$verbose) message(node_name, " (sample: ", sample_uuid, ")\n")
+                                    gate_key <- paste0(definition_uuid, "_", sample_uuid)
+                                    gate_obj <- gates[[gate_key]]
+                                    is_logica_gate <- !is.null(node$logical_gate_info)
+                                    if (.pkgenv$verbose) message(node_name, " (sample: ", sample_uuid, ")\n")
     # browser() # nocov
-    if (is.null(gate_obj) && !is_logica_gate) {
+                                    if (is.null(gate_obj) && !is_logica_gate) {
         # Get available population paths for debugging
         all_pop_paths <- tryCatch(flowWorkspace::gs_get_pop_paths(gh), error = function(e) NULL)
         pop_paths_str <- if (!is.null(all_pop_paths)) {
             paste("\n  Available populations:", paste(all_pop_paths, collapse = "\n  "))
-        } else {
+            } else {
             ""
-        }
+            }
 
         warning(
             "No gate found for population: ", node_name, " (sample: ", sample_uuid, ")\n",
             "  Parent: ", paste(parent, collapse = " : "),
             "  Definition UUID: ", definition_uuid,
             pop_paths_str
-        )
+            )
         return()
-    }
-    if (is_logica_gate) {
+        }
+                                    if (is_logica_gate) {
         # Create boolean filter for logical gate
         # browser() # nocov
         # Create boolean filter for logical gate
@@ -726,16 +726,16 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
                     warning(
                         "Could not find population '", comp_name, "' for logical gate '", node_name, "'\n",
                         "  Available populations: ", paste(all_paths, collapse = ", ")
-                    )
-                }
+                        )
+                    }
                 return(NA_character_)
-            }
+                }
 
             # Use the first matching path
             path <- matching_paths[1]
             if (.pkgenv$verbose) message("    Found: ", comp_name, " -> ", path)
             return(path)
-        }, character(1))
+            }, character(1))
 
         # Remove unresolved components
         component_refs <- component_refs[!is.na(component_refs)]
@@ -745,17 +745,17 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
                 deferred$gates <- c(
                     deferred$gates,
                     list(list(node = node, parent = parent))
-                )
-            } else {
+                    )
+                } else {
                 missing_components <- setdiff(component_names, names(component_refs))
                 warning(
                     "Could not resolve all component paths for logical gate: ", node_name, "\n",
                     "  Missing components: ", paste(missing_components, collapse = ", "), "\n",
                     "  Resolved: ", paste(names(component_refs), collapse = ", ")
-                )
-            }
+                    )
+                }
             return()
-        }
+            }
 
         # Clean paths - remove leading slash as per booleanFilter examples
         clean_refs <- gsub("^/", "", component_refs)
@@ -763,17 +763,17 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
         # Build boolean expression - NO SPACES!
         if (operator == "and") {
             bool_expr <- paste(clean_refs, collapse = "&") # No spaces
-        } else if (operator == "or") {
+            } else if (operator == "or") {
             bool_expr <- paste(clean_refs, collapse = "|") # No spaces
-        } else if (operator == "not") {
+            } else if (operator == "not") {
             bool_expr <- paste0("!", clean_refs[1]) # No spaces
-        } else {
+            } else {
             warning(
                 "Unknown logical operator '", operator, "' for gate: ", node_name,
                 ". Expected 'and', 'or', or 'not'"
-            )
+                )
             return()
-        }
+            }
 
         if (.pkgenv$verbose) message("  Boolean expression: ", bool_expr)
         tryCatch(
@@ -790,23 +790,23 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
                     bool_filter,
                     parent = parent,
                     name = node_name
-                )
+                    )
 
                 if (.pkgenv$verbose) message("  Successfully added logical gate: ", node_name)
 
                 # Recompute immediately to verify it works
                 # flowWorkspace::recompute(gh)
                 # message("  Recomputed successfully")
-            },
+                },
             error = function(e) {
                 warning(
                     "Failed to add logical gate '", node_name, "': ", e$message, "\n",
                     "  Parent: ", paste(parent, collapse = " : "), "\n",
                     "  Components: ", paste(component_refs, collapse = ", "), "\n",
                     "  Expression: ", bool_expr
-                )
-            }
-        )
+                    )
+                }
+            )
 
         # Recursively add children
         if (!is.null(node$children)) {
@@ -815,9 +815,9 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
                 # consistently from sanitized names.
                 child_parent <- if (!is.null(child$parent) && is.character(child$parent)) {
                     sanitize_population_name(child$parent)
-                } else {
+                    } else {
                     paste0(parent, "/", node_name)
-                }
+                    }
                 add_population_node(
                     gh = gh,
                     node = child,
@@ -827,10 +827,10 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
                     strip_comp_prefix = strip_comp_prefix,
                     verbose = verbose,
                     deferred = deferred
-                )
+                    )
+                }
             }
-        }
-    } else {
+        } else {
         # And gate:
         # those are the populations where this definition should be applied to
         node$pop_def$children$populations
@@ -846,7 +846,7 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
                     # this seems to be working for the current case but should
                     if (inherits(gate_obj, "quadGate")) {
                         node_name <- node_name[c(3, 4, 2, 1)]
-                    }
+                        }
                     # quad gate is tried to be added multiple times.
                     # Get flowFrame parameter names from the GatingHierarchy
                     flowframe_params <- markernames(gh)
@@ -856,20 +856,20 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
                         message("Verifying marker name consistency for gate: ", node_name[1])
                         message("  Gate params: ", paste(gate_params, collapse = ", "))
                         message("  FlowFrame params: ", paste(flowframe_params, collapse = ", "))
-                    }
+                        }
 
                     # Verify marker name consistency
                     verification <- verify_gate_marker_names(
                         gate_obj = gate_obj,
                         flowframe_params = flowframe_params,
                         gate_source = paste(node_name, collapse = "/")
-                    )
+                        )
 
                     if (!verification$valid && .pkgenv$verbose) {
                         for (warn in verification$warnings) {
                             message("  Note: ", warn)
+                            }
                         }
-                    }
 
                     # Adjust gate transformations if needed
                     gate_obj_adjusted <- adjust_gate_transformations(gh, gate_obj, strip_comp_prefix = strip_comp_prefix)
@@ -878,7 +878,7 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
                     if (.pkgenv$verbose) {
                         gate_params_adjusted <- flowCore::parameters(gate_obj_adjusted)
                         message("  Gate params after adjustment: ", paste(gate_params_adjusted, collapse = ", "))
-                    }
+                        }
 
                     tryCatch(
                         {
@@ -887,28 +887,28 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
                                 gate = gate_obj_adjusted,
                                 parent = parent,
                                 name = node_name
-                            )
+                                )
                             if (.pkgenv$verbose) {
                                 message("  Successfully added gate: ", paste(node_name, collapse = "/"))
-                            }
-                        },
+                                }
+                            },
                         error = function(e) {
                             # Ignore "already exists" errors - this can happen with quadGates
                             # when the population was already added in a previous step
                             if (grepl("already exists", e$message, ignore.case = TRUE)) {
                                 if (.pkgenv$verbose) {
                                     message("  Population already exists, skipping: ", paste(node_name, collapse = "/"))
-                                }
-                            } else {
+                                    }
+                                } else {
                                 warning(
                                     "Failed to add population '", paste(node_name, collapse = "/"), "': ", e$message, "\n",
                                     "  Parent: ", paste(parent, collapse = " : "), "\n",
                                     "  Gate type: ", class(gate_obj_adjusted)[1]
-                                )
+                                    )
+                                }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
                 # Recursively add children
                 if (!is.null(node$children)) {
@@ -929,17 +929,17 @@ add_population_node <- function(gh, node, gates, sample_uuid, parent = "root",
                             strip_comp_prefix = strip_comp_prefix,
                             verbose = verbose,
                             deferred = deferred
-                        )
+                            )
+                        }
                     }
-                }
-            },
+                },
             error = function(e) {
                 warning(
                     "Failed to process gate for population '", paste(node_name, collapse = "/"), "': ", e$message, "\n",
                     "  Parent: ", paste(parent, collapse = " : "), "\n",
                     "  Sample UUID: ", sample_uuid
-                )
-            }
-        )
-    }
-}
+                    )
+                }
+            )
+        }
+                                    }

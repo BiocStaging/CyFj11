@@ -44,16 +44,16 @@ as_num_quiet <- function(x) {
     rx <- paste0(
         "^[[:space:]]*[+-]?(Inf(inity)?|NaN|(0[xX][0-9a-fA-F]+",
         "|[0-9]+(\\.[0-9]*)?|\\.[0-9]+)([eE][+-]?[0-9]+)?)[[:space:]]*$"
-    )
+        )
     ok <- grepl(rx, x)
     out <- rep(NA_real_, length(x))
     if (any(ok)) {
         # Values reaching as.numeric() already matched the numeric-literal regex,
         # so the conversion cannot warn.
         out[ok] <- as.numeric(x[ok])
-    }
+        }
     out
-}
+    }
 
 #' @rdname safe-coercion
 as_int_quiet <- function(x) {
@@ -64,7 +64,7 @@ as_int_quiet <- function(x) {
     in_range <- ok & n >= -.Machine$integer.max & n <= .Machine$integer.max
     out[in_range] <- as.integer(n[in_range])
     out
-}
+    }
 
 #' @importFrom utils packageVersion
 NULL
@@ -82,7 +82,7 @@ NULL
 #' @keywords internal
 `%||%` <- function(x, y) {
     if (is.null(x)) y else x
-}
+    }
 
 #' Load Example FlowJo v11 Workspace
 #'
@@ -100,10 +100,10 @@ load_example_workspace <- function() {
     test_file <- system.file("extdata", "min_test.flowjo", package = "CyFj11")
     if (!file.exists(test_file)) {
         stop("Example FlowJo v11 file not found. Please ensure the package is installed with inst/extdata/min_test.flowjo")
-    }
+        }
 
     return(read_flowjo11_workspace(test_file))
-}
+    }
 
 #' Unified Parameter Name Mapping Function
 #'
@@ -129,63 +129,63 @@ load_example_workspace <- function() {
 #' @return Named list mapping source names to target names. Unmapped names have NULL values.
 #' @keywords internal
 map_param_names <- function(source_names,
-                            target_names,
-                            target_descriptions = NULL,
-                            strip_comp_prefix = FALSE,
-                            case_insensitive = FALSE,
-                            sanitize_slashes = TRUE) {
-    if (is.null(source_names) || length(source_names) == 0) {
+    target_names,
+    target_descriptions = NULL,
+    strip_comp_prefix = FALSE,
+    case_insensitive = FALSE,
+    sanitize_slashes = TRUE) {
+                                if (is.null(source_names) || length(source_names) == 0) {
         return(list())
-    }
+        }
 
-    if (is.null(target_names) || length(target_names) == 0) {
+                                if (is.null(target_names) || length(target_names) == 0) {
         return(setNames(lapply(source_names, function(x) NULL), source_names))
-    }
+        }
 
     # Sanitization function
-    sanitize_name <- function(x) {
+                                sanitize_name <- function(x) {
         # Strip "Comp-" prefix if requested
         if (strip_comp_prefix) {
             x <- sub("^Comp-", "", x)
-        }
+            }
         # Replace "/" with "_" (flowCore compensation sanitization)
         if (sanitize_slashes) {
             x <- gsub("/", "_", x)
-        }
+            }
         # Apply case normalization if requested
         if (case_insensitive) {
             x <- tolower(x)
-        }
+            }
         x
-    }
+        }
 
     # Create sanitized versions for matching
-    sanitized_source <- vapply(source_names, sanitize_name, character(1))
-    sanitized_target <- vapply(target_names, sanitize_name, character(1))
+                                sanitized_source <- vapply(source_names, sanitize_name, character(1))
+                                sanitized_target <- vapply(target_names, sanitize_name, character(1))
 
     # Prepare optional description matching.
     # target_descriptions should be a named vector: target_name -> description/marker
-    has_descriptions <- !is.null(target_descriptions) && length(target_descriptions) > 0
-    if (has_descriptions) {
+                                has_descriptions <- !is.null(target_descriptions) && length(target_descriptions) > 0
+                                if (has_descriptions) {
         # Ensure descriptions are named by target_names; if names are missing,
         # assume target_descriptions is in the same order as target_names.
         desc_names <- names(target_descriptions)
         if (is.null(desc_names)) {
             if (length(target_descriptions) == length(target_names)) {
                 names(target_descriptions) <- target_names
-            } else {
+                } else {
                 has_descriptions <- FALSE
+                }
             }
-        }
         if (has_descriptions) {
             sanitized_desc <- vapply(target_descriptions, sanitize_name, character(1))
+            }
         }
-    }
 
     # Create mapping
-    mapping <- list()
+                                mapping <- list()
 
-    for (i in seq_along(source_names)) {
+                                for (i in seq_along(source_names)) {
         source_name <- source_names[i]
         sanitized_s <- sanitized_source[i]
 
@@ -193,7 +193,7 @@ map_param_names <- function(source_names,
         if (source_name %in% target_names) {
             mapping[[source_name]] <- source_name
             next
-        }
+            }
 
         # Match via sanitized names
         match_idx <- which(sanitized_target == sanitized_s)
@@ -202,7 +202,7 @@ map_param_names <- function(source_names,
             # Use the original target name
             mapping[[source_name]] <- target_names[match_idx[1]]
             next
-        }
+            }
 
         # Match via descriptions (e.g. detector name against marker name)
         if (has_descriptions) {
@@ -210,15 +210,15 @@ map_param_names <- function(source_names,
             if (length(match_idx) > 0) {
                 mapping[[source_name]] <- names(target_descriptions)[match_idx[1]]
                 next
+                }
             }
-        }
 
         # No match found
         mapping[[source_name]] <- NULL
-    }
+        }
 
-    return(mapping)
-}
+                                return(mapping)
+                                }
 
 #' Apply Parameter Name Mapping to Names Vector
 #'
@@ -243,20 +243,20 @@ apply_param_mapping <- function(source_names, mapping, on_no_match = "keep") {
         if (is.null(mapped)) {
             if (on_no_match == "keep") {
                 result[i] <- source_name
-            } else if (on_no_match == "drop") {
+                } else if (on_no_match == "drop") {
                 result[i] <- NA_character_
-            } else if (on_no_match == "warn") {
+                } else if (on_no_match == "warn") {
                 warning("Could not map parameter name '", source_name, "' to target names")
                 result[i] <- source_name
-            }
-        } else {
+                }
+            } else {
             result[i] <- mapped
+            }
         }
-    }
 
     # Remove NA values (dropped names)
     result[!is.na(result)]
-}
+    }
 
 #' Verify Marker Name Consistency After Gate Creation
 #'
@@ -284,20 +284,20 @@ verify_gate_marker_names <- function(gate_obj, flowframe_params, gate_source = "
     gate_params <- tryCatch(
         {
             flowCore::parameters(gate_obj)
-        },
+            },
         error = function(e) {
             warnings_vec <- c(warnings_vec, paste("Could not extract parameters from gate:", e$message))
             return(character())
-        }
-    )
+            }
+        )
 
     if (length(gate_params) == 0) {
         return(list(
             valid = FALSE,
             mapping = list(),
             warnings = warnings_vec
-        ))
-    }
+            ))
+        }
 
     # Create parameter name mapping.  flowframe_params is a named vector from
     # markernames() with detector/channel names as names and marker names as values.
@@ -309,30 +309,30 @@ verify_gate_marker_names <- function(gate_obj, flowframe_params, gate_source = "
         strip_comp_prefix = TRUE,
         case_insensitive = FALSE,
         sanitize_slashes = TRUE
-    )
+        )
 
     # Check for unmapped parameters - collect all warnings at once
     unmapped_params <- gate_params[vapply(gate_params, function(param) {
         is.null(name_mapping[[param]])
-    }, logical(1))]
+        }, logical(1))]
 
     if (length(unmapped_params) > 0) {
         additional_warnings <- vapply(unmapped_params, function(param) {
             msg <- paste0("Gate parameter '", param, "' does not match any flowFrame parameter")
             if (gate_source != "") {
                 msg <- paste0(msg, " (gate: ", gate_source, ")")
-            }
+                }
             msg
-        }, character(1))
+            }, character(1))
         warnings_vec <- c(warnings_vec, additional_warnings)
-    }
+        }
 
     list(
         valid = length(warnings_vec) == 0,
         mapping = name_mapping,
         warnings = warnings_vec
-    )
-}
+        )
+    }
 
 #' Restore Marker Names After Automated Routine Changes
 #'

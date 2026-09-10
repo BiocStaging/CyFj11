@@ -51,65 +51,65 @@ NULL
 #' file.exists(out_file)
 export_flowjo10_workspace <- function(gating_set, output_path,
     workspace_name = NULL,
-        fcs_root = NULL,
-            overwrite = FALSE) {
+    fcs_root = NULL,
+    overwrite = FALSE) {
     # Validate inputs
-    if (missing(gating_set) || missing(output_path)) {
+                if (missing(gating_set) || missing(output_path)) {
         stop("Missing required parameters: gating_set, output_path")
-    }
-    if (!is.character(output_path) || length(output_path) != 1) {
+        }
+                if (!is.character(output_path) || length(output_path) != 1) {
         stop("output_path must be a single character string")
-    }
-    if (!requireNamespace("flowWorkspace", quietly = TRUE)) {
+        }
+                if (!requireNamespace("flowWorkspace", quietly = TRUE)) {
         stop("flowWorkspace package required for GatingSet operations")
-    }
+        }
 
     # ---- Accept a single GatingSet or a list of them -------------------------
     # fj11_to_gatingset() returns a named list of GatingSets (one per sample);
     # merge them so the export path always sees one GatingSet.
-    if (is.list(gating_set) && !methods::is(gating_set, "GatingSet")) {
+                if (is.list(gating_set) && !methods::is(gating_set, "GatingSet")) {
         if (length(gating_set) == 0 || !all(vapply(gating_set, methods::is, logical(1), class2 = "GatingSet"))) {
             stop("gating_set must be a GatingSet or a list of GatingSets")
-        }
+            }
         if (length(gating_set) > 1) {
             warning(
                 "gating_set is a list of ", length(gating_set),
                 " GatingSets; merging with flowWorkspace::merge_list_to_gs() ",
                 "(per-sample transformations may be discarded)"
-            )
-        }
+                )
+            }
         gating_set <- flowWorkspace::merge_list_to_gs(gating_set)
-    }
+        }
 
     # ---- Determine the directory for FCS path calculations ------------------
-    target_fcs_dir <- if (!is.null(fcs_root)) {
+                target_fcs_dir <- if (!is.null(fcs_root)) {
         outDir <- fcs_root
         if (!dir.exists(outDir)) {
             stop(
                 "fcs_root directory does not exist: ", outDir
-            )
-        }
+                )
+            }
         outDir
-    } else {
+        } else {
         dirname(output_path)
-    }
+        }
 
     # ---- Write FCS files when an explicit fcs_root is supplied --------------
-    if (!is.null(fcs_root)) {
+                if (!is.null(fcs_root)) {
         write_fcs_files_to_dir(gating_set, target_fcs_dir, overwrite = overwrite)
-    }
+        }
 
     # ---- Extract components from GatingSet ----------------------------------
-    samples_data <- extract_samples_from_gatingset_v10(gating_set, target_fcs_dir = target_fcs_dir)
-    gates_data <- extract_gates_from_gatingset_v10(gating_set)
-    populations_data <- extract_populations_from_gatingset_v10(gating_set, samples_data, gates_data)
-    groups_data <- create_default_groups_v10(samples_data)
+                samples_data <- extract_samples_from_gatingset_v10(gating_set, target_fcs_dir = target_fcs_dir)
+                gates_data <- extract_gates_from_gatingset_v10(gating_set)
+                populations_data <- extract_populations_from_gatingset_v10(gating_set, samples_data, gates_data)
+                groups_data <- create_default_groups_v10(samples_data)
 
-    if (is.null(workspace_name)) {
+                if (is.null(workspace_name)) {
         workspace_name <- tools::file_path_sans_ext(basename(output_path))
-    }
+        }
 
-    xml_content <- generate_flowjo10_xml(
+                xml_content <- generate_flowjo10_xml(
         gating_set = gating_set,
         samples = samples_data,
         gates = gates_data,
@@ -118,24 +118,24 @@ export_flowjo10_workspace <- function(gating_set, output_path,
         workspace_name = workspace_name,
         output_path = output_path,
         force_XSC_linear = TRUE
-    )
+        )
 
-    result <- tryCatch(
+                result <- tryCatch(
         {
             writeLines(xml_content, output_path)
             TRUE
-        },
+            },
         error = function(e) {
             warning("Failed to write FlowJo v10 workspace: ", e$message)
             FALSE
-        }
-    )
+            }
+        )
 
-    if (result) {
+                if (result) {
         message("Successfully exported FlowJo v10 workspace to: ", output_path)
-    }
-    return(result)
-}
+        }
+                return(result)
+                }
 
 #' Extract Samples from GatingSet for FlowJo v10
 #'
@@ -165,20 +165,20 @@ extract_samples_from_gatingset_v10 <- function(gating_set, target_fcs_dir = NULL
                         # Just extract the filename (e.g., "sample01.fcs")
                         original_basename <- basename(keyword_list$`$FIL`)
                         original_fcs_path <- keyword_list$FILENAME
-                    }
-                },
+                        }
+                    },
                 error = function(e) {
                     warning("problem with keywords ", sample_name, "\n")
-                }
-            )
-        }
+                    }
+                )
+            }
 
         # --- CONSTRUCT THE NEW URI ---
         final_uri <- NA
 
         if (!is.na(original_basename) && !is.null(target_fcs_dir)) {
             final_uri <- file.path(target_fcs_dir, original_basename)
-        }
+            }
 
         # --- RECONSTRUCT KEYWORDS FROM ORIGINAL FCS HEADER ---
         # flowWorkspace/CytoML rename compensated channels to "Comp-..." in the
@@ -191,49 +191,49 @@ extract_samples_from_gatingset_v10 <- function(gating_set, target_fcs_dir = NULL
         # First try: the FILENAME keyword points to an existing file
         if (!is.na(original_fcs_path) && file.exists(original_fcs_path)) {
             fcs_path <- original_fcs_path
-        }
+            }
         # Second try: the final_uri (target location) already exists
         else if (!is.na(final_uri) && file.exists(final_uri)) {
             fcs_path <- final_uri
-        }
+            }
         # Third try: look for the basename in the same directory as FILENAME
         else if (!is.na(original_fcs_path) && !is.na(original_basename)) {
             alt_path <- file.path(dirname(original_fcs_path), original_basename)
             if (file.exists(alt_path)) {
                 fcs_path <- alt_path
+                }
             }
-        }
 
         if (!is.null(fcs_path)) {
             fcs_header <- tryCatch(
                 {
                     flowCore::read.FCSheader(fcs_path)[[1]]
-                },
+                    },
                 error = function(e) NULL
-            )
-        }
+                )
+            }
 
         # GatingSet-derived keywords that should be preserved/overlaid
         gs_keywords <- tryCatch(
             {
                 flowCore::keyword(gh)
-            },
+                },
             error = function(e) NULL
-        )
+            )
 
         keywords <- build_sample_keywords(
             fcs_keywords = fcs_header,
             gs_keywords = gs_keywords,
             final_filename = final_uri
-        )
+            )
 
         # --- EXTRACT COMPENSATION MATRIX ---
         spill_matrix <- tryCatch(
             {
                 parse_spill_keyword(keywords)
-            },
+                },
             error = function(e) NULL
-        )
+            )
 
         samples[[sample_id]] <- list(
             id = sample_id,
@@ -243,15 +243,15 @@ extract_samples_from_gatingset_v10 <- function(gating_set, target_fcs_dir = NULL
             count = tryCatch(
                 {
                     nrow(flowCore::exprs(flowWorkspace::gh_pop_get_data(gh)))
-                },
+                    },
                 error = function(e) 0
-            ),
+                ),
             spill_matrix = spill_matrix,
             fcs_header = fcs_header
-        )
-    }
+            )
+        }
     return(samples)
-}
+    }
 
 #' Read Original FCS Header Keywords
 #'
@@ -261,14 +261,14 @@ extract_samples_from_gatingset_v10 <- function(gating_set, target_fcs_dir = NULL
 get_fcs_header_keywords <- function(fcs_path) {
     if (is.null(fcs_path) || !file.exists(fcs_path)) {
         return(NULL)
-    }
+        }
     tryCatch(
         {
             flowCore::read.FCSheader(fcs_path)[[1]]
-        },
+            },
         error = function(e) NULL
-    )
-}
+        )
+    }
 
 #' Parse SPILL Keyword into Matrix
 #'
@@ -279,22 +279,22 @@ parse_spill_keyword <- function(keywords) {
     spill <- keywords[["SPILL"]]
     if (is.null(spill)) {
         return(NULL)
-    }
+        }
 
     if (is.matrix(spill)) {
         if (is.null(rownames(spill)) && !is.null(colnames(spill))) {
             rownames(spill) <- colnames(spill)
-        }
+            }
         if (is.null(colnames(spill)) && !is.null(rownames(spill))) {
             colnames(spill) <- rownames(spill)
-        }
+            }
         return(spill)
-    }
+        }
 
     # SPILL may be a single comma-separated string or a character vector.
     if (is.character(spill) && length(spill) == 1) {
         spill <- strsplit(spill, ",")[[1]]
-    }
+        }
 
     # FCS SPILL keyword is a flat vector: first value is the number of
     # parameters, followed by the parameter names, then the column-major matrix
@@ -305,22 +305,22 @@ parse_spill_keyword <- function(keywords) {
     n <- as_int_quiet(vals[1])
     if (is.na(n) || n <= 0) {
         return(NULL)
-    }
+        }
 
     needed_total <- 1 + n + n * n
     if (length(spill) < needed_total) {
         return(NULL)
-    }
+        }
 
     col_names <- tokens[2:(n + 1)]
     mat_vals <- vals[(n + 2):needed_total]
     if (any(is.na(mat_vals))) {
         return(NULL)
-    }
+        }
 
     mat <- matrix(mat_vals, nrow = n, ncol = n, dimnames = list(col_names, col_names), byrow = TRUE)
     mat
-}
+    }
 
 #' Build Sample Keywords from Original FCS Header and GatingSet Overlay
 #'
@@ -345,9 +345,9 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
         for (k in names(fcs_list)) {
             if (k != "SPILL") {
                 keywords[[k]] <- fcs_list[[k]]
+                }
             }
         }
-    }
 
     # Rewrite FILENAME as requested
     keywords[["FILENAME"]] <- final_filename
@@ -381,7 +381,7 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
             keywords[[sprintf("$P%dN", idx)]] <- comp_name
             keywords[[sprintf("$P%dS", idx)]] <- orig_s
             keywords[[sprintf("$P%dR", idx)]] <- as.character(orig_r)
-        }
+            }
 
         # Ensure SPILL is serialized in FCS flat format: n, names, values.
         # GatingSet keywords may store SPILL as a matrix even when the original
@@ -395,7 +395,7 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
             col_names <- sub("^Comp-", "", colnames(sp))
             flat_spill <- paste(c(ncol(sp), col_names, as.vector(sp)), collapse = ",")
             keywords[["SPILL"]] <- flat_spill
-        } else if (is.character(sp)) {
+            } else if (is.character(sp)) {
             # Already a flat string (possibly a single element). Strip any Comp- prefix
             # from the channel names so it matches the original FCS parameters.
             if (length(sp) == 1) {
@@ -404,16 +404,16 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
                 if (!is.na(n) && length(parts) >= 1 + n) {
                     parts[2:(n + 1)] <- sub("^Comp-", "", parts[2:(n + 1)])
                     sp <- paste(parts, collapse = ",")
-                }
-            } else if (length(sp) > 1) {
+                    }
+                } else if (length(sp) > 1) {
                 sp <- paste(sp, collapse = ",")
-            }
+                }
             keywords[["SPILL"]] <- sp
+            }
         }
-    }
 
     keywords
-}
+    }
 
 #' Build FlowJo Spillover Matrix XML
 #'
@@ -425,7 +425,7 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
 build_spillover_matrix_xml <- function(spill_matrix, matrix_id, indent = "     ") {
     if (is.null(spill_matrix)) {
         return(character(0))
-    }
+        }
 
     param_names <- colnames(spill_matrix)
     if (is.null(param_names)) param_names <- rownames(spill_matrix)
@@ -441,19 +441,19 @@ build_spillover_matrix_xml <- function(spill_matrix, matrix_id, indent = "     "
         sprintf(
             '%s    <data-type:parameter data-type:name="%s" userProvidedCompInfix="Comp-%s" />',
             indent, xml_encode(p), xml_encode(p)
-        )
-    }, character(1))
+            )
+        }, character(1))
 
     if (is.null(rownames(spill_matrix))) {
         rownames(spill_matrix) <- param_names
-    } else {
+        } else {
         rownames(spill_matrix) <- sub("^Comp-", "", rownames(spill_matrix))
-    }
+        }
     if (is.null(colnames(spill_matrix))) {
         colnames(spill_matrix) <- param_names
-    } else {
+        } else {
         colnames(spill_matrix) <- sub("^Comp-", "", colnames(spill_matrix))
-    }
+        }
 
     # Build spillover coefficient lines using nested vapply
     spillover_lines <- vapply(param_names, function(p) {
@@ -463,32 +463,32 @@ build_spillover_matrix_xml <- function(spill_matrix, matrix_id, indent = "     "
             sprintf(
                 '%s    <transforms:coefficient data-type:parameter="%s" transforms:value="%.10g" />',
                 indent, xml_encode(q), val
-            )
-        }, character(1))
+                )
+            }, character(1))
         paste(c(
             sprintf(
                 '%s  <transforms:spillover data-type:parameter="%s" userProvidedCompInfix="Comp-%s" >',
                 indent, xml_encode(p), xml_encode(p)
-            ),
+                ),
             coef_lines,
             sprintf("%s  </transforms:spillover>", indent)
-        ), collapse = "\n")
-    }, character(1))
+            ), collapse = "\n")
+        }, character(1))
 
     # Combine all lines
     lines <- c(
         sprintf(
             '%s<transforms:spilloverMatrix spectral="0" weightOptAlgorithmType="OLS" prefix="Comp-" name="Acquisition-defined" editable="0" matrixType="wizardDefined" color="#c0c0c0" version="FlowJo-10.10.1" status="FINALIZED" transforms:id="%s" suffix="" >',
             indent, xml_encode(matrix_id)
-        ),
+            ),
         sprintf("%s  <data-type:parameters>", indent),
         param_lines,
         sprintf("%s  </data-type:parameters>", indent),
         spillover_lines,
         sprintf("%s</transforms:spilloverMatrix>", indent)
-    )
+        )
     lines
-}
+    }
 #' Extract Gates from GatingSet for FlowJo v10
 #'
 #' @param gating_set GatingSet object
@@ -508,7 +508,7 @@ extract_gates_from_gatingset_v10 <- function(gating_set) {
     generate_flowjo_id <- function() {
         id_env$counter <- id_env$counter + 1L
         return(paste0("ID", id_env$counter))
-    }
+        }
 
     # Helper function to get or create FlowJo ID for a sample/population combination
     get_or_create_flowjo_id <- function(sample_name, pop_path) {
@@ -516,10 +516,10 @@ extract_gates_from_gatingset_v10 <- function(gating_set) {
 
         if (is.null(id_lookup[[lookup_key]])) {
             id_lookup[[lookup_key]] <- generate_flowjo_id()
-        }
+            }
 
         return(id_lookup[[lookup_key]])
-    }
+        }
 
     # Get all population paths
     sample_names <- flowWorkspace::sampleNames(gating_set)
@@ -533,12 +533,12 @@ extract_gates_from_gatingset_v10 <- function(gating_set) {
             pop_paths <- tryCatch(
                 {
                     flowWorkspace::gs_get_pop_paths(gh, path = "auto")
-                },
+                    },
                 error = function(e) {
                     warning("Failed to get population paths for sample ", sample_name, ": ", e$message)
                     character(0)
-                }
-            )
+                    }
+                )
 
             # Extract gate information for each population
             for (pop_path in pop_paths) {
@@ -546,7 +546,7 @@ extract_gates_from_gatingset_v10 <- function(gating_set) {
                     # Skip root population as it doesn't have a gate, but add to lookup
                     get_or_create_flowjo_id(sample_name, pop_path)
                     next
-                }
+                    }
                 tryCatch(
                     {
                         # Get gate object
@@ -582,24 +582,24 @@ extract_gates_from_gatingset_v10 <- function(gating_set) {
                                     sample_name = sample_name,
                                     definition = gate_definition,
                                     lookup_key = lookup_key # For debugging/reference
-                                )
+                                    )
+                                }
                             }
-                        }
-                    },
+                        },
                     error = function(e) {
                         warning("Failed to extract gate for population ", pop_path, ": ", e$message)
-                    }
-                )
+                        }
+                    )
+                }
             }
         }
-    }
 
     # Return both gates and lookup table
     return(list(
         gates = gates,
         id_lookup = id_lookup
-    ))
-}
+        ))
+    }
 
 #' Extract Populations from GatingSet for FlowJo v10
 #'
@@ -626,12 +626,12 @@ extract_populations_from_gatingset_v10 <- function(gating_set, samples_data, gat
         pop_paths <- tryCatch(
             {
                 flowWorkspace::gs_get_pop_paths(gh, path = "auto")
-            },
+                },
             error = function(e) {
                 warning("Failed to get population paths for sample ", sample_name, ": ", e$message)
                 character(0)
-            }
-        )
+                }
+            )
 
         # Extract population information
         for (pop_path in pop_paths) {
@@ -640,16 +640,16 @@ extract_populations_from_gatingset_v10 <- function(gating_set, samples_data, gat
             parent_path <- "root"
             if (pop_path != "root") {
                 parent_path <- trimws(flowWorkspace::gs_pop_get_parent(gh, pop_path, path = "auto"))
-            }
+                }
             # Count cells in population
             nCells <- tryCatch(
                 {
                     gh_pop_get_count(gh, pop_path)
-                },
+                    },
                 error = function(e) {
                     0
-                }
-            )
+                    }
+                )
 
             # Generate population ID
             pop_id <- paste0("pop_", sample_id, "_", gsub("/", "_", pop_path))
@@ -658,7 +658,7 @@ extract_populations_from_gatingset_v10 <- function(gating_set, samples_data, gat
             gate_id <- NULL
             if (pop_path != "root") {
                 gate_id <- paste0("gate_", sample_name, "_", gsub("/", "_", pop_path))
-            }
+                }
 
             populations[[pop_id]] <- list(
                 id = pop_id,
@@ -667,12 +667,12 @@ extract_populations_from_gatingset_v10 <- function(gating_set, samples_data, gat
                 parent_path = parent_path,
                 gate_id = gate_id,
                 count = nCells
-            )
+                )
+            }
         }
-    }
 
     return(populations)
-}
+    }
 
 #' Create Default Groups for FlowJo v10
 #'
@@ -695,12 +695,12 @@ create_default_groups_v10 <- function(samples) {
                 keyword = "",
                 "function" = "Contains",
                 value = ""
+                )
             )
         )
-    )
 
     return(groups)
-}
+    }
 
 #' Convert flowCore Gate to FlowJo v10 Format
 #'
@@ -714,21 +714,21 @@ convert_gate_to_flowjo10_format <- function(gate, pop_name, gh = NULL) {
         gate_class <- class(gate)[1]
         if (methods::is(gate, "rectangleGate")) {
             return(convert_rectangle_to_flowjo10(gate, pop_name, gh))
-        } else if (methods::is(gate, "polygonGate")) {
+            } else if (methods::is(gate, "polygonGate")) {
             return(convert_polygon_to_flowjo10(gate, pop_name, gh))
-        } else if (methods::is(gate, "ellipsoidGate")) {
+            } else if (methods::is(gate, "ellipsoidGate")) {
             return(convert_ellipsoid_to_flowjo10(gate, pop_name, gh))
-        } else if (methods::is(gate, "booleanFilter")) {
+            } else if (methods::is(gate, "booleanFilter")) {
             return(convert_boolean_to_flowjo10(gate, pop_name, gh))
-        } else {
+            } else {
             warning("Unsupported gate type for population: ", pop_name, " (class: ", gate_class, ")")
             return(NULL)
+            }
         }
-    }
 
 
     return(NULL)
-}
+    }
 
 #' Get Transform Specification for Export
 #'
@@ -745,7 +745,7 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
     if (is.null(trans_list) || length(trans_list) == 0) {
         if (.pkgenv$verbose) warning("No transformations found in gating hierarchy for dimension ", dim) # nocov
         return(NULL)
-    }
+        }
 
     trans <- trans_list[[dim]]
 
@@ -755,14 +755,14 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
             transformType = "Linear",
             minRange = -Inf,
             maxRange = Inf
-        ))
-    }
+            ))
+        }
 
     params <- attributes(trans)
 
     if (is.null(params) || is.null(params$type)) {
         return(NULL)
-    }
+        }
 
     type <- params$type
     p <- params$parameters # may be NULL for some types
@@ -777,8 +777,8 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
             W               = p$widthBasis,
             vectorLength    = p$channelRange,
             autoWidthBasis  = FALSE
-        ))
-    }
+            ))
+        }
 
     # --- linear ---
     if (type == "linear") {
@@ -786,17 +786,17 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
             transformType = "Linear",
             minRange      = p$minRange,
             maxRange      = p$maxRange
-        ))
-    }
+            ))
+        }
 
     # --- log (includes logtGml2) ---
     if (type %in% c("log", "logtGml2", "flowJo_log")) {
         fn_env <- tryCatch(environment(trans), error = function(e) new.env())
 
         decade <- p$decade %||% p$n %||%
-            fn_env$n %||% fn_env$decade %||% 1
+        fn_env$n %||% fn_env$decade %||% 1
         offset <- p$offset %||% p$m %||%
-            fn_env$m %||% fn_env$offset %||% 1
+        fn_env$m %||% fn_env$offset %||% 1
         scale <- p$scale %||% fn_env$scale %||% 1
 
         return(list(
@@ -805,8 +805,8 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
             offset        = offset,
             decade        = decade, # now correctly 6, not 1
             scale         = scale
-        ))
-    }
+            ))
+        }
 
     # --- logicle ---
     if (type == "logicle") {
@@ -816,8 +816,8 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
             M = p$m %||% p$M %||% 4.5,
             W = p$w %||% p$W %||% 0.5,
             A = p$a %||% p$A %||% 0
-        ))
-    }
+            ))
+        }
 
     # --- arcsinh / fasinh ---
     if (type %in% c("fasinh", "arcsinh")) {
@@ -826,13 +826,13 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
             a = p$a %||% 0,
             b = p$b %||% (1 / 150),
             c = p$c %||% 0
-        ))
-    }
+            ))
+        }
 
     # --- unsupported ---
     warning("Unsupported transformation type: ", type, " for dimension ", dim)
     NULL
-}
+    }
 
 #' Collect all channel names referenced by gates in the workspace
 #'
@@ -842,31 +842,31 @@ get_transform_spec <- function(gh, dim = "SSC-A") {
 get_referenced_channels <- function(gates) {
     if (is.null(gates) || is.null(gates$gates)) {
         return(character(0))
-    }
+        }
 
     # Extract all channel names using lapply and unlist (vectorized)
     all_channels <- unlist(lapply(gates$gates, function(gate) {
         def <- gate$definition
         if (is.null(def)) {
             return(character(0))
-        }
+            }
 
         dims <- def$dimensions
         dim_params <- if (!is.null(dims)) {
             vapply(dims, function(dim) dim$parameter, character(1))
-        } else {
+            } else {
             character(0)
-        }
+            }
 
         c(
             dim_params[!is.na(dim_params)],
             if (!is.null(def$x_param)) def$x_param else character(0),
             if (!is.null(def$y_param)) def$y_param else character(0)
-        )
-    }), use.names = FALSE)
+            )
+        }), use.names = FALSE)
 
     unique(all_channels)
-}
+    }
 
 
 #' Safely get graph axis parameters for a population
@@ -890,9 +890,9 @@ get_graph_axes <- function(gh, pop_path) {
             dims <- tryCatch(parameters(gate), error = function(e) NULL)
             if (!is.null(dims) && length(dims) >= 1) {
                 return(dims)
+                }
             }
         }
-    }
 
     # 2. Try self
     if (pop_path != "root") {
@@ -901,9 +901,9 @@ get_graph_axes <- function(gh, pop_path) {
             dims <- tryCatch(parameters(gate), error = function(e) NULL)
             if (!is.null(dims) && length(dims) >= 1) {
                 return(dims)
+                }
             }
         }
-    }
 
     # 3. Try parent
     if (pop_path != "root") {
@@ -914,14 +914,14 @@ get_graph_axes <- function(gh, pop_path) {
                 dims <- tryCatch(parameters(gate), error = function(e) NULL)
                 if (!is.null(dims) && length(dims) >= 1) {
                     return(dims)
+                    }
                 }
             }
         }
-    }
 
     # 4. Default fallback
     return(c("FSC-A", "SSC-A"))
-}
+    }
 
 #' Convert Rectangle Gate to FlowJo v10 Format
 #' @keywords internal
@@ -930,7 +930,7 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
     params <- NULL
     if (!is.null(gate@parameters)) {
         params <- flowCore::parameters(gate)
-    }
+        }
 
     min_vals <- gate@min
     max_vals <- gate@max
@@ -938,10 +938,10 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
     # ---- validate ------------------------------------------------------------
     if (is.null(params) || is.null(min_vals) || is.null(max_vals)) {
         return(NULL)
-    }
+        }
     if (length(params) != length(min_vals) || length(params) != length(max_vals)) {
         return(NULL)
-    }
+        }
 
     # ---- apply inverse transformations (if gating hierarchy supplied) ---------
     if (!is.null(gh)) {
@@ -954,7 +954,7 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
             spec <- get_transform_spec(gh, param_name)
             if (is.null(spec)) {
                 return(val)
-            }
+                }
             switch(spec$transformType,
                 "Linear" = val,
                 "Log" = ,
@@ -963,19 +963,19 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
                     log_spec <- spec[names(spec) %in% valid_log_args]
                     tt <- create_log_transform(spec = log_spec)
                     tt$inverse(val)
-                },
+                    },
                 {
                     inv_fn <- trans_list[[param_name]]
                     if (is.function(inv_fn)) inv_fn(val) else val
-                }
-            )
-        }
+                    }
+                )
+            }
 
         for (i in seq_along(params)) {
             min_vals[i] <- .apply_inverse_val(min_vals[i], params[i])
             max_vals[i] <- .apply_inverse_val(max_vals[i], params[i])
+            }
         }
-    }
 
     # ---- build output --------------------------------------------------------
     if (length(params) == 1) {
@@ -983,20 +983,20 @@ convert_rectangle_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
             type = "rectangle",
             dimensions = list(
                 list(parameter = params[1], min = min_vals[1], max = max_vals[1])
-            )
-        ))
-    } else if (length(params) >= 2) {
+                )
+            ))
+        } else if (length(params) >= 2) {
         return(list(
             type = "rectangle",
             dimensions = list(
                 list(parameter = params[1], min = min_vals[1], max = max_vals[1]),
                 list(parameter = params[2], min = min_vals[2], max = max_vals[2])
-            )
-        ))
-    }
+                )
+            ))
+        }
 
     NULL
-}
+    }
 
 
 #' Convert Polygon Gate to FlowJo v10 Format
@@ -1006,18 +1006,18 @@ convert_polygon_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
     params <- NULL
     if (!is.null(gate@parameters)) {
         params <- flowCore::parameters(gate)
-    }
+        }
 
     vertices <- NULL
     if (!is.null(gate@boundaries)) {
         vertices <- gate@boundaries
-    }
+        }
 
     # ---- validate ------------------------------------------------------------
     if (is.null(params) || length(params) < 2 ||
         is.null(vertices) || nrow(vertices) < 3) {
-        return(NULL)
-    }
+            return(NULL)
+            }
 
     x_coords <- vertices[, 1]
     y_coords <- vertices[, 2]
@@ -1036,7 +1036,7 @@ convert_polygon_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
 
             if (is.null(spec)) {
                 return(coords)
-            }
+                }
 
             switch(spec$transformType,
 
@@ -1051,7 +1051,7 @@ convert_polygon_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
                     log_spec <- spec[names(spec) %in% valid_log_args]
                     tt <- create_log_transform(spec = log_spec)
                     tt$inverse(coords)
-                },
+                    },
 
                 # All other non-linear types: gh_get_transformations is correct.
                 "Biex" = ,
@@ -1060,21 +1060,21 @@ convert_polygon_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
                 "fasinh" = {
                     inv_fn <- trans_list[[param_name]]
                     if (is.function(inv_fn)) inv_fn(coords) else coords
-                },
+                    },
 
                 # Unknown / unsupported type <U+2014> leave coordinates unchanged.
                 coords
-            )
-        }
+                )
+            }
 
         x_coords <- .apply_inverse(x_coords, params[1])
         y_coords <- .apply_inverse(y_coords, params[2])
-    }
+        }
 
     # ---- build vertex list ---------------------------------------------------
     vertex_list <- lapply(seq_along(x_coords), function(i) {
         list(x = x_coords[i], y = y_coords[i])
-    })
+        })
 
     # ---- return ---------------------------------------------------------------
     list(
@@ -1082,10 +1082,10 @@ convert_polygon_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
         dimensions = list(
             list(parameter = params[1], values = x_coords),
             list(parameter = params[2], values = y_coords)
-        ),
+            ),
         vertices = vertex_list
-    )
-}
+        )
+    }
 
 
 #' Convert Ellipsoid Gate to FlowJo v10 Format
@@ -1099,48 +1099,48 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
     params <- tryCatch(
         {
             flowCore::parameters(gate)
-        },
+            },
         error = function(e) {
             NULL
-        }
-    )
+            }
+        )
     # browser() # nocov
     if (is.null(params) || length(params) < 2) {
         return(NULL)
-    }
+        }
     # browser() # nocov
     # Get ellipse parameters
     mean_vals <- tryCatch(
         {
             gate@mean
-        },
+            },
         error = function(e) {
             return(NULL)
-        }
-    )
+            }
+        )
 
     cov_mat <- tryCatch(
         {
             gate@cov
-        },
+            },
         error = function(e) {
             return(NULL)
-        }
-    )
+            }
+        )
 
     # Get distance parameter (Mahalanobis distance)
     distance <- tryCatch(
         {
             gate@distance
-        },
+            },
         error = function(e) {
             1 # Default to 1 if not available
-        }
-    )
+            }
+        )
 
     if (is.null(mean_vals) || is.null(cov_mat)) {
         return(NULL)
-    }
+        }
 
     # Extract parameters
     x_param <- params[1]
@@ -1212,21 +1212,21 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
                 trans_max <- if (is.function(fwd_fn)) {
                     out <- tryCatch(fwd_fn(262144), error = function(e) NA_real_)
                     if (is.finite(out) && out > 0) out else 1.0
-                } else {
+                    } else {
                     1.0 # arcsinh fallback: output range is [0, 1]
-                }
+                    }
                 return((value / trans_max) * 256)
-            } else {
+                } else {
                 # Linear channel: normalise raw value to [0, 256] by channel range.
                 min_val <- range_vals[1]
                 max_val <- range_vals[2]
                 range_span <- max_val - min_val
                 if (range_span == 0) {
                     return(50)
-                }
+                    }
                 return(((value - min_val) / range_span) * 256)
-            }
-        } # nocov end
+                }
+            } # nocov end
 
         # Convert all x coordinates
         center_x <- to_display_coords(center_x, x_range, x_param)
@@ -1245,7 +1245,7 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
         edge2_y <- to_display_coords(edge2_y, y_range, y_param)
         edge3_y <- to_display_coords(edge3_y, y_range, y_param)
         edge4_y <- to_display_coords(edge4_y, y_range, y_param)
-    }
+        }
 
     # Recalculate distance in display space
     foci_distance <- sqrt((focus2_x - focus1_x)^2 + (focus2_y - focus1_y)^2)
@@ -1259,15 +1259,15 @@ convert_ellipsoid_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
         foci = list(
             focus1 = list(x = focus1_x, y = focus1_y),
             focus2 = list(x = focus2_x, y = focus2_y)
-        ),
+            ),
         edge = list(
             list(x = edge1_x, y = edge1_y), # major axis +
             list(x = edge3_x, y = edge3_y), # major axis -
             list(x = edge2_x, y = edge2_y), # minor axis +
             list(x = edge4_x, y = edge4_y) # minor axis -
-        )
-    ))
-}
+            )
+        ))
+    }
 
 #' Convert Boolean Gate to FlowJo v10 Format
 #'
@@ -1280,16 +1280,16 @@ convert_boolean_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
     expr <- tryCatch(
         {
             attr(gate, "expr")
-        },
+            },
         error = function(e) {
             warning("Failed to extract expression from boolean gate: ", pop_name)
             return(NULL)
-        }
-    )
+            }
+        )
 
     if (is.null(expr)) {
         return(NULL)
-    }
+        }
 
     expr_str <- if (is.character(expr)) expr else deparse(expr, width.cutoff = 500L)[1]
 
@@ -1304,12 +1304,12 @@ convert_boolean_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
                 error = function(e) {
                     warning("Could not resolve full path for '", name, "'")
                     name
-                }
-            )
-        } else {
+                    }
+                )
+            } else {
             name
+            }
         }
-    }
 
     resolve_parent_path <- function() {
         if (!is.null(gh)) {
@@ -1318,26 +1318,26 @@ convert_boolean_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
                     parent <- flowWorkspace::gh_pop_get_parent(gh, pop_name)
                     if (identical(parent, "root")) {
                         "root"
-                    } else {
+                        } else {
                         sub("^/", "", flowWorkspace::gh_pop_get_full_path(gh, parent))
-                    }
-                },
+                        }
+                    },
                 error = function(e) {
                     warning("Could not get parent for '", pop_name, "'; falling back to 'root'")
                     "root"
-                }
-            )
-        } else {
+                    }
+                )
+            } else {
             "root"
+            }
         }
-    }
 
     parse_component <- function(comp) {
         comp <- trimws(comp)
         negated <- startsWith(comp, "!")
         raw <- if (negated) trimws(sub("^!", "", comp)) else comp
         list(name = resolve_full_path(raw), negated = negated)
-    }
+        }
 
     if (grepl("&", expr_clean)) {
         parts <- trimws(strsplit(expr_clean, "\\s*&+\\s*")[[1]])
@@ -1345,12 +1345,12 @@ convert_boolean_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
         parsed <- lapply(parts, parse_component)
 
         dep_names <- vapply(parsed, `[[`, character(1), "name")
-        dep_neg <- vapply(parsed, `[[`, logical(1), "negated")
+            dep_neg <- vapply(parsed, `[[`, logical(1), "negated")
 
         # <U+2500><U+2500> KEY FIX: "parent & !dep" is a FlowJo NotNode, not AndNode <U+2500><U+2500><U+2500><U+2500><U+2500><U+2500><U+2500><U+2500><U+2500><U+2500><U+2500><U+2500><U+2500><U+2500>
-        non_neg_idx <- which(!dep_neg)
-        neg_idx <- which(dep_neg)
-        if (length(non_neg_idx) == 1 && length(neg_idx) >= 1 && !is.null(gh)) {
+            non_neg_idx <- which(!dep_neg)
+            neg_idx <- which(dep_neg)
+            if (length(non_neg_idx) == 1 && length(neg_idx) >= 1 && !is.null(gh)) {
             if (identical(dep_names[non_neg_idx], resolve_parent_path())) {
                 return(list(
                     type       = "boolean",
@@ -1358,18 +1358,18 @@ convert_boolean_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
                     expression = expr_str,
                     dependents = dep_names[neg_idx], # only the negated pop(s)
                     negated    = rep(TRUE, length(neg_idx))
-                ))
+                    ))
+                }
             }
-        }
 
-        return(list(
+            return(list(
             type       = "boolean",
             op_type    = "and",
             expression = expr_str,
             dependents = dep_names,
             negated    = dep_neg
-        ))
-    } else if (grepl("\\|", expr_clean)) {
+            ))
+            } else if (grepl("\\|", expr_clean)) {
         parts <- trimws(strsplit(expr_clean, "\\s*\\|+\\s*")[[1]])
         parts <- parts[nzchar(parts)]
         parsed <- lapply(parts, parse_component)
@@ -1379,9 +1379,9 @@ convert_boolean_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
             op_type    = "or",
             expression = expr_str,
             dependents = vapply(parsed, `[[`, character(1), "name"),
-            negated    = vapply(parsed, `[[`, logical(1), "negated")
-        ))
-    } else if (startsWith(expr_clean, "!")) {
+                negated    = vapply(parsed, `[[`, logical(1), "negated")
+                ))
+                } else if (startsWith(expr_clean, "!")) {
         # <U+2500><U+2500> KEY FIX: pure NOT <U+2014> just the negated dep, no parent in dependents <U+2500><U+2500><U+2500><U+2500><U+2500><U+2500><U+2500>
         dep_path <- resolve_full_path(trimws(sub("^!", "", expr_clean)))
         return(list(
@@ -1390,12 +1390,12 @@ convert_boolean_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
             expression = expr_str,
             dependents = dep_path, # single string, not c(parent, dep)
             negated    = TRUE
-        ))
-    } else {
+            ))
+        } else {
         warning("Could not determine boolean operation type for: ", pop_name)
         return(NULL)
-    }
-}
+        }
+                }
 
 
 #' Generate Logical Node XML (AndNode, OrNode, NotNode)
@@ -1408,24 +1408,24 @@ convert_boolean_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
 #' @param gates Full gates list (for looking up dependent gates if needed)
 #' @return Character vector of XML lines
 #' @keywords internal
-generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, gates = NULL) {
+            generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, gates = NULL) {
     xml_lines <- character(0)
     def <- gate$definition
 
     if (is.null(def) || def$type != "boolean") {
         return(xml_lines)
-    }
+        }
     # Determine node type
     node_type <- switch(def$op_type,
         "and" = "AndNode",
         "or" = "OrNode",
         "not" = "NotNode",
         "Population"
-    )
+        )
 
     if (node_type == "Population") {
         return(xml_lines) # Fallback if unknown type
-    }
+        }
     # browser() # nocov
     # Format display name according to FlowJo conventions
     display_name <- pop_name
@@ -1444,9 +1444,9 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
     tryCatch(
         {
             count <- flowWorkspace::gh_pop_get_count(gh, child_path)
-        },
+            },
         error = function(e) {}
-    )
+        )
 
     # Start node element
     xml_lines <- c(
@@ -1454,8 +1454,8 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
         sprintf(
             '%s<%s name="%s" annotation="" owningGroup="" expanded="1" sortPriority="10" count="%d">',
             indent, node_type, xml_encode(pop_name), count
+            )
         )
-    )
 
     # Add Graph for AndNode and OrNode (NotNode typically doesn't have one in the example)
     if (def$op_type %in% c("and", "or")) {
@@ -1463,9 +1463,9 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
         axes <- tryCatch(
             {
                 get_graph_axes(gh, def$dependents[1])
-            },
+                },
             error = function(e) c("FSC-A", "SSC-A")
-        )
+            )
 
         xml_lines <- c(
             xml_lines,
@@ -1481,8 +1481,8 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
             sprintf('%s      <WindowPosition x="247" y="-1415" width="390" height="679" displayed="0" panelState="---" />', indent),
             sprintf("%s    </GraphEnvironment>", indent),
             sprintf("%s  </Graph>", indent)
-        )
-    }
+            )
+        }
 
     # For NotNode, optionally include the gate definition from the dependent
     # (as shown in your example where NotNode contains a RectangleGate)
@@ -1496,7 +1496,7 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
             if (!is.na(g$name) && !is.na(dep_name) &&
                 (g$name == dep_name || basename(g$population_path) == dep_name)) {
                 # Found the dependent's gate, copy its definition
-                if (!is.null(g$definition) && g$definition$type %in% c("rectangle", "polygon", "ellipsoid")) {
+                    if (!is.null(g$definition) && g$definition$type %in% c("rectangle", "polygon", "ellipsoid")) {
                     # Add gate wrapper
                     xml_lines <- c(xml_lines, sprintf('%s  <Gate gating:id="%s">', indent, xml_encode(gate$id)))
 
@@ -1505,25 +1505,25 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
                         xml_lines <- c(
                             xml_lines,
                             sprintf('%s    <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Hairline" userDefined="1">', indent)
-                        )
+                            )
                         for (dim in gate_def$dimensions) {
                             xml_lines <- c(
                                 xml_lines,
                                 sprintf('%s      <gating:dimension gating:min="%f" gating:max="%f" yRatio="0.5">', indent, dim$min, dim$max),
                                 sprintf('%s        <data-type:fcs-dimension data-type:name="%s"/>', indent, xml_encode(dim$parameter)),
                                 sprintf("%s      </gating:dimension>", indent)
-                            )
-                        }
+                                )
+                            }
                         xml_lines <- c(xml_lines, sprintf("%s    </gating:RectangleGate>", indent))
-                    }
+                        }
                     # Could add polygon/ellipsoid handling here too
 
                     xml_lines <- c(xml_lines, sprintf("%s  </Gate>", indent))
-                }
-                break
+                    }
+                    break
+                    }
             }
         }
-    }
 
     # Add Dependents section
     xml_lines <- c(xml_lines, sprintf("%s  <Dependents>", indent))
@@ -1531,14 +1531,14 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
         # message(xml_encode(dep))
         # browser() # nocov
         xml_lines <- c(xml_lines, sprintf('%s    <Dependent name="%s" />', indent, xml_encode(dep)))
-    }
+        }
     xml_lines <- c(xml_lines, sprintf("%s  </Dependents>", indent))
 
     # Close node
     xml_lines <- c(xml_lines, sprintf("%s</%s>", indent, node_type))
 
     return(xml_lines)
-}
+    }
 
 
 #' Generate FlowJo v10 XML Content
@@ -1551,14 +1551,14 @@ generate_logical_node_xml <- function(gate, pop_name, child_path, indent, gh, ga
 #' @importFrom flowWorkspace gh_pop_get_data
 #' @return Character string containing XML content
 #' @keywords internal
-generate_flowjo10_xml <- function(gating_set, samples, gates, populations, groups, workspace_name, output_path, force_XSC_linear = FALSE, minimal_fj11 = FALSE) {
+            generate_flowjo10_xml <- function(gating_set, samples, gates, populations, groups, workspace_name, output_path, force_XSC_linear = FALSE, minimal_fj11 = FALSE) {
     if (minimal_fj11) {
         # Minimal FJ11 format - very simple structure
         xml_lines <- c(
             '<?xml version="1.0" encoding="UTF-8"?><Workspace flowJoVersion="10.10.0">',
             "<Matrices />"
-        )
-    } else {
+            )
+        } else {
         # Full FJ10 format with all attributes
         current_time <- format(Sys.time(), "%a %b %d %H:%M:%S %Z %Y")
         client_ts <- format(Sys.time(), "%s%OS3")
@@ -1582,18 +1582,18 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
             '   xsi:schemaLocation="http://www.isac-net.org/std/Gating-ML/v2.0/gating http://www.isac-net.org/std/Gating-ML/v2.0/gating/Gating-ML.v2.0.xsd http://www.isac-net.org/std/Gating-ML/v2.0/transformations http://www.isac-net.org/std/Gating-ML/v2.0/gating/Transformations.v2.0.xsd http://www.isac-net.org/std/Gating-ML/v2.0/datatypes http://www.isac-net.org/std/Gating-ML/v2.0/gating/DataTypes.v2.0.xsd "',
             sprintf('   nonAutoSaveFileName="file:%s"', xml_encode(output_path)),
             " >"
-        )
+            )
         # Add window position
         xml_lines <- c(
             xml_lines,
             '   <WindowPosition x="100" y="100" width="800" height="600" displayed="1" panelState="" />'
-        )
+            )
 
         # Add workspace-level TextTraits
         xml_lines <- c(
             xml_lines,
             '   <TextTraits font="SansSerif" size="11" name="" style="plain" color="#000000" background="#00ffffff" just="left" />'
-        )
+            )
 
         # Add Columns section
         xml_lines <- c(
@@ -1609,7 +1609,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
             '       <Property key="fj.appnode.prop.ncells" />',
             "     </TColumn>",
             "   </Columns>"
-        )
+            )
 
         # Add workspace-level compensation matrix if available
         ws_matrix_id <- NULL
@@ -1620,10 +1620,10 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                 "   <Matrices>",
                 build_spillover_matrix_xml(samples[[1]]$spill_matrix, ws_matrix_id, indent = "     "),
                 "   </Matrices>"
-            )
-        } else {
+                )
+            } else {
             xml_lines <- c(xml_lines, "   <Matrices/>")
-        }
+            }
 
         # Derive cytometer attributes from the first sample's FCS header if possible
         cyt_attrs <- derive_cytometer_attrs(if (length(samples) > 0) samples[[1]]$fcs_header else NULL)
@@ -1637,9 +1637,9 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
             tryCatch(
                 {
                     sample_gh_for_ts <- gating_set[[samples[[1]]$name]]
-                },
+                    },
                 error = function(e) {}
-            )
+                )
 
             if (!is.null(sample_gh_for_ts)) {
                 all_ts_transforms <- flowWorkspace::gh_get_transformations(sample_gh_for_ts)
@@ -1650,8 +1650,8 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                     orig_nm <- sub("^Comp-", "", nm)
                     if (!(orig_nm %in% names(ts_transforms))) {
                         ts_transforms[[orig_nm]] <- all_ts_transforms[[nm]]
+                        }
                     }
-                }
                 # Ensure scatter channels have linear transforms
                 if (force_XSC_linear) {
                     lin_trans <- flowCore::linearTransform(transformationId = "defaultLin", a = 1, b = 0)
@@ -1659,14 +1659,14 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                         if (is.null(ts_transforms[[marker]])) {
                             ts_transforms[[marker]] <- lin_trans@.Data
                             attr(ts_transforms[[marker]], "type") <- "Linear"
+                            }
                         }
                     }
-                }
                 # Ensure Time has a linear transform
                 if (is.null(ts_transforms[["Time"]])) {
                     ts_transforms[["Time"]] <- flowCore::linearTransform(transformationId = "defaultLin", a = 1, b = 0)@.Data
                     attr(ts_transforms[["Time"]], "type") <- "Linear"
-                }
+                    }
 
                 if (length(ts_transforms) > 0) {
                     # Build transform lines using lapply (vectorized)
@@ -1692,17 +1692,17 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                                         data_vals <- flowCore::exprs(fr)[, channel]
                                         actual_min <- min(data_vals, na.rm = TRUE)
                                         if (actual_min < 0) min_val <- actual_min
-                                    }
+                                        }
                                     c(min_val, max_val)
-                                } else {
+                                    } else {
                                     c(0, 262144)
-                                }
-                            },
+                                    }
+                                },
                             error = function(e) c(0, 262144)
-                        )
+                            )
 
                         emit_transform_xml(atr_tr$type, channel, ts_transforms[[tr_idx]], atr_tr, data_range, indent = "             ")
-                    })
+                        })
 
                     transform_store_lines <- c(
                         "       <TransformStore>",
@@ -1712,13 +1712,13 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                         "           </Transforms>",
                         "         </MatrixID>",
                         "       </TransformStore>"
-                    )
+                        )
+                    }
                 }
             }
-        }
         if (length(transform_store_lines) == 0) {
             transform_store_lines <- "       <TransformStore/>"
-        }
+            }
 
         # Add Cytometers section
         xml_lines <- c(
@@ -1746,7 +1746,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                 xml_encode(cyt_attrs$serialnumber),
                 xml_encode(cyt_attrs$homepage),
                 xml_encode(cyt_attrs$icon)
-            ),
+                ),
             "       <LinParams>",
             "         <Param>time</Param>",
             "       </LinParams>",
@@ -1755,8 +1755,8 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
             transform_store_lines,
             "     </Cytometer>",
             "   </Cytometers>"
-        )
-    }
+            )
+        }
 
     # Add groups
     xml_lines <- c(xml_lines, "   <Groups>")
@@ -1781,20 +1781,20 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
             sprintf('    <Group name="%s"  live="1"  role="ws.group.dlog.test"  key=""  synchronized="0"  foreground="#000000"  fontStyle="bold" >', group$name),
             "      <Criteria/>",
             "      <SampleRefs>"
-        )
+            )
 
         # Add sample references
         for (sample_id in group$sample_ids) {
             xml_lines <- c(xml_lines, sprintf('        <SampleRef sampleID="%d"/>', sample_id))
-        }
+            }
 
         xml_lines <- c(
             xml_lines,
             "         </SampleRefs>",
             "         <Keywords/>",
             "       </Group>"
-        )
-    }
+            )
+        }
     xml_lines <- c(xml_lines, "     </GroupNode>")
 
     # Add Compensation group node
@@ -1820,7 +1820,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
         "         <Keywords/>",
         "       </Group>",
         "     </GroupNode>"
-    )
+        )
 
     xml_lines <- c(xml_lines, "   </Groups>")
 
@@ -1836,12 +1836,12 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
             tryCatch(
                 {
                     sample_gh <- gating_set[[sample$name]]
-                },
+                    },
                 error = function(e) {
                     # Continue without sample_gh if not available
-                }
-            )
-        }
+                    }
+                )
+            }
 
         xml_lines <- c(
             xml_lines,
@@ -1849,16 +1849,16 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
             sprintf(
                 '       <DataSet uri="file:%s" sampleID="%d" />',
                 xml_encode(sample$uri), sample_id
+                )
             )
-        )
 
         # Add sample-level spillover matrix if compensation is present
         if (!is.null(sample$spill_matrix) && !is.null(ws_matrix_id)) {
             xml_lines <- c(
                 xml_lines,
                 build_spillover_matrix_xml(sample$spill_matrix, ws_matrix_id, indent = "       ")
-            )
-        }
+                )
+            }
 
         # Sample-level Transformations: include both original and Comp- duplicate
         # channels when compensation is applied, matching FlowJo's exported shape.
@@ -1872,9 +1872,9 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                 if (is.null(transforms[[marker]])) {
                     transforms[[marker]] <- lin_trans@.Data
                     attr(transforms[[marker]], "type") <- "Linear"
+                    }
                 }
             }
-        }
 
         # If compensation is present, add duplicate transforms for the original
         # (uncompensated) channel names as well.
@@ -1885,17 +1885,17 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                 comp_nm <- paste0("Comp-", nm)
                 if (!is.null(transforms[[comp_nm]]) && is.null(transforms[[nm]])) {
                     transforms[[nm]] <- transforms[[comp_nm]]
+                    }
                 }
-            }
             # Also ensure all Comp- channels are present
             for (nm in orig_names) {
                 # TODO verify that comp name has to be changed.
                 comp_nm <- paste0("Comp-", nm)
                 if (is.null(transforms[[comp_nm]]) && !is.null(transforms[[nm]])) {
                     transforms[[comp_nm]] <- transforms[[nm]]
+                    }
                 }
             }
-        }
 
         xml_lines <- c(xml_lines, "      <Transformations>")
         for (tr_idx in seq_along(transforms)) {
@@ -1921,20 +1921,20 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                             data_vals <- flowCore::exprs(fr)[, channel]
                             actual_min <- min(data_vals, na.rm = TRUE)
                             if (actual_min < 0) min_val <- actual_min
-                        }
+                            }
                         c(min_val, max_val)
-                    } else {
+                        } else {
                         c(0, 262144)
-                    }
-                },
+                        }
+                    },
                 error = function(e) c(0, 262144)
-            )
+                )
 
             xml_lines <- c(
                 xml_lines,
                 emit_transform_xml(atr_tr$type, channel, transform_obj, atr_tr, data_range, indent = "        ")
-            )
-        }
+                )
+            }
         xml_lines <- c(xml_lines, "      </Transformations>")
 
         # Add keywords
@@ -1945,9 +1945,9 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                 sprintf(
                     '        <Keyword name="%s" value="%s"/>',
                     xml_encode(kw_name), xml_encode(sample$keywords[[kw_name]])
+                    )
                 )
-            )
-        }
+            }
         xml_lines <- c(xml_lines, "      </Keywords>")
 
         # Get root population count
@@ -1956,21 +1956,21 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
             root_count <- tryCatch(
                 {
                     flowWorkspace::gh_pop_get_count(sample_gh, "root")
-                },
+                    },
                 error = function(e) {
                     sample$count # fallback to sample count
-                }
-            )
-        }
+                    }
+                )
+            }
         # save(file = "generate_flowjo10_xml.debug.RData", list = ls())
         gate_dims <- tryCatch(
             {
                 parameters(gh_pop_get_gate(sample_gh, gh_get_pop_paths(sample_gh)[2]))
-            },
+                },
             error = function(e) {
                 NULL
-            }
-        )
+                }
+            )
         # Only add y-axis if second dimension exists
         # Use $FIL keyword for sample name if available, otherwise use sample$name
         sample_display_name <- sample$keywords[["$FIL"]] %||% sample$name
@@ -1982,8 +1982,8 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
             first_chan <- colnames(sample$spill_matrix)[1]
             if (!is.null(first_chan) && nzchar(first_chan)) {
                 heat_map_param <- paste0("Comp-", first_chan)
+                }
             }
-        }
 
         # ---- SampleNode opening tag + Graph -----------------------------------
         xml_lines <- c(
@@ -1991,23 +1991,23 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
             sprintf(
                 '       <SampleNode name="%s" annotation="" owningGroup="" expanded="1" sortPriority="10" count="%d" sampleID="%d" >',
                 xml_encode(sample_display_name), root_count, sample_id
-            ),
+                ),
             sprintf(
                 '         <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="%s" type="Pseudocolor" fast="1" >',
                 heat_map_param
-            ),
+                ),
             sprintf(
                 '           <Axis dimension="x" name="%s" label="" auto="auto" />',
                 if (is.null(gate_dims) || length(gate_dims) < 1) "FSC-A" else gate_dims[[1]]
+                )
             )
-        )
         xml_lines <- c(
             xml_lines,
             sprintf(
                 '           <Axis dimension="y" name="%s" label="" auto="auto" />',
                 if (is.null(gate_dims) || length(gate_dims) < 2) "" else gate_dims[[2]]
+                )
             )
-        )
         xml_lines <- c(
             xml_lines,
             '           <GraphSettings level="5%" smoothingHighResolution="1" contourHighResolution="1" histogramSmoothingCount="0" graphResolution="256" showOutliers="0" drawLargeDots="0" dotsToDraw="8000" tint="le.chartfill.tinted.40" lineWeight="le.lineweight.normal" lineStyle="le.linestyle.solid" />',
@@ -2019,7 +2019,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
             '             <WindowPosition x="247" y="-1415" width="390" height="679" displayed="0" panelState="---" />',
             "           </GraphEnvironment>",
             "         </Graph>"
-        )
+            )
 
         # ---- Subpopulations for this sample ------------------------------------
         if (requireNamespace("flowWorkspace", quietly = TRUE) && !is.null(sample_gh)) {
@@ -2030,18 +2030,18 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
                 gates,
                 populations = populations[
                     names(populations)[startsWith(names(populations), paste0("pop_", sample_id, "_"))]
-                ],
+                    ],
                 parent_path = "root",
                 indent = "           ",
                 heat_map_param = heat_map_param # <-- threaded through
-            )
+                )
             xml_lines <- c(xml_lines, subpop_xml)
 
             xml_lines <- c(xml_lines, "         </Subpopulations>")
-        }
+            }
 
         xml_lines <- c(xml_lines, "       </SampleNode>", "     </Sample>")
-    }
+        }
 
     xml_lines <- c(xml_lines, "   </SampleList>")
 
@@ -2056,7 +2056,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
         '       <Iteration iterationType="SAMPLE" iterationValue="1" iterationKeyword="" discriminator="" panelSize="1" groupName="workspaceSelection" />',
         "     </Table>",
         "   </TableEditor>"
-    )
+        )
 
     # Add LayoutEditor section
     xml_lines <- c(
@@ -2072,7 +2072,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
         "     </Layout>",
         '     <WindowPosition x="0" y="3" width="900" height="600" />',
         "   </LayoutEditor>"
-    )
+        )
 
     # Add Scripts section
     xml_lines <- c(
@@ -2080,7 +2080,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
         "   <Scripts>",
         '     <Script lang="text/javascript" name="New Script     " />',
         "   </Scripts>"
-    )
+        )
 
     # Add Experiment section
     xml_lines <- c(
@@ -2103,7 +2103,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
         "       </StagingArea>",
         "     </PlateEditorState>",
         "   </Experiment>"
-    )
+        )
 
     # Add Exports section
     xml_lines <- c(xml_lines, "   <Exports/>")
@@ -2118,7 +2118,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
     xml_lines <- c(xml_lines, " </Workspace>")
 
     return(paste(xml_lines, collapse = "\n"))
-}
+    }
 
 #' Generate Sample Subpopulations XML
 #'
@@ -2132,19 +2132,19 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
 #' @param heat_map_param Channel name used for heatMapStatParameter attribute
 #' @return Character vector of XML lines
 #' @keywords internal
-generate_sample_subpopulations_xml <- function(
+            generate_sample_subpopulations_xml <- function(
     gating_hierarchy, gates, populations,
-        parent_path = "root",
-            indent = "        ",
-                heat_map_param = ""
-) {
+    parent_path = "root",
+    indent = "        ",
+    heat_map_param = ""
+    ) {
     xml_lines <- character(0)
 
     # Children of the current population
     children_paths <- tryCatch(
         flowWorkspace::gs_pop_get_children(gating_hierarchy, parent_path, path = "auto"),
         error = function(e) character(0)
-    )
+        )
 
     for (child_path in children_paths) {
         pop_display_name <- basename(child_path)
@@ -2155,21 +2155,21 @@ generate_sample_subpopulations_xml <- function(
             if (populations[[pop_id]]$name == child_path) {
                 matching_pop <- populations[[pop_id]]
                 break
+                }
             }
-        }
 
         # ---- event count -------------------------------------------------------
         pop_count <- tryCatch(
             flowWorkspace::gh_pop_get_count(gating_hierarchy, child_path),
             error = function(e) if (!is.null(matching_pop)) matching_pop$count else 0L
-        )
+            )
 
         # ---- boolean-gate check ------------------------------------------------
         is_boolean_gate <- FALSE
         if (!is.null(matching_pop) && !is.null(matching_pop$gate_id) &&
             matching_pop$gate_id %in% names(gates$gates)) {
-            g <- gates$gates[[matching_pop$gate_id]]
-            if (!is.null(g$definition) && g$definition$type == "boolean") {
+                g <- gates$gates[[matching_pop$gate_id]]
+                if (!is.null(g$definition) && g$definition$type == "boolean") {
                 is_boolean_gate <- TRUE
                 xml_lines <- c(
                     xml_lines,
@@ -2180,11 +2180,11 @@ generate_sample_subpopulations_xml <- function(
                         indent     = indent,
                         gh         = gating_hierarchy,
                         gates      = gates
+                        )
                     )
-                )
                 next
-            }
-        }
+                }
+                }
 
         # ---- regular Population ------------------------------------------------
         xml_lines <- c(
@@ -2192,37 +2192,37 @@ generate_sample_subpopulations_xml <- function(
             sprintf(
                 '%s<Population name="%s" annotation="" owningGroup="" expanded="1" sortPriority="10" count="%d">',
                 indent, xml_encode(pop_display_name), pop_count
+                )
             )
-        )
 
         # ---- Graph axes (show first-child gate dimensions) --------------------
         grandchild_path <- tryCatch(
             flowWorkspace::gs_pop_get_children(gating_hierarchy, child_path, path = "auto")[[1]],
             error = function(e) NA_character_
-        )
+            )
         if (is.na(grandchild_path)) grandchild_path <- child_path # leaf <U+2192> show own gate
 
         gate_dims <- tryCatch(
             flowCore::parameters(
                 flowWorkspace::gh_pop_get_gate(gating_hierarchy, grandchild_path)
-            ),
+                ),
             error = function(e) NULL
-        )
+            )
 
         xml_lines <- c(
             xml_lines,
             sprintf(
                 '        <Graph smoothing="0" backColor="#ffffff" foreColor="#000000" heatMapStatParameter="%s" type="Pseudocolor" fast="1">',
                 heat_map_param
-            ),
+                ),
             sprintf(
                 '          <Axis dimension="x" name="%s" label="" auto="auto" />',
                 if (is.null(gate_dims) || length(gate_dims) < 1) "FSC-A" else gate_dims[[1]]
-            ),
+                ),
             sprintf(
                 '          <Axis dimension="y" name="%s" label="" auto="auto" />',
                 if (is.null(gate_dims) || length(gate_dims) < 2) "" else gate_dims[[2]]
-            ),
+                ),
             '          <GraphSettings level="5%" smoothingHighResolution="1" contourHighResolution="1" histogramSmoothingCount="0" graphResolution="256" showOutliers="0" drawLargeDots="0" dotsToDraw="8000" tint="le.chartfill.tinted.40" lineWeight="le.lineweight.normal" lineStyle="le.linestyle.solid" />',
             '          <GraphEnvironment showGrid="0" showAxes="tnlTNL" showGates="1" showFreqOnPlots="1" showGateNameOnPlots="1" showMedians="0" showUncomped="0" addEventParam="0" lastYAxisName="">',
             '            <TextTraits font="SansSerif" size="11" name="Labels" style="plain" color="#000000" background="#00ffffff" just="left" />',
@@ -2232,34 +2232,34 @@ generate_sample_subpopulations_xml <- function(
             '            <WindowPosition x="247" y="-1415" width="390" height="582" displayed="0" panelState="---" />',
             "          </GraphEnvironment>",
             "        </Graph>"
-        )
+            )
 
         # ---- Gate element ------------------------------------------------------
         if (!is.null(matching_pop) && !is.null(matching_pop$gate_id) &&
             matching_pop$gate_id %in% names(gates$gates)) {
-            gate <- gates$gates[[matching_pop$gate_id]]
-            gate_def <- gate$definition
+                gate <- gates$gates[[matching_pop$gate_id]]
+                gate_def <- gate$definition
 
-            parent_id_attr <- if (gate$parent != "root") {
+                parent_id_attr <- if (gate$parent != "root") {
                 sprintf('gating:parent_id="%s" ', gate$parent_id)
-            } else {
+                } else {
                 ""
-            }
+                }
 
-            xml_lines <- c(
+                xml_lines <- c(
                 xml_lines,
                 sprintf('%s  <Gate gating:id="%s" %s>', indent, gate$id, parent_id_attr)
-            )
+                )
 
             # ---- RectangleGate ---------------------------------------------------
-            if (!is.null(gate_def) && gate_def$type == "rectangle") {
+                if (!is.null(gate_def) && gate_def$type == "rectangle") {
                 xml_lines <- c(
                     xml_lines,
                     sprintf(
                         '%s    <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" percentX="0" percentY="0" >',
                         indent
+                        )
                     )
-                )
 
                 is_1d <- length(gate_def$dimensions) == 1L
                 for (dim in gate_def$dimensions) {
@@ -2269,42 +2269,42 @@ generate_sample_subpopulations_xml <- function(
                             sprintf(
                                 '%s      <gating:dimension gating:min="%s" gating:max="%s" yRatio="0.5" >',
                                 indent, format_gate_num(dim$min), format_gate_num(dim$max)
-                            ),
+                                ),
                             sprintf(
                                 '%s        <data-type:fcs-dimension data-type:name="%s" />',
                                 indent, xml_encode(dim$parameter)
-                            ),
+                                ),
                             sprintf("%s      </gating:dimension>", indent)
-                        )
-                    } else {
+                            )
+                        } else {
                         xml_lines <- c(
                             xml_lines,
                             sprintf(
                                 '%s      <gating:dimension gating:min="%s" gating:max="%s" >',
                                 indent, format_gate_num(dim$min), format_gate_num(dim$max)
-                            ),
+                                ),
                             sprintf(
                                 '%s        <data-type:fcs-dimension data-type:name="%s" />',
                                 indent, xml_encode(dim$parameter)
-                            ),
+                                ),
                             sprintf("%s      </gating:dimension>", indent)
-                        )
+                            )
+                        }
                     }
-                }
                 xml_lines <- c(
                     xml_lines,
                     sprintf("%s    </gating:RectangleGate>", indent)
-                )
+                    )
 
                 # ---- PolygonGate -----------------------------------------------------
-            } else if (!is.null(gate_def) && gate_def$type == "polygon") {
+                } else if (!is.null(gate_def) && gate_def$type == "polygon") {
                 xml_lines <- c(
                     xml_lines,
                     sprintf(
                         '%s    <gating:PolygonGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" quadId="-1" gateResolution="256" >',
                         indent
+                        )
                     )
-                )
                 for (dim in gate_def$dimensions) {
                     xml_lines <- c(
                         xml_lines,
@@ -2312,10 +2312,10 @@ generate_sample_subpopulations_xml <- function(
                         sprintf(
                             '%s        <data-type:fcs-dimension data-type:name="%s" />',
                             indent, xml_encode(dim$parameter)
-                        ),
+                            ),
                         sprintf("%s      </gating:dimension>", indent)
-                    )
-                }
+                        )
+                    }
                 for (vertex in gate_def$vertices) {
                     xml_lines <- c(
                         xml_lines,
@@ -2323,63 +2323,63 @@ generate_sample_subpopulations_xml <- function(
                         sprintf(
                             '%s        <gating:coordinate data-type:value="%s" />',
                             indent, format_gate_num(vertex$x)
-                        ),
+                            ),
                         sprintf(
                             '%s        <gating:coordinate data-type:value="%s" />',
                             indent, format_gate_num(vertex$y)
-                        ),
+                            ),
                         sprintf("%s      </gating:vertex>", indent)
-                    )
-                }
+                        )
+                    }
                 xml_lines <- c(
                     xml_lines,
                     sprintf("%s    </gating:PolygonGate>", indent)
-                )
+                    )
 
                 # ---- EllipsoidGate ---------------------------------------------------
-            } else if (!is.null(gate_def) && gate_def$type == "ellipsoid") {
+                } else if (!is.null(gate_def) && gate_def$type == "ellipsoid") {
                 xml_lines <- c(
                     xml_lines,
                     sprintf(
                         '%s    <gating:EllipsoidGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" gating:distance="%s" >',
                         indent, format_gate_num(gate_def$distance)
-                    ),
+                        ),
                     sprintf("%s      <gating:dimension>", indent),
                     sprintf(
                         '%s        <data-type:fcs-dimension data-type:name="%s" />',
                         indent, xml_encode(gate_def$x_param)
-                    ),
+                        ),
                     sprintf("%s      </gating:dimension>", indent),
                     sprintf("%s      <gating:dimension>", indent),
                     sprintf(
                         '%s        <data-type:fcs-dimension data-type:name="%s" />',
                         indent, xml_encode(gate_def$y_param)
-                    ),
+                        ),
                     sprintf("%s      </gating:dimension>", indent),
                     sprintf("%s      <gating:foci>", indent),
                     sprintf("%s        <gating:vertex>", indent),
                     sprintf(
                         '%s          <gating:coordinate data-type:value="%s" />',
                         indent, format_gate_num(gate_def$foci$focus1$x)
-                    ),
+                        ),
                     sprintf(
                         '%s          <gating:coordinate data-type:value="%s" />',
                         indent, format_gate_num(gate_def$foci$focus1$y)
-                    ),
+                        ),
                     sprintf("%s        </gating:vertex>", indent),
                     sprintf("%s        <gating:vertex>", indent),
                     sprintf(
                         '%s          <gating:coordinate data-type:value="%s" />',
                         indent, format_gate_num(gate_def$foci$focus2$x)
-                    ),
+                        ),
                     sprintf(
                         '%s          <gating:coordinate data-type:value="%s" />',
                         indent, format_gate_num(gate_def$foci$focus2$y)
-                    ),
+                        ),
                     sprintf("%s        </gating:vertex>", indent),
                     sprintf("%s      </gating:foci>", indent),
                     sprintf("%s      <gating:edge>", indent)
-                )
+                    )
                 for (ep in gate_def$edge) {
                     xml_lines <- c(
                         xml_lines,
@@ -2387,29 +2387,29 @@ generate_sample_subpopulations_xml <- function(
                         sprintf(
                             '%s          <gating:coordinate data-type:value="%s" />',
                             indent, format_gate_num(ep$x)
-                        ),
+                            ),
                         sprintf(
                             '%s          <gating:coordinate data-type:value="%s" />',
                             indent, format_gate_num(ep$y)
-                        ),
+                            ),
                         sprintf("%s        </gating:vertex>", indent)
-                    )
-                }
+                        )
+                    }
                 xml_lines <- c(
                     xml_lines,
                     sprintf("%s      </gating:edge>", indent),
                     sprintf("%s    </gating:EllipsoidGate>", indent)
-                )
-            }
+                    )
+                }
 
-            xml_lines <- c(xml_lines, sprintf("%s  </Gate>", indent))
-        } # end gate block
+                xml_lines <- c(xml_lines, sprintf("%s  </Gate>", indent))
+                } # end gate block
 
         # ---- Subpopulations (only when children exist) ------------------------
         grandchildren <- tryCatch(
             flowWorkspace::gs_pop_get_children(gating_hierarchy, child_path, path = "auto"),
             error = function(e) character(0)
-        )
+            )
 
         if (length(grandchildren) > 0) {
             xml_lines <- c(xml_lines, sprintf("%s  <Subpopulations>", indent))
@@ -2420,16 +2420,16 @@ generate_sample_subpopulations_xml <- function(
                     parent_path = child_path,
                     indent = paste0(indent, "    "),
                     heat_map_param = heat_map_param
+                    )
                 )
-            )
             xml_lines <- c(xml_lines, sprintf("%s  </Subpopulations>", indent))
-        }
+            }
 
         xml_lines <- c(xml_lines, sprintf("%s</Population>", indent))
-    } # end for child_path
+        } # end for child_path
 
     xml_lines
-}
+    }
 
 #' Generate Group Node Subpopulations XML
 #'
@@ -2444,45 +2444,45 @@ generate_sample_subpopulations_xml <- function(
 #' @return Character vector of XML lines
 #' @keywords internal
 #' @importFrom magrittr %>%
-generate_group_subpopulations_xml <- function(populations, gates, parent_path = "root",
+            generate_group_subpopulations_xml <- function(populations, gates, parent_path = "root",
     indent = "        ", visited_paths = NULL,
-        gh = NULL) {
+    gh = NULL) {
     # Safety check to prevent infinite recursion
-    if (is.null(visited_paths)) {
+            if (is.null(visited_paths)) {
         visited_paths <- character(0)
-    }
+        }
 
     # Check if we've already visited this parent_path (cycle detection)
-    if (parent_path %in% visited_paths) {
+            if (parent_path %in% visited_paths) {
         # message("WARNING: Cycle detected in population hierarchy at parent_path='", parent_path, "'\n")
         return(character(0))
-    }
+        }
 
-    visited_paths <- c(visited_paths, parent_path)
-    parent_path <- trimws(parent_path)
+            visited_paths <- c(visited_paths, parent_path)
+            parent_path <- trimws(parent_path)
 
-    xml_lines <- character(0)
+            xml_lines <- character(0)
 
     # Find all populations that have the current parent path
-    child_populations <- list()
-    for (pop_id in names(populations)) {
+            child_populations <- list()
+            for (pop_id in names(populations)) {
         pop <- populations[[pop_id]]
         if (pop$parent_path == parent_path) {
             child_populations[[pop_id]] <- pop
+            }
         }
-    }
 
     # cat(file = stderr(), parent_path, ":",
     #     sapply(child_populations, function(x) x$name) %>% unlist() %>% paste(collapse = " "), "\n")
 
     # Process each child population
-    for (pop_id in names(child_populations)) {
+            for (pop_id in names(child_populations)) {
         population <- child_populations[[pop_id]]
 
 
         if (population$name == "Ungated") {
             next()
-        }
+            }
 
         # Check if this is a boolean gate
         is_boolean_gate <- FALSE
@@ -2502,13 +2502,13 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                     indent = indent,
                     gh = gh,
                     gates = gates
-                )
+                    )
                 xml_lines <- c(xml_lines, logical_xml)
 
                 # Skip to next child - logical nodes don't have recursive subpopulations here
                 next
+                }
             }
-        }
 
         # Continue with regular Population handling if not boolean
         if (!is_boolean_gate) {
@@ -2518,8 +2518,8 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                 sprintf(
                     '%s<Population name="%s" annotation="" owningGroup="All Samples" expanded="1" sortPriority="10" count="%d">',
                     indent, xml_encode(basename(population$name)), population$count
+                    )
                 )
-            )
 
             # Add gate if exists
             if (!is.null(population$gate_id) && population$gate_id %in% names(gates$gates)) {
@@ -2536,8 +2536,8 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                             sprintf(
                                 '%s    <gating:RectangleGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Hairline" userDefined="1">',
                                 indent
+                                )
                             )
-                        )
 
                         # yRatio is a display hint for histogram-style (1-D) gates. It should only
                         # be emitted when the rectangle gate has a single dimension.
@@ -2550,38 +2550,38 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                                     sprintf(
                                         '%s      <gating:dimension gating:min="%f" gating:max="%f" yRatio="0.5">',
                                         indent, dim$min, dim$max
-                                    ),
+                                        ),
                                     sprintf(
                                         '%s        <data-type:fcs-dimension data-type:name="%s"/>',
                                         indent, xml_encode(dim$parameter)
-                                    ),
+                                        ),
                                     sprintf("%s      </gating:dimension>", indent)
-                                )
-                            } else {
+                                    )
+                                } else {
                                 xml_lines <- c(
                                     xml_lines,
                                     sprintf(
                                         '%s      <gating:dimension gating:min="%f" gating:max="%f">',
                                         indent, dim$min, dim$max
-                                    ),
+                                        ),
                                     sprintf(
                                         '%s        <data-type:fcs-dimension data-type:name="%s"/>',
                                         indent, xml_encode(dim$parameter)
-                                    ),
+                                        ),
                                     sprintf("%s      </gating:dimension>", indent)
-                                )
+                                    )
+                                }
                             }
-                        }
 
                         xml_lines <- c(xml_lines, sprintf("%s    </gating:RectangleGate>", indent))
-                    } else if (gate_def$type == "polygon") {
+                        } else if (gate_def$type == "polygon") {
                         xml_lines <- c(
                             xml_lines,
                             sprintf(
                                 '%s    <gating:PolygonGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Hairline" userDefined="1">',
                                 indent
+                                )
                             )
-                        )
 
                         # Add dimensions
                         for (dim in gate_def$dimensions) {
@@ -2591,10 +2591,10 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                                 sprintf(
                                     '%s        <data-type:fcs-dimension data-type:name="%s"/>',
                                     indent, xml_encode(dim$parameter)
-                                ),
+                                    ),
                                 sprintf("%s      </gating:dimension>", indent)
-                            )
-                        }
+                                )
+                            }
 
                         # Add vertices
                         for (vertex in gate_def$vertices) {
@@ -2604,18 +2604,18 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                                 sprintf('%s        <gating:coordinate data-type:value="%f"/>', indent, vertex$x),
                                 sprintf('%s        <gating:coordinate data-type:value="%f"/>', indent, vertex$y),
                                 sprintf("%s      </gating:vertex>", indent)
-                            )
-                        }
+                                )
+                            }
 
                         xml_lines <- c(xml_lines, sprintf("%s    </gating:PolygonGate>", indent))
-                    } else if (gate_def$type == "ellipsoid") {
+                        } else if (gate_def$type == "ellipsoid") {
                         xml_lines <- c(
                             xml_lines,
                             sprintf(
                                 '%s    <gating:EllipsoidGate eventsInside="1" annoOffsetX="0" annoOffsetY="0" tint="#000000" isTinted="0" lineWeight="Normal" userDefined="1" gating:distance="%f">',
                                 indent, gate_def$distance
+                                )
                             )
-                        )
 
                         # Add dimensions
                         xml_lines <- c(
@@ -2624,15 +2624,15 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                             sprintf(
                                 '%s        <data-type:fcs-dimension data-type:name="%s" />',
                                 indent, xml_encode(gate_def$x_param)
-                            ),
+                                ),
                             sprintf("%s      </gating:dimension>", indent),
                             sprintf("%s      <gating:dimension>", indent),
                             sprintf(
                                 '%s        <data-type:fcs-dimension data-type:name="%s" />',
                                 indent, xml_encode(gate_def$y_param)
-                            ),
+                                ),
                             sprintf("%s      </gating:dimension>", indent)
-                        )
+                            )
 
                         # Add foci
                         xml_lines <- c(
@@ -2642,24 +2642,24 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                             sprintf(
                                 '%s          <gating:coordinate data-type:value="%f" />',
                                 indent, gate_def$foci$focus1$x
-                            ),
+                                ),
                             sprintf(
                                 '%s          <gating:coordinate data-type:value="%f" />',
                                 indent, gate_def$foci$focus1$y
-                            ),
+                                ),
                             sprintf("%s        </gating:vertex>", indent),
                             sprintf("%s        <gating:vertex>", indent),
                             sprintf(
                                 '%s          <gating:coordinate data-type:value="%f" />',
                                 indent, gate_def$foci$focus2$x
-                            ),
+                                ),
                             sprintf(
                                 '%s          <gating:coordinate data-type:value="%f" />',
                                 indent, gate_def$foci$focus2$y
-                            ),
+                                ),
                             sprintf("%s        </gating:vertex>", indent),
                             sprintf("%s      </gating:foci>", indent)
-                        )
+                            )
 
                         # Add edge points
                         xml_lines <- c(xml_lines, sprintf("%s      <gating:edge>", indent))
@@ -2670,22 +2670,22 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                                 sprintf(
                                     '%s          <gating:coordinate data-type:value="%f" />',
                                     indent, edge_point$x
-                                ),
+                                    ),
                                 sprintf(
                                     '%s          <gating:coordinate data-type:value="%f" />',
                                     indent, edge_point$y
-                                ),
+                                    ),
                                 sprintf("%s        </gating:vertex>", indent)
-                            )
-                        }
+                                )
+                            }
                         xml_lines <- c(xml_lines, sprintf("%s      </gating:edge>", indent))
 
                         xml_lines <- c(xml_lines, sprintf("%s    </gating:EllipsoidGate>", indent))
+                        }
                     }
-                }
 
                 xml_lines <- c(xml_lines, sprintf("%s  </Gate>", indent))
-            }
+                }
 
             # Recursively process child populations
             xml_lines <- c(xml_lines, sprintf("%s  <Subpopulations>", indent))
@@ -2695,15 +2695,15 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                 warning(
                     "Population '", population$name,
                     "' cannot be its own parent. Skipping recursion."
-                )
-            } else {
+                    )
+                } else {
                 # Check if we've already visited this population
                 if (population$name %in% visited_paths) {
                     warning(
                         "Cycle detected - population '",
                         population$name, "' already visited. Skipping recursion."
-                    )
-                } else {
+                        )
+                    } else {
                     new_visited_paths <- unique(c(visited_paths, population$name))
                     subpop_xml <- generate_group_subpopulations_xml(
                         populations = populations,
@@ -2712,18 +2712,18 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
                         indent = paste0(indent, "    "),
                         visited_paths = new_visited_paths,
                         gh = gh # Pass gh down for boolean gate processing
-                    )
+                        )
                     xml_lines <- c(xml_lines, subpop_xml)
+                    }
                 }
-            }
             xml_lines <- c(xml_lines, sprintf("%s  </Subpopulations>", indent))
 
             # Close population element
             xml_lines <- c(xml_lines, sprintf("%s</Population>", indent))
+            }
         }
-    }
-    return(xml_lines)
-}
+            return(xml_lines)
+            }
 
 
 #' XML Encode Special Characters
@@ -2731,10 +2731,10 @@ generate_group_subpopulations_xml <- function(populations, gates, parent_path = 
 #' @param text Text to encode
 #' @return Encoded text
 #' @keywords internal
-xml_encode <- function(text) {
+            xml_encode <- function(text) {
     if (is.null(text) || length(text) == 0) {
         return("")
-    }
+        }
 
     # Convert to character if needed
     text <- as.character(text)
@@ -2744,10 +2744,10 @@ xml_encode <- function(text) {
     text <- gsub("<", "<", text)
     text <- gsub(">", ">", text)
     text <- gsub('"', "\"", text)
-    text <- gsub("'", "'", text)
+        text <- gsub("'", "'", text)
 
-    return(text)
-}
+        return(text)
+        }
 
 #' Format a gate coordinate or dimension value for XML output
 #'
@@ -2757,32 +2757,32 @@ xml_encode <- function(text) {
 #' @param x Numeric value.
 #' @return Character string suitable for embedding in an XML attribute.
 #' @keywords internal
-format_gate_num <- function(x) {
+    format_gate_num <- function(x) {
     if (is.null(x) || is.na(x)) {
         return("0")
-    }
+        }
     if (is.infinite(x) && x > 0) {
         return("262144")
-    }
+        }
     if (is.infinite(x) && x <= 0) {
         return("0")
-    }
+        }
     sprintf("%.15g", x)
-}
+    }
 
 #' Get Display Range for Parameter
 #'
 #' Determines the min/max range for a parameter that will be used in the XML
 #' @keywords internal
-get_display_range <- function(gh, param_name) {
+    get_display_range <- function(gh, param_name) {
     tryCatch(
         {
             # Extract flowFrame from GatingHierarchy if needed
             if (inherits(gh, "GatingHierarchy")) {
                 fr <- flowWorkspace::gh_pop_get_data(gh, "root")
-            } else {
+                } else {
                 fr <- gh
-            }
+                }
 
             kw <- flowCore::keyword(fr)
 
@@ -2807,11 +2807,11 @@ get_display_range <- function(gh, param_name) {
                         actual_min <- min(data_vals, na.rm = TRUE)
                         if (actual_min < 0) {
                             min_val <- floor(actual_min / 10000) * 10000
+                            }
                         }
-                    }
 
                     c(min_val, max_val) # No explicit return needed
-                } else {
+                    } else {
                     # Keyword missing, fall through to data range
                     data_vals <- flowCore::exprs(fr)[, param_name]
                     min_val <- min(data_vals, na.rm = TRUE)
@@ -2819,8 +2819,8 @@ get_display_range <- function(gh, param_name) {
 
                     range_span <- max_val - min_val
                     c(min_val - 0.1 * range_span, max_val + 0.1 * range_span)
-                }
-            } else {
+                    }
+                } else {
                 # Parameter not found in keywords, use actual data
                 data_vals <- flowCore::exprs(fr)[, param_name]
                 min_val <- min(data_vals, na.rm = TRUE)
@@ -2828,13 +2828,13 @@ get_display_range <- function(gh, param_name) {
 
                 range_span <- max_val - min_val
                 c(min_val - 0.1 * range_span, max_val + 0.1 * range_span)
-            }
-        },
+                }
+            },
         error = function(e) {
             c(0, 262144)
-        }
-    )
-}
+            }
+        )
+    }
 
 #' Emit a Single Channel Transform as XML
 #'
@@ -2846,7 +2846,7 @@ get_display_range <- function(gh, param_name) {
 #' @param indent Indentation string.
 #' @return Character vector of XML lines.
 #' @keywords internal
-emit_transform_xml <- function(type, channel, transform_obj, atr_tr, data_range, indent = "        ") {
+    emit_transform_xml <- function(type, channel, transform_obj, atr_tr, data_range, indent = "        ") {
     # Normalize FlowJo transform type names
     type <- tolower(type)
     if (type %in% c("biexp", "biexponential")) type <- "biex"
@@ -2860,8 +2860,8 @@ emit_transform_xml <- function(type, channel, transform_obj, atr_tr, data_range,
                 atr_tr$parameters$neg %>% as.integer(),
                 atr_tr$parameters$widthBasis %>% as.integer(),
                 atr_tr$parameters$pos
-            )
-        },
+                )
+            },
         "log" = ,
         "logtGml2" = ,
         "flowJo_log" = {
@@ -2870,8 +2870,8 @@ emit_transform_xml <- function(type, channel, transform_obj, atr_tr, data_range,
                 "transforms:offset=\"%d\" transforms:decades=\"%d\"",
                 fn_env$m %||% fn_env$offset %||% 1 %>% as.integer(),
                 fn_env$n %||% fn_env$decade %||% 6.0 %>% as.integer()
-            )
-        },
+                )
+            },
         "fasinh" = {
             fn_env <- environment(transform_obj)
             param_str <- sprintf(
@@ -2881,33 +2881,33 @@ emit_transform_xml <- function(type, channel, transform_obj, atr_tr, data_range,
                 fn_env$a,
                 fn_env$m,
                 fn_env$t
-            )
-        },
+                )
+            },
         "linear" = {
             param_str <- sprintf(
                 "transforms:minRange=\"%.1f\" transforms:maxRange=\"%.1f\" gain=\"1\"",
                 data_range[1], data_range[2]
-            )
-        },
+                )
+            },
         {
             warning("not implemented: ", type)
             return(character(0))
-        }
-    )
+            }
+        )
 
     sprintf(
         '%s<transforms:%s %s >\n%s  <data-type:parameter data-type:name="%s"/>\n%s</transforms:%s >',
         indent, xml_encode(type), xml_encode(param_str), indent,
         xml_encode(channel), indent, xml_encode(type)
-    )
-}
+        )
+    }
 
 #' Determine Cytometer Attributes from FCS Header
 #'
 #' @param fcs_keywords Named list of FCS header keywords.
 #' @return Named list of Cytometer XML attributes.
 #' @keywords internal
-derive_cytometer_attrs <- function(fcs_keywords) {
+    derive_cytometer_attrs <- function(fcs_keywords) {
     attrs <- list(
         name = "GENERIC",
         cyt = "",
@@ -2929,14 +2929,14 @@ derive_cytometer_attrs <- function(fcs_keywords) {
         serialnumber = "",
         homepage = "workspaces-and-samples/flowjo-and-your-cytometer/ws-instrumentation/",
         icon = "generic.png"
-    )
+        )
 
     if (is.null(fcs_keywords) || length(fcs_keywords) == 0) {
         return(attrs)
-    }
+        }
 
     cyt_val <- tryCatch(fcs_keywords[["$CYT"]], error = function(e) NULL) %||%
-        tryCatch(fcs_keywords[["CREATOR"]], error = function(e) NULL) %||% ""
+    tryCatch(fcs_keywords[["CREATOR"]], error = function(e) NULL) %||% ""
     if (!is.null(cyt_val) && nzchar(cyt_val)) {
         attrs$cyt <- as.character(cyt_val)
         # FlowJo convention: BD FACSDiva -> DIVA cytometer name
@@ -2951,11 +2951,11 @@ derive_cytometer_attrs <- function(fcs_keywords) {
             attrs$linMax <- "262144"
             attrs$logMax <- "262144"
             attrs$widthBasis <- "-100"
+            }
         }
-    }
 
     attrs
-}
+    }
 
 #' Write FCS Files from a GatingSet to a Directory
 #'
@@ -2971,7 +2971,7 @@ derive_cytometer_attrs <- function(fcs_keywords) {
 #'   file already exists; \code{TRUE} replaces existing files after a warning.
 #' @return Invisible character vector of file paths written successfully.
 #' @keywords internal
-write_fcs_files_to_dir <- function(gating_set, target_dir, overwrite = FALSE) {
+    write_fcs_files_to_dir <- function(gating_set, target_dir, overwrite = FALSE) {
     sample_names <- flowWorkspace::sampleNames(gating_set)
 
     fcs_info <- lapply(sample_names, function(sn) {
@@ -2986,52 +2986,52 @@ write_fcs_files_to_dir <- function(gating_set, target_dir, overwrite = FALSE) {
 
         orig_basename <- if (!is.na(fil_kw) && nzchar(fil_kw)) {
             basename(fil_kw)
-        } else if (!is.na(filename_kw) && nzchar(filename_kw)) {
+            } else if (!is.na(filename_kw) && nzchar(filename_kw)) {
             basename(filename_kw)
-        } else {
+            } else {
             paste0(sn, ".fcs") # sn is already "foo.fcs" from sampleNames
-        }
+            }
 
         # The original file path (for verbatim copy, if it exists)
         orig_path <- if (!is.na(filename_kw) && nzchar(filename_kw)) {
             filename_kw
-        } else {
+            } else {
             NA_character_
-        }
+            }
 
         list(
             sample_name   = sn,
             orig_path     = orig_path,
             orig_basename = orig_basename,
             dest          = file.path(target_dir, orig_basename)
-        )
-    })
+            )
+        })
 
     dest_paths <- vapply(fcs_info, `[[`, character(1), "dest")
-    already_exist <- dest_paths[
+        already_exist <- dest_paths[
         file.exists(dest_paths) &
-            !mapply(function(orig, dest) {
+        !mapply(function(orig, dest) {
                 !is.na(orig) && file.exists(orig) &&
-                    normalizePath(orig) == normalizePath(dest)
-            }, vapply(fcs_info, `[[`, character(1), "orig_path"), dest_paths)
-    ]
+                normalizePath(orig) == normalizePath(dest)
+                }, vapply(fcs_info, `[[`, character(1), "orig_path"), dest_paths)
+                ]
 
-    if (length(already_exist) > 0L && !overwrite) {
+                if (length(already_exist) > 0L && !overwrite) {
         stop(
             length(already_exist), " FCS file(s) already exist in '", target_dir, "'.\n",
             "  Set overwrite = TRUE to replace them, or choose a different fcs_root.\n",
             "  Conflicting file(s): ", paste(basename(already_exist), collapse = ", ")
-        )
-    }
-    if (length(already_exist) > 0L) {
+            )
+        }
+                if (length(already_exist) > 0L) {
         warning(
             length(already_exist), " existing FCS file(s) will be overwritten in: ",
             target_dir
-        )
-    }
+            )
+        }
 
-    written <- character(0)
-    for (info in fcs_info) {
+                written <- character(0)
+                for (info in fcs_info) {
         tryCatch(
             {
                 if (!is.na(info$orig_path) && file.exists(info$orig_path)) {
@@ -3039,10 +3039,10 @@ write_fcs_files_to_dir <- function(gating_set, target_dir, overwrite = FALSE) {
                     if (normalizePath(info$orig_path) != normalizePath(info$dest)) {
                         file.copy(info$orig_path, info$dest, overwrite = TRUE)
                         message("  Copied  FCS: ", info$orig_basename)
-                    } else {
+                        } else {
                         message("  Skipped FCS (already in place): ", info$orig_basename)
-                    }
-                } else {
+                        }
+                    } else {
                     gh <- gating_set[[info$sample_name]]
                     fr <- flowWorkspace::gh_pop_get_data(gh, "root")
                     inv_trans <- flowWorkspace::gh_get_transformations(gh, inverse = TRUE)
@@ -3051,22 +3051,22 @@ write_fcs_files_to_dir <- function(gating_set, target_dir, overwrite = FALSE) {
                         if (length(valid_channels) > 0L) {
                             tl <- flowCore::transformList(valid_channels, inv_trans[valid_channels])
                             fr <- flowCore::transform(fr, tl)
+                            }
                         }
-                    }
                     flowCore::write.FCS(fr, filename = info$dest)
                     message("  Exported FCS: ", info$orig_basename)
-                }
+                    }
                 written <- c(written, info$dest)
-            },
+                },
             error = function(e) {
                 warning("Failed to write FCS for sample '", info$sample_name, "': ", e$message)
-            }
-        )
-    }
+                }
+            )
+        }
 
-    message(
+                message(
         "Wrote ", length(written), " / ", length(fcs_info),
         " FCS file(s) to: ", target_dir
-    )
-    invisible(written)
-}
+        )
+                invisible(written)
+                }

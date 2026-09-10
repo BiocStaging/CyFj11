@@ -37,7 +37,7 @@ utils::globalVariables(c(
     "better_name", "description", "file", "id", "missing_signatures",
     "population", "population_path", "sample_count", "sample_id",
     "sample_name", "stat_ancestor", "stat_name", "value_num", "value_raw"
-))
+    ))
 
 #' Extract Statistics from FlowJo Workspace (.wsp) XML Files
 #'
@@ -103,129 +103,129 @@ utils::globalVariables(c(
 #' @keywords internal
 extract_flowjo_stats <- function(wsp_files,
     csv_file = NULL,
-        output_csv = "wsp_stat_mapping.csv",
-            write_csv = TRUE,
-                value_as_numeric = TRUE,
-                    preserve_slashes = FALSE) {
+    output_csv = "wsp_stat_mapping.csv",
+    write_csv = TRUE,
+    value_as_numeric = TRUE,
+    preserve_slashes = FALSE) {
     # ---- Input validation ----
-    if (!is.character(wsp_files) || length(wsp_files) == 0) {
+                        if (!is.character(wsp_files) || length(wsp_files) == 0) {
         stop("'wsp_files' must be a non-empty character vector.")
-    }
+        }
 
-    missing_files <- wsp_files[!file.exists(wsp_files)]
-    if (length(missing_files) > 0) {
+                        missing_files <- wsp_files[!file.exists(wsp_files)]
+                        if (length(missing_files) > 0) {
         stop(
             "The following files do not exist:\n",
             paste(missing_files, collapse = "\n")
-        )
-    }
+            )
+        }
 
     # ---- Extract long-format table ----
-    long_table <- bind_rows(lapply(wsp_files, extract_wsp_data_long))
+                        long_table <- bind_rows(lapply(wsp_files, extract_wsp_data_long))
 
-    if (value_as_numeric) {
+                        if (value_as_numeric) {
         long_table <- long_table %>%
-            mutate(value_num = as_num_quiet(value_raw))
-    }
+        mutate(value_num = as_num_quiet(value_raw))
+        }
 
     # Normalize empty ancestors to NA for matching
-    long_table <- long_table %>%
-        mutate(stat_ancestor = if_else(is.na(stat_ancestor) | stat_ancestor == "",
+                        long_table <- long_table %>%
+                        mutate(stat_ancestor = if_else(is.na(stat_ancestor) | stat_ancestor == "",
             NA_character_,
             as.character(stat_ancestor)
-        ))
+            ))
 
     # ---- Mode 1: no CSV -> generate mapping template ----
-    if (is.null(csv_file)) {
+                        if (is.null(csv_file)) {
         mapping <- long_table %>%
-            distinct(population_path, population, id, stat_name, stat_ancestor) %>%
-            mutate(
+        distinct(population_path, population, id, stat_name, stat_ancestor) %>%
+        mutate(
                 better_name = make_better_names(population, stat_name, stat_ancestor,
                     preserve_slashes = preserve_slashes
-                ),
+                    ),
                 description = case_when(
                     stat_name == "PopulationCount" ~
-                        paste0("Event count for population '", population_path, "'"),
+                    paste0("Event count for population '", population_path, "'"),
                     is.na(stat_ancestor) ~
-                        paste0(stat_name, " for population '", population_path, "'"),
+                    paste0(stat_name, " for population '", population_path, "'"),
                     TRUE ~
-                        paste0(
+                    paste0(
                             stat_name, " for population '", population_path,
                             "' relative to '", stat_ancestor, "'"
-                        )
-                )
-            ) %>%
-            select(
+                            )
+                    )
+                ) %>%
+        select(
                 population_path, population, id, stat_name, stat_ancestor,
                 better_name, description
-            ) %>%
-            arrange(population_path, stat_name, stat_ancestor)
+                ) %>%
+        arrange(population_path, stat_name, stat_ancestor)
 
         if (write_csv) {
             write_csv(mapping, output_csv)
             message(
                 "Mapping template written to: ",
                 normalizePath(output_csv, mustWork = FALSE)
-            )
-        }
+                )
+            }
 
         return(list(long = long_table, mapping = mapping))
-    }
+        }
 
     # ---- Mode 2: CSV provided -> validate and build wide table ----
-    if (!file.exists(csv_file)) {
+                        if (!file.exists(csv_file)) {
         stop("csv_file does not exist: ", csv_file)
-    }
+        }
 
-    mapping <- read_csv(csv_file, show_col_types = FALSE)
+                        mapping <- read_csv(csv_file, show_col_types = FALSE)
 
-    required_cols <- c("population_path", "stat_name", "stat_ancestor")
-    missing_cols <- required_cols[!required_cols %in% names(mapping)]
-    if (length(missing_cols) > 0) {
+                        required_cols <- c("population_path", "stat_name", "stat_ancestor")
+                        missing_cols <- required_cols[!required_cols %in% names(mapping)]
+                        if (length(missing_cols) > 0) {
         stop(
             "csv_file is missing required columns: ",
             paste(missing_cols, collapse = ", ")
-        )
-    }
+            )
+        }
 
     # Auto-generate better_name if the column is missing from the CSV
-    if (!"better_name" %in% names(mapping)) {
+                        if (!"better_name" %in% names(mapping)) {
         mapping <- mapping %>%
-            mutate(
+        mutate(
                 population = coalesce(population, get_leaf_population(population_path)),
                 better_name = make_better_names(population, stat_name, stat_ancestor,
                     preserve_slashes = preserve_slashes
+                    )
                 )
-            )
-    }
+        }
 
     # Normalize mapping signatures
-    mapping <- mapping %>%
-        mutate(
+                        mapping <- mapping %>%
+                        mutate(
             stat_ancestor = if_else(is.na(stat_ancestor) | stat_ancestor == "",
                 NA_character_,
                 as.character(stat_ancestor)
-            ),
+                ),
             better_name = as.character(better_name)
-        )
+            )
 
     # Signatures present in data vs. CSV
-    data_sigs <- long_table %>%
-        distinct(population_path, stat_name, stat_ancestor)
+                        data_sigs <- long_table %>%
+                        distinct(population_path, stat_name, stat_ancestor)
 
-    csv_sigs <- mapping %>%
-        distinct(population_path, stat_name, stat_ancestor)
+                        csv_sigs <- mapping %>%
+                        distinct(population_path, stat_name, stat_ancestor)
 
     # Fail if the workspace contains stats not in the CSV
-    missing_in_csv <- long_table %>%
-        anti_join(csv_sigs, by = c("population_path", "stat_name", "stat_ancestor")) %>%
-        distinct(file, population_path, stat_name, stat_ancestor)
+                        missing_in_csv <- long_table %>%
+                        anti_join(csv_sigs, by = c("population_path", "stat_name", "stat_ancestor")) %>%
+                        distinct(file, population_path, stat_name, stat_ancestor)
 
-    if (nrow(missing_in_csv) > 0) {
+                        if (nrow(missing_in_csv) > 0) {
         affected_files <- sort(unique(missing_in_csv$file))
         summary_by_file <- missing_in_csv %>%
-            count(file, name = "n_missing") %>%
-            arrange(file)
+        count(file, name = "n_missing") %>%
+        arrange(file)
 
         stop(
             "The following workspace signatures are missing from csv_file.\n",
@@ -234,75 +234,75 @@ extract_flowjo_stats <- function(wsp_files,
             "Missing by file:\n",
             paste(capture.output(format(as.data.frame(summary_by_file))),
                 collapse = "\n"
-            ),
+                ),
             "\n\nMissing signatures:\n",
             paste(capture.output(format(as.data.frame(missing_in_csv))),
                 collapse = "\n"
-            ),
+                ),
             call. = FALSE
-        )
-    }
+            )
+        }
 
     # Warn about extra mappings in CSV that are not in the data
-    extra_in_csv <- csv_sigs %>%
-        anti_join(data_sigs, by = c("population_path", "stat_name", "stat_ancestor"))
+                        extra_in_csv <- csv_sigs %>%
+                        anti_join(data_sigs, by = c("population_path", "stat_name", "stat_ancestor"))
 
-    if (nrow(extra_in_csv) > 0) {
+                        if (nrow(extra_in_csv) > 0) {
         warning(
             "csv_file contains mappings not present in the workspaces ",
             "(these will be ignored):\n",
             paste(capture.output(format(as.data.frame(extra_in_csv))),
                 collapse = "\n"
+                )
             )
-        )
-    }
+        }
 
     # Check for missing better_name values
-    missing_names <- mapping %>%
-        filter(is.na(better_name) | better_name == "")
+                        missing_names <- mapping %>%
+                        filter(is.na(better_name) | better_name == "")
 
-    if (nrow(missing_names) > 0) {
+                        if (nrow(missing_names) > 0) {
         stop(
             "The following rows in csv_file have empty better_name values:\n",
             paste(capture.output(format(as.data.frame(missing_names))),
                 collapse = "\n"
+                )
             )
-        )
-    }
+        }
 
     # Check for duplicate better_name values and require manual resolution
-    dup_count <- mapping %>%
-        count(better_name) %>%
-        filter(n > 1)
+                        dup_count <- mapping %>%
+                        count(better_name) %>%
+                        filter(n > 1)
 
-    if (nrow(dup_count) > 0) {
+                        if (nrow(dup_count) > 0) {
         stop(
             "Duplicate better_name values found; please resolve manually:\n",
             paste(dup_count$better_name, collapse = "\n")
-        )
-    }
+            )
+        }
 
     # Join long table with mapping and pivot wide
-    wide_table <- long_table %>%
-        left_join(
+                        wide_table <- long_table %>%
+                        left_join(
             mapping %>% select(population_path, stat_name, stat_ancestor, better_name),
             by = c("population_path", "stat_name", "stat_ancestor")
-        ) %>%
-        mutate(
+            ) %>%
+                        mutate(
             better_name = if_else(is.na(better_name),
                 paste0(population_path, " | ", stat_name),
                 better_name
-            )
-        ) %>%
-        select(file, sample_name, sample_id, sample_count, better_name, value_num) %>%
-        pivot_wider(
+                )
+            ) %>%
+                        select(file, sample_name, sample_id, sample_count, better_name, value_num) %>%
+                        pivot_wider(
             id_cols = c(file, sample_name, sample_id, sample_count),
             names_from = better_name,
             values_from = value_num
-        )
+            )
 
-    return(wide_table)
-}
+                        return(wide_table)
+                        }
 
 
 #' Check Workspace-to-CSV Coverage
@@ -327,52 +327,52 @@ extract_flowjo_stats <- function(wsp_files,
 check_wsp_csv_coverage <- function(wsp_files, csv_file) {
     if (!is.character(wsp_files) || length(wsp_files) == 0) {
         stop("'wsp_files' must be a non-empty character vector.")
-    }
+        }
     if (!is.character(csv_file) || length(csv_file) != 1) {
         stop("'csv_file' must be a single character string.")
-    }
+        }
     if (!file.exists(csv_file)) {
         stop("csv_file does not exist: ", csv_file)
-    }
+        }
 
     csv <- read_csv(csv_file, show_col_types = FALSE) %>%
-        mutate(
+    mutate(
             stat_ancestor = if_else(is.na(stat_ancestor) | stat_ancestor == "",
                 NA_character_,
                 as.character(stat_ancestor)
-            )
-        ) %>%
-        distinct(population_path, stat_name, stat_ancestor)
+                )
+            ) %>%
+    distinct(population_path, stat_name, stat_ancestor)
 
     long_table <- bind_rows(lapply(wsp_files, extract_wsp_data_long)) %>%
-        mutate(
+    mutate(
             stat_ancestor = if_else(is.na(stat_ancestor) | stat_ancestor == "",
                 NA_character_,
                 as.character(stat_ancestor)
+                )
             )
-        )
 
     file_totals <- long_table %>%
-        distinct(file, population_path, stat_name, stat_ancestor) %>%
-        group_by(file) %>%
-        summarise(total_signatures = n(), .groups = "drop")
+    distinct(file, population_path, stat_name, stat_ancestor) %>%
+    group_by(file) %>%
+    summarise(total_signatures = n(), .groups = "drop")
 
     missing_by_file <- long_table %>%
-        distinct(file, population_path, stat_name, stat_ancestor) %>%
-        anti_join(csv, by = c("population_path", "stat_name", "stat_ancestor")) %>%
-        group_by(file) %>%
-        summarise(missing_signatures = n(), .groups = "drop")
+    distinct(file, population_path, stat_name, stat_ancestor) %>%
+    anti_join(csv, by = c("population_path", "stat_name", "stat_ancestor")) %>%
+    group_by(file) %>%
+    summarise(missing_signatures = n(), .groups = "drop")
 
     coverage <- file_totals %>%
-        left_join(missing_by_file, by = "file") %>%
-        mutate(
+    left_join(missing_by_file, by = "file") %>%
+    mutate(
             missing_signatures = coalesce(missing_signatures, 0L),
             covered = missing_signatures == 0L
-        ) %>%
-        arrange(desc(missing_signatures), file)
+            ) %>%
+    arrange(desc(missing_signatures), file)
 
     coverage
-}
+    }
 
 
 # ============================================================================
@@ -390,36 +390,36 @@ get_population_path <- function(node) {
         if (nm == "SampleNode") break # stop at the sample boundary
         if (nm == "Population") {
             path <- c(xml_attr(current, "name"), path)
-        }
+            }
         current <- xml_parent(current)
-    }
+        }
 
     if (length(path) == 0) {
         return(NA_character_)
-    }
+        }
     paste(path, collapse = " / ")
-}
+    }
 
 #' Get the name of the immediate enclosing Population
 #' @noRd
 get_immediate_population <- function(node) {
     if (xml_type(node) == "element" && xml_name(node) == "Population") {
         return(xml_attr(node, "name"))
-    }
+        }
 
     current <- xml_parent(node)
     while (!is.null(current) && xml_type(current) == "element") {
         nm <- xml_name(current)
         if (nm == "SampleNode") {
             return(NA_character_)
-        }
+            }
         if (nm == "Population") {
             return(xml_attr(current, "name"))
-        }
+            }
         current <- xml_parent(current)
-    }
+        }
     return(NA_character_)
-}
+    }
 
 #' Extract all counts and statistics from one .wsp file into a long tibble
 #' @noRd
@@ -449,8 +449,8 @@ extract_wsp_data_long <- function(file) {
                 stat_name = "PopulationCount",
                 stat_ancestor = NA_character_,
                 value_raw = attrs["count"]
-            )
-        }))
+                )
+            }))
 
         # ---- Statistic elements ----
         stats <- xml_find_all(sample, ".//Statistic")
@@ -469,12 +469,12 @@ extract_wsp_data_long <- function(file) {
                 stat_name = attrs["name"] %||% NA_character_,
                 stat_ancestor = attrs["ancestor"] %||% NA_character_,
                 value_raw = attrs["value"]
-            )
-        }))
+                )
+            }))
 
         bind_rows(pop_counts, stat_rows)
-    }))
-}
+        }))
+    }
 
 #' Extract the leaf population name from a population path
 #' @noRd
@@ -482,7 +482,7 @@ get_leaf_population <- function(population_path) {
     path <- as.character(population_path)
     leaf <- sub("^.*/\\s*", "", path)
     ifelse(leaf == "", NA_character_, leaf)
-}
+    }
 
 #' Shorten common FlowJo statistic names for compact column names
 #' @noRd
@@ -508,7 +508,7 @@ shorten_stat_name <- function(stat_name) {
         "Min" = "Min",
         "Max" = "Max",
         "Count" = "Count"
-    )
+        )
 
     out <- dict[nm]
     out <- ifelse(is.na(out), nm, out)
@@ -517,7 +517,7 @@ shorten_stat_name <- function(stat_name) {
     out <- gsub("[[:space:]_]+", "", out)
     out <- gsub("[^A-Za-z0-9]", "", out)
     unname(out)
-}
+    }
 
 #' Sanitize a string so it is safe as a column name
 #'
@@ -537,14 +537,14 @@ sanitize_name <- function(x, preserve_slashes = FALSE) {
     # Handle slashes: either preserve or replace
     if (!preserve_slashes) {
         x <- gsub("/", "_", x)
-    }
+        }
 
     # Keep only allowed characters (preserve +/- distinction and optionally /)
     if (preserve_slashes) {
         x <- gsub("[^A-Za-z0-9+/_-]", "_", x)
-    } else {
+        } else {
         x <- gsub("[^A-Za-z0-9+_-]", "_", x)
-    }
+        }
 
     # Collapse repeated separators
     x <- gsub("_+", "_", x)
@@ -553,7 +553,7 @@ sanitize_name <- function(x, preserve_slashes = FALSE) {
     x <- ifelse(grepl("^[0-9]", x), paste0("X", x), x)
     # Empty strings become NA
     unname(ifelse(x == "", NA_character_, x))
-}
+    }
 
 #' Build better_name values from population, stat_name, and stat_ancestor
 #'
@@ -587,16 +587,16 @@ make_better_names <- function(population, stat_name, stat_ancestor, preserve_sla
         if (is.na(base)) {
             result[i] <- NA_character_
             next
-        }
+            }
         candidate <- base
         suffix <- 1L
         while (candidate %in% seen) {
             suffix <- suffix + 1L
             candidate <- paste0(base, "_", suffix)
-        }
+            }
         result[i] <- candidate
         seen <- c(seen, candidate)
-    }
+        }
 
     unname(result)
-}
+    }
