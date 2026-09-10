@@ -108,7 +108,8 @@ extract_flowjo_stats <- function(wsp_files,
     value_as_numeric = TRUE,
     preserve_slashes = FALSE) {
     # ---- Input validation ----
-                        if (!is.character(wsp_files) || length(wsp_files) == 0) {
+                        if (!is.character(wsp_files) || 
+                            length(wsp_files) == 0) {
         stop("'wsp_files' must be a non-empty character vector.")
         }
 
@@ -121,7 +122,8 @@ extract_flowjo_stats <- function(wsp_files,
         }
 
     # ---- Extract long-format table ----
-                        long_table <- bind_rows(lapply(wsp_files, extract_wsp_data_long))
+                        long_table <- bind_rows(lapply(wsp_files,
+                            extract_wsp_data_long))
 
                         if (value_as_numeric) {
         long_table <- long_table %>%
@@ -140,14 +142,17 @@ extract_flowjo_stats <- function(wsp_files,
         mapping <- long_table %>%
         distinct(population_path, population, id, stat_name, stat_ancestor) %>%
         mutate(
-                better_name = make_better_names(population, stat_name, stat_ancestor,
+                better_name = make_better_names(population, stat_name,
+                    stat_ancestor,
                     preserve_slashes = preserve_slashes
                     ),
                 description = case_when(
                     stat_name == "PopulationCount" ~
-                    paste0("Event count for population '", population_path, "'"),
+                    paste0("Event count for population '", population_path,
+                        "'"),
                     is.na(stat_ancestor) ~
-                    paste0(stat_name, " for population '", population_path, "'"),
+                    paste0(stat_name, " for population '", population_path,
+                        "'"),
                     TRUE ~
                     paste0(
                             stat_name, " for population '", population_path,
@@ -179,7 +184,8 @@ extract_flowjo_stats <- function(wsp_files,
 
                         mapping <- read_csv(csv_file, show_col_types = FALSE)
 
-                        required_cols <- c("population_path", "stat_name", "stat_ancestor")
+                        required_cols <- c("population_path", "stat_name",
+                            "stat_ancestor")
                         missing_cols <- required_cols[!required_cols %in% names(mapping)]
                         if (length(missing_cols) > 0) {
         stop(
@@ -192,8 +198,10 @@ extract_flowjo_stats <- function(wsp_files,
                         if (!"better_name" %in% names(mapping)) {
         mapping <- mapping %>%
         mutate(
-                population = coalesce(population, get_leaf_population(population_path)),
-                better_name = make_better_names(population, stat_name, stat_ancestor,
+                population = coalesce(population,
+                    get_leaf_population(population_path)),
+                better_name = make_better_names(population, stat_name,
+                    stat_ancestor,
                     preserve_slashes = preserve_slashes
                     )
                 )
@@ -218,8 +226,10 @@ extract_flowjo_stats <- function(wsp_files,
 
     # Fail if the workspace contains stats not in the CSV
                         missing_in_csv <- long_table %>%
-                        anti_join(csv_sigs, by = c("population_path", "stat_name", "stat_ancestor")) %>%
-                        distinct(file, population_path, stat_name, stat_ancestor)
+                        anti_join(csv_sigs, by = c("population_path",
+                            "stat_name", "stat_ancestor")) %>%
+                        distinct(file, population_path, stat_name,
+                            stat_ancestor)
 
                         if (nrow(missing_in_csv) > 0) {
         affected_files <- sort(unique(missing_in_csv$file))
@@ -230,7 +240,8 @@ extract_flowjo_stats <- function(wsp_files,
         stop(
             "The following workspace signatures are missing from csv_file.\n",
             "This usually means the CSV was generated without all wsp_files.\n",
-            "Affected file(s): ", paste(affected_files, collapse = ", "), "\n\n",
+            "Affected file(s): ", paste(affected_files, collapse = ", "),
+                "\n\n",
             "Missing by file:\n",
             paste(capture.output(format(as.data.frame(summary_by_file))),
                 collapse = "\n"
@@ -245,7 +256,8 @@ extract_flowjo_stats <- function(wsp_files,
 
     # Warn about extra mappings in CSV that are not in the data
                         extra_in_csv <- csv_sigs %>%
-                        anti_join(data_sigs, by = c("population_path", "stat_name", "stat_ancestor"))
+                        anti_join(data_sigs, by = c("population_path",
+                            "stat_name", "stat_ancestor"))
 
                         if (nrow(extra_in_csv) > 0) {
         warning(
@@ -285,7 +297,8 @@ extract_flowjo_stats <- function(wsp_files,
     # Join long table with mapping and pivot wide
                         wide_table <- long_table %>%
                         left_join(
-            mapping %>% select(population_path, stat_name, stat_ancestor, better_name),
+            mapping %>% select(population_path, stat_name, stat_ancestor,
+                better_name),
             by = c("population_path", "stat_name", "stat_ancestor")
             ) %>%
                         mutate(
@@ -294,7 +307,8 @@ extract_flowjo_stats <- function(wsp_files,
                 better_name
                 )
             ) %>%
-                        select(file, sample_name, sample_id, sample_count, better_name, value_num) %>%
+                        select(file, sample_name, sample_id, sample_count,
+                            better_name, value_num) %>%
                         pivot_wider(
             id_cols = c(file, sample_name, sample_id, sample_count),
             names_from = better_name,
@@ -567,7 +581,8 @@ sanitize_name <- function(x, preserve_slashes = FALSE) {
 #'   Default FALSE (replaces "/" with "_").
 #' @return Character vector of sanitized names
 #' @noRd
-make_better_names <- function(population, stat_name, stat_ancestor, preserve_slashes = FALSE) {
+make_better_names <- function(population, stat_name, stat_ancestor,
+    preserve_slashes = FALSE) {
     pop <- sanitize_name(population, preserve_slashes = preserve_slashes)
     short <- shorten_stat_name(stat_name)
     anc <- sanitize_name(stat_ancestor, preserve_slashes = preserve_slashes)

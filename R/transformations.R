@@ -43,7 +43,8 @@ extract_transformations <- function(populationDefinitions, sample_uuids) {
 
     for (sample_uuid in sample_uuids) {
         # Extract transformation specs from data source
-        trans_spec <- extract_transformation_spec(sample_uuid, populationDefinitions)
+        trans_spec <- extract_transformation_spec(sample_uuid,
+            populationDefinitions)
 
         if (!is.null(trans_spec)) {
             # Convert to flowWorkspace transformation objects
@@ -92,7 +93,8 @@ extract_transformation_spec <- function(sample_uuid, populationDefinitions) {
 
             if (!is.null(param_spec) && !is.null(transform_info)) {
                 channel_name <- param_spec$name
-                if (!is.null(channel_name) && !(channel_name %in% names(trans_spec))) {
+                if (!is.null(channel_name) && 
+                    !(channel_name %in% names(trans_spec))) {
                     trans_spec[[channel_name]] <- parse_transformation_info(transform_info)
                     trans_spec[[channel_name]]$channel <- channel_name
                     }
@@ -106,7 +108,8 @@ extract_transformation_spec <- function(sample_uuid, populationDefinitions) {
 
             if (!is.null(param_spec) && !is.null(transform_info)) {
                 channel_name <- param_spec$name
-                if (!is.null(channel_name) && !(channel_name %in% names(trans_spec))) {
+                if (!is.null(channel_name) && 
+                    !(channel_name %in% names(trans_spec))) {
                     trans_spec[[channel_name]] <- parse_transformation_info(transform_info)
                     trans_spec[[channel_name]]$channel <- channel_name
                     }
@@ -148,8 +151,10 @@ parse_transformation_info <- function(trans_info) {
         )
 
     # If the transformation type is still not recognized, replace with biexponential
-    if (!(normalized_type %in% c("biexponential", "logicle", "arcsinh", "log", "linear"))) {
-        warning("Unknown transformation type '", trans_type, "' replaced with biexponential")
+    if (!(normalized_type %in% c("biexponential", "logicle", "arcsinh",
+        "log", "linear"))) {
+        warning("Unknown transformation type '", trans_type,
+            "' replaced with biexponential")
         normalized_type <- "biexponential"
         }
 
@@ -185,15 +190,21 @@ parse_transformation_info <- function(trans_info) {
             # FlowJo v11 Log transform metadata uses decadesOffset (1-based start
             # decade), numberDecades, and shift.  We store the raw metadata; the
             # decoder in display_to_raw() implements the actual inversion.
-            params$decadesOffset <- trans_info[["decadesOffset"]] %||% trans_info[["decadesOffset"]] %||% 1
-            params$numberDecades <- trans_info[["numberDecades"]] %||% trans_info[["numberDecades"]] %||% 4
-            params$shift <- trans_info[["shift"]] %||% trans_info[["shift"]] %||% 0
-            params$base <- trans_info[["base"]] %||% trans_info[["Base"]] %||% 10
+            params$decadesOffset <- trans_info[["decadesOffset"]] %||% 
+                trans_info[["decadesOffset"]] %||% 1
+            params$numberDecades <- trans_info[["numberDecades"]] %||% 
+                trans_info[["numberDecades"]] %||% 4
+            params$shift <- trans_info[["shift"]] %||% 
+                trans_info[["shift"]] %||% 0
+            params$base <- trans_info[["base"]] %||% 
+                trans_info[["Base"]] %||% 10
             params$vectorLength <- trans_info[["vectorLength"]] %||% 256
             },
         "linear" = {
-            params$a <- trans_info[["a"]] %||% trans_info[["A"]] %||% trans_info[["maxRange"]] %||% 1
-            params$b <- trans_info[["b"]] %||% trans_info[["B"]] %||% trans_info[["minRange"]] %||% 0
+            params$a <- trans_info[["a"]] %||% trans_info[["A"]] %||% 
+                trans_info[["maxRange"]] %||% 1
+            params$b <- trans_info[["b"]] %||% trans_info[["B"]] %||% 
+                trans_info[["minRange"]] %||% 0
             }
         )
 
@@ -362,8 +373,10 @@ create_log_transform <- function(spec) {
 
     # Detect parameterisation.  flowWorkspace / FlowJo v10 uses decade/offset/scale;
     # FlowJo v11 parsed metadata uses numberDecades/decadesOffset/vectorLength.
-    has_v10_style <- any(c("decade", "decades", "offset", "scale") %in% names(spec))
-    has_v11_style <- any(c("numberDecades", "decadesOffset", "vectorLength") %in% names(spec))
+    has_v10_style <- any(c("decade", "decades", "offset",
+        "scale") %in% names(spec))
+    has_v11_style <- any(c("numberDecades", "decadesOffset",
+        "vectorLength") %in% names(spec))
 
     if (has_v10_style || !has_v11_style) {
         # flowWorkspace flowjo_log_trans parameterisation
@@ -378,8 +391,10 @@ create_log_transform <- function(spec) {
         vector_length <- spec[["vectorLength"]] %||% 256
         shift <- spec[["shift"]] %||% 0
 
-        if (is.null(vector_length) || length(vector_length) == 0 || vector_length == 0) {
-            warning("Log transform has invalid vectorLength (", vector_length, "). Using 256.")
+        if (is.null(vector_length) || length(vector_length) == 0 || 
+            vector_length == 0) {
+            warning("Log transform has invalid vectorLength (",
+                vector_length, "). Using 256.")
             vector_length <- 256
             }
 
@@ -532,7 +547,8 @@ map_transformation_names <- function(trans_list, param_names) {
             mapped_trans[[mapped_name]] <- trans_list[[trans_name]]
             } else {
             # No match found - skip this transformation with warning
-            warning("Could not map transformation channel '", trans_name, "' to any parameter")
+            warning("Could not map transformation channel '", trans_name,
+                "' to any parameter")
             }
         }
 

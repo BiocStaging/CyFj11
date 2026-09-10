@@ -45,7 +45,8 @@ extract_compensation <- function(dataSources,
 
     # First, build a map of sample UUID to compensation matrix from platforms
                 sample_comp_map <- NULL
-                if (!is.null(platforms) && !is.null(platforms$spilloverMatrix)) {
+                if (!is.null(platforms) && 
+                    !is.null(platforms$spilloverMatrix)) {
         sample_comp_map <- extract_compensation_from_platforms(platforms$spilloverMatrix, dataSources, sample_uuids)
         }
 
@@ -54,7 +55,8 @@ extract_compensation <- function(dataSources,
 
         # Check for custom compensation first
         if (!is.null(custom_compensation)) {
-            if (is.list(custom_compensation) && !is.data.frame(custom_compensation)) {
+            if (is.list(custom_compensation) && 
+                !is.data.frame(custom_compensation)) {
                 # Named list - check if this sample has custom comp
                 if (sample_uuid %in% names(custom_compensation)) {
                     comp_list[[sample_uuid]] <- validate_compensation(
@@ -70,7 +72,8 @@ extract_compensation <- function(dataSources,
             }
 
         # Try compensation from platforms first (sample-specific)
-        if (!is.null(sample_comp_map) && !is.null(sample_comp_map[[sample_uuid]])) {
+        if (!is.null(sample_comp_map) && 
+            !is.null(sample_comp_map[[sample_uuid]])) {
             comp_list[[sample_uuid]] <- sample_comp_map[[sample_uuid]]
             next
             }
@@ -95,7 +98,8 @@ extract_compensation <- function(dataSources,
 #' @param sample_uuids Vector of sample UUIDs
 #' @return Named list of compensation matrices (one per sample)
 #' @keywords internal
-extract_compensation_from_platforms <- function(spillover_matrices, dataSources = NULL, sample_uuids = NULL) {
+extract_compensation_from_platforms <- function(spillover_matrices,
+    dataSources = NULL, sample_uuids = NULL) {
     # Return NULL if no spillover matrices
     if (length(spillover_matrices) == 0) {
         return(NULL)
@@ -186,7 +190,8 @@ extract_compensation_from_platforms <- function(spillover_matrices, dataSources 
     sample_comp_map <- list()
     for (sample_uuid in sample_uuids) {
         ds <- dataSources[[sample_uuid]]
-        if (!is.null(ds) && !is.null(ds$parents) && !is.null(ds$parents$platforms)) {
+        if (!is.null(ds) && !is.null(ds$parents) && 
+            !is.null(ds$parents$platforms)) {
             # Get the compensation UUID(s) this sample references
             comp_uuids <- ds$parents$platforms
             if (length(comp_uuids) > 0) {
@@ -372,13 +377,15 @@ map_compensation_names <- function(comp_matrix, param_names) {
     # Check for unmapped names and warn
     for (i in seq_along(comp_names_base)) {
         if (is.null(name_mapping[[comp_names_base[i]]])) {
-            warning("Could not map compensation channel '", comp_names_base[i], "' to any parameter")
+            warning("Could not map compensation channel '",
+                comp_names_base[i], "' to any parameter")
             }
         }
 
     # Apply mapping to create new compensation matrix with cytoframe parameter names
     # (without "Comp-" prefix, so flowCore::compensate can match them)
-    mapped_names <- apply_param_mapping(comp_names_base, name_mapping, on_no_match = "keep")
+    mapped_names <- apply_param_mapping(comp_names_base, name_mapping,
+        on_no_match = "keep")
 
     # Create new compensation matrix with mapped names
     mapped_comp <- comp_matrix

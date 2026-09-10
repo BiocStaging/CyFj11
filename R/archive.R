@@ -39,7 +39,8 @@ process_zip_archive <- function(zip_path) {
         stop("Workspace file does not exist: ", zip_path)
         }
     # Create unique temporary directory for extraction
-    work_dir <- file.path(tempdir(), paste0("processing_", Sys.getpid(), "_", round(runif(1, 10000, 99999))))
+    work_dir <- file.path(tempdir(), paste0("processing_", Sys.getpid(),
+        "_", round(runif(1, 10000, 99999))))
     dir.create(work_dir, recursive = TRUE)
 
     # Ensure cleanup happens even if function errors
@@ -50,7 +51,8 @@ process_zip_archive <- function(zip_path) {
             }
         })
 
-    if (.pkgenv$verbose) message("Created temporary directory:", work_dir, "\n") # nocov
+    if (.pkgenv$verbose) message("Created temporary directory:", work_dir,
+        "\n") # nocov
 
     # Extract all files from the ZIP archive
     unzip(zip_path, exdir = work_dir)
@@ -85,11 +87,13 @@ process_zip_archive <- function(zip_path) {
         if (file.exists(json_file)) {
             results$json[[basename(json_file)]] <- tryCatch(
                 {
-                    jsonlite::fromJSON(json_file, simplifyVector = FALSE, simplifyMatrix = FALSE) # Parse JSON
+                    jsonlite::fromJSON(json_file, simplifyVector = FALSE,
+                        simplifyMatrix = FALSE) # Parse JSON
                     },
                 error = function(e) {
                     # If parsing fails, return error and raw content for debugging
-                    list(error = e$message, raw_content = readLines(json_file, warn = FALSE))
+                    list(error = e$message,
+                        raw_content = readLines(json_file, warn = FALSE))
                     }
                 )
             }
@@ -122,11 +126,13 @@ read_flowjo11_workspace <- function(workspace_path) {
         }
 
     # Process the ZIP archive
-    if (.pkgenv$verbose) message("Reading FlowJo v11 workspace:", workspace_path, "\n") # nocov
+    if (.pkgenv$verbose) message("Reading FlowJo v11 workspace:",
+        workspace_path, "\n") # nocov
     results <- process_zip_archive(workspace_path)
 
     # Get the main analysis JSON (find the first analysis JSON file)
-    main_json_name <- grep("^analysis-.*\\.json$", names(results$json), value = TRUE)
+    main_json_name <- grep("^analysis-.*\\.json$", names(results$json),
+        value = TRUE)
     if (length(main_json_name) == 0) {
         stop("No analysis JSON file found in workspace")
         }
@@ -165,7 +171,8 @@ read_flowjo11_workspace <- function(workspace_path) {
         message("  - JSON files:", length(workspace$json), "\n")
         message("  - Groups:", length(workspace$groups), "\n")
         message("  - DataSources:", length(workspace$dataSources), "\n")
-        message("  - PopulationDefinitions:", length(workspace$populationDefinitions), "\n")
+        message("  - PopulationDefinitions:",
+            length(workspace$populationDefinitions), "\n")
         message("  - Populations:", length(workspace$populations), "\n")
         message("  - Reports:", length(workspace$reports), "\n")
         message("  - Platforms:", length(workspace$platforms), "\n")

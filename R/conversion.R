@@ -180,9 +180,11 @@ fj11_to_gatingset <- function(fj11_workspace,
         sample_uuids <- selected_group$results$dataSources
 
     # Filter samples based on subset argument
-        sample_uuids <- filter_samples(sample_uuids, subset, dataSources, keywords)
+        sample_uuids <- filter_samples(sample_uuids, subset, dataSources,
+            keywords)
 
-        if (.pkgenv$verbose) message("Processing", length(sample_uuids), "samples\n\n")
+        if (.pkgenv$verbose) message("Processing", length(sample_uuids),
+            "samples\n\n")
 
     # Step 3: Resolve FCS file paths ----
         if (is.null(cytoset)) {
@@ -208,13 +210,15 @@ fj11_to_gatingset <- function(fj11_workspace,
             # Strict mode: stop on any failure (missing or multiple)
             failed <- path_resolution[path_resolution$status != "FOUND", ]
             if (nrow(failed) > 0) {
-                stop("Could not resolve ", nrow(failed), " FCS file(s). See path_resolution for details.")
+                stop("Could not resolve ", nrow(failed),
+                    " FCS file(s). See path_resolution for details.")
                 }
             } else {
             # Permissive mode: only stop on truly missing files, allow multiple matches
                 failed <- path_resolution[path_resolution$status == "NOT_FOUND" | path_resolution$status == "NO_URI", ]
                 if (nrow(failed) > 0) {
-                stop("Could not resolve ", nrow(failed), " FCS file(s). Missing files detected. See path_resolution for details.")
+                stop("Could not resolve ", nrow(failed),
+                    " FCS file(s). Missing files detected. See path_resolution for details.")
                 }
                 }
 
@@ -233,7 +237,8 @@ fj11_to_gatingset <- function(fj11_workspace,
                 if (any(multiple_rows)) {
                 # Split the resolved_path by " | " and take the first path
                 first_paths <- vapply(
-                    strsplit(path_resolution$resolved_path[multiple_rows], " \\| "),
+                    strsplit(path_resolution$resolved_path[multiple_rows],
+                        " \\| "),
                     function(p) p[1], character(1)
                     )
                 names(first_paths) <- path_resolution$sample_id[multiple_rows]
@@ -261,7 +266,8 @@ fj11_to_gatingset <- function(fj11_workspace,
         if (.pkgenv$verbose) message("\nBuilding gating hierarchy...\n")
 
     # Get root population (usually the ungated data)
-        root_pop_uuid <- find_root_population(populations, populationDefinitions, sample_uuids[1])
+        root_pop_uuid <- find_root_population(populations,
+            populationDefinitions, sample_uuids[1])
     # browser()
     # Build hierarchy tree for each sample
     # browser()
@@ -346,7 +352,8 @@ fj11_to_gatingset <- function(fj11_workspace,
 
         # Safely get population count
                                                                                                                     if (!is.null(gsList) && length(gsList) > 0 && !is.null(gsList[[1]])) {
-            message("Populations: ", length(flowWorkspace::gs_get_pop_paths(gsList[[1]])), "\n")
+            message("Populations: ",
+                length(flowWorkspace::gs_get_pop_paths(gsList[[1]])), "\n")
             } else {
                 message("Populations: 0 (GatingSet list is empty)\n")
                 }

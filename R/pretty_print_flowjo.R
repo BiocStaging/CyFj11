@@ -50,7 +50,8 @@ pretty_print_flowjo <- function(flowjo_file) {
     system2("unzip", args = c(flowjo_file, "-d", temp_dir))
 
     # Find the analysis JSON file
-    json_files <- list.files(file.path(temp_dir, "analyses"), pattern = "\\.json$", recursive = TRUE, full.names = TRUE)
+    json_files <- list.files(file.path(temp_dir, "analyses"),
+        pattern = "\\.json$", recursive = TRUE, full.names = TRUE)
     if (length(json_files) == 0) {
         stop("No JSON files found in the FlowJo workspace")
         }
@@ -65,7 +66,8 @@ pretty_print_flowjo <- function(flowjo_file) {
     output_file <- paste0(base_name, "_pretty.json")
 
     # Write the pretty printed JSON to file
-    jsonlite::write_json(path = output_file, x = json_data, auto_unbox = TRUE, pretty = TRUE, always_decimal = TRUE)
+    jsonlite::write_json(path = output_file, x = json_data,
+        auto_unbox = TRUE, pretty = TRUE, always_decimal = TRUE)
 
     message("Pretty printed JSON saved to:", output_file, "\n")
 

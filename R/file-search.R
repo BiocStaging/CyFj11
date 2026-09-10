@@ -55,7 +55,8 @@ search_fcs_files <- function(root_dir, pattern = "\\.fcs$") {
 
     # Search for FCS files
     if (.pkgenv$verbose) { # nocov
-        message("Searching for FCS files in", length(root_dir), "directories...\n")
+        message("Searching for FCS files in", length(root_dir),
+            "directories...\n")
         }
 
     # Find all FCS files
@@ -102,7 +103,8 @@ search_fcs_files <- function(root_dir, pattern = "\\.fcs$") {
 
     n_dupes <- sum(duplicated(results$filename))
     if (n_dupes > 0 && .pkgenv$verbose) { # nocov
-        message("  Note:", n_dupes, "duplicate filename(s) found in different directories\n")
+        message("  Note:", n_dupes,
+            "duplicate filename(s) found in different directories\n")
         }
 
     if (.pkgenv$verbose) { # nocov
@@ -200,12 +202,14 @@ resolve_all_fcs_paths <- function(dataSources,
             n_found <- n_found + 1
             } else {
             # Multiple matches
-            message("!! ", filename, " - MULTIPLE MATCHES (", length(match_idx), ")\n", sep = "")
+            message("!! ", filename, " - MULTIPLE MATCHES (",
+                length(match_idx), ")\n", sep = "")
             resolution_results[[i]] <- data.frame(
                 sample_id = sample_id,
                 flowjo_uri = flowjo_uri,
                 filename = filename,
-                resolved_path = paste(fcs_index$full_path[match_idx], collapse = " | "),
+                resolved_path = paste(fcs_index$full_path[match_idx],
+                    collapse = " | "),
                 status = "MULTIPLE",
                 stringsAsFactors = FALSE
                 )
@@ -221,9 +225,12 @@ resolve_all_fcs_paths <- function(dataSources,
                 message("  Resolution Summary\n")
                 message("===========================================\n")
                 message("Total samples:  ", n_total, "\n")
-                message("  Found:        ", n_found, sprintf(" (%.1f%%)\n", n_found / n_total * 100))
-                message("  Missing:      ", n_missing, sprintf(" (%.1f%%)\n", n_missing / n_total * 100))
-                message("  Multiple:     ", n_multiple, sprintf(" (%.1f%%)\n", n_multiple / n_total * 100))
+                message("  Found:        ", n_found, sprintf(" (%.1f%%)\n",
+                    n_found / n_total * 100))
+                message("  Missing:      ", n_missing,
+                    sprintf(" (%.1f%%)\n", n_missing / n_total * 100))
+                message("  Multiple:     ", n_multiple,
+                    sprintf(" (%.1f%%)\n", n_multiple / n_total * 100))
                 message("===========================================\n\n")
 
     # Handle errors based on settings

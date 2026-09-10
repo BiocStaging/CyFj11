@@ -51,7 +51,8 @@ extract_all_gates <- function(populationDefinitions,
 
         # Skip if no gate definition
         if (is.null(pop_def$definition)) next
-        if (length(pop_def$definition$name) == 1 && pop_def$definition$name == "Ungated") next
+        if (length(pop_def$definition$name) == 1 && 
+            pop_def$definition$name == "Ungated") next
 
         gate_def <- pop_def$definition$gateDefinition
         desync_table <- pop_def$definition$desyncTable
@@ -66,7 +67,8 @@ extract_all_gates <- function(populationDefinitions,
                 } else {
                 gate_to_use <- gate_def
                 }
-            if (.pkgenv$verbose) message("pop_def: ", pop_def, " ", sample_uuid) # nocov
+            if (.pkgenv$verbose) message("pop_def: ", pop_def, " ",
+                sample_uuid) # nocov
             # browser() # nocov
             if (is.null(gate_to_use)) next
 
@@ -87,7 +89,8 @@ extract_all_gates <- function(populationDefinitions,
                 gates_list[[key]] <- gate_obj
                 } else {
                 warning(
-                    "Failed to convert gate for population: ", pop_def$definition$name,
+                    "Failed to convert gate for population: ",
+                        pop_def$definition$name,
                     " (", pop_uuid, "), sample: ", sample_uuid
                     )
                 }
@@ -111,10 +114,12 @@ convert_flowjo_gate <- function(gate,
                                     gate_type <- gate$type %||% pop_type
 
     # Infer gate type from structure if needed
-                                    if (is.null(gate_type) || gate_type == "gate") {
+                                    if (is.null(gate_type) || 
+                                        gate_type == "gate") {
         if (!is.null(gate$xVertices) && !is.null(gate$yVertices)) {
             gate_type <- "PolygonGate"
-            } else if (!is.null(gate$xMin) || !is.null(gate$x$max) || !is.null(gate$yMin) || !is.null(gate$y$max)) {
+            } else if (!is.null(gate$xMin) || !is.null(gate$x$max) || 
+                !is.null(gate$yMin) || !is.null(gate$y$max)) {
             gate_type <- "RectangleGate"
             } else if (!is.null(gate$centerX) || !is.null(gate$centerY)) {
             gate_type <- "EllipsoidGate"
@@ -127,24 +132,32 @@ convert_flowjo_gate <- function(gate,
         {
             switch(gate_type,
                 "RectangleGate" = ,
-                "rectangle" = convert_rectangle_gate(gate, pop_name, extend_val, extend_to, correct_faulty_gate, use_transformed_coords),
+                "rectangle" = convert_rectangle_gate(gate, pop_name,
+                    extend_val, extend_to, correct_faulty_gate,
+                        use_transformed_coords),
                 "PolygonGate" = ,
-                "polygon" = convert_polygon_gate(gate, pop_name, extend_val, extend_to, correct_faulty_gate, use_transformed_coords),
+                "polygon" = convert_polygon_gate(gate, pop_name, extend_val,
+                    extend_to, correct_faulty_gate, use_transformed_coords),
                 "EllipsoidGate" = ,
-                "ellipse" = convert_ellipse_gate(gate, pop_name, extend_val, extend_to, correct_faulty_gate, use_transformed_coords),
+                "ellipse" = convert_ellipse_gate(gate, pop_name, extend_val,
+                    extend_to, correct_faulty_gate, use_transformed_coords),
                 "RangeGate" = ,
-                "range" = convert_range_gate(gate, pop_name, extend_val, extend_to, correct_faulty_gate, use_transformed_coords),
+                "range" = convert_range_gate(gate, pop_name, extend_val,
+                    extend_to, correct_faulty_gate, use_transformed_coords),
                 "QuadrantGate" = ,
-                "quad" = convert_quadrant_gate(gate, pop_name, extend_val, extend_to, correct_faulty_gate, use_transformed_coords),
+                "quad" = convert_quadrant_gate(gate, pop_name, extend_val,
+                    extend_to, correct_faulty_gate, use_transformed_coords),
                 "BooleanGate" = convert_boolean_gate(gate, pop_name),
                 {
-                    warning("Unsupported gate type: ", gate_type, " for population: ", pop_name)
+                    warning("Unsupported gate type: ", gate_type,
+                        " for population: ", pop_name)
                     NULL
                     }
                 )
             },
         error = function(e) {
-            warning("Failed to convert gate ", gate_type, " for ", pop_name, ": ", e$message)
+            warning("Failed to convert gate ", gate_type, " for ", pop_name,
+                ": ", e$message)
             NULL
             }
         )
@@ -167,7 +180,9 @@ convert_flowjo_gate <- function(gate,
 #' @param correct_faulty_gate Fallback maxRange value if maxRange=0
 #' @return Numeric vector of coordinates in raw data space
 #' @keywords internal
-display_to_raw <- function(display_coords, transform_spec, gate_resolution = NULL, correct_faulty_gate = 0, use_transformed_coords = FALSE) {
+display_to_raw <- function(display_coords, transform_spec,
+    gate_resolution = NULL, correct_faulty_gate = 0,
+        use_transformed_coords = FALSE) {
     # Handle NULL or empty input
     if (is.null(display_coords) || length(display_coords) == 0) {
         return(numeric(0))
@@ -224,10 +239,13 @@ display_to_raw <- function(display_coords, transform_spec, gate_resolution = NUL
         decades_offset <- transform_spec$decadesOffset %||% 1
         number_decades <- transform_spec$numberDecades %||% 4
         shift <- transform_spec$shift %||% 0
-        vector_length <- gate_resolution %||% transform_spec$vectorLength %||% 256
+        vector_length <- gate_resolution %||% 
+            transform_spec$vectorLength %||% 256
 
-        if (is.null(vector_length) || length(vector_length) == 0 || vector_length == 0) {
-            warning("Log transform has invalid vectorLength (", vector_length, "). Using 256.")
+        if (is.null(vector_length) || length(vector_length) == 0 || 
+            vector_length == 0) {
+            warning("Log transform has invalid vectorLength (",
+                vector_length, "). Using 256.")
             vector_length <- 256
             }
 
@@ -246,7 +264,8 @@ display_to_raw <- function(display_coords, transform_spec, gate_resolution = NUL
         raw_coords <- 10^(display_coords * number_decades / vector_length + decades_offset - 1) - shift
         return(raw_coords)
         } else {
-        warning("Unsupported transform type: ", trans_type, ". Returning coordinates as-is.")
+        warning("Unsupported transform type: ", trans_type,
+            ". Returning coordinates as-is.")
         return(display_coords)
         }
     }
@@ -271,7 +290,8 @@ apply_extension <- function(coords, extend_val = 0, extend_to = -4000) {
 #' Convert Rectangle Gate
 #' @keywords internal
 #' @importFrom flowCore rectangleGate
-convert_rectangle_gate <- function(gate, pop_name, extend_val, extend_to, correct_faulty_gate = 0, use_transformed_coords = FALSE) {
+convert_rectangle_gate <- function(gate, pop_name, extend_val, extend_to,
+    correct_faulty_gate = 0, use_transformed_coords = FALSE) {
     # browser() # nocov
     # Extract parameters
     x_param <- gate$xAxis$parameterSpec$name %||% gate$xParameter
@@ -286,7 +306,8 @@ convert_rectangle_gate <- function(gate, pop_name, extend_val, extend_to, correc
 
     # Transform X coordinates
     x_display <- unlist(gate$xVertices)
-    x_raw <- display_to_raw(x_display, gate$xAxis$transform, gate_resolution, correct_faulty_gate, use_transformed_coords)
+    x_raw <- display_to_raw(x_display, gate$xAxis$transform,
+        gate_resolution, correct_faulty_gate, use_transformed_coords)
     x_raw <- apply_extension(x_raw, extend_val, extend_to)
 
     x_min <- min(x_raw)
@@ -304,7 +325,8 @@ convert_rectangle_gate <- function(gate, pop_name, extend_val, extend_to, correc
         } else {
         # 2D gate
         y_display <- unlist(gate$yVertices)
-        y_raw <- display_to_raw(y_display, gate$yAxis$transform, gate_resolution, correct_faulty_gate, use_transformed_coords)
+        y_raw <- display_to_raw(y_display, gate$yAxis$transform,
+            gate_resolution, correct_faulty_gate, use_transformed_coords)
         y_raw <- apply_extension(y_raw, extend_val, extend_to)
 
         y_min <- min(y_raw)
@@ -325,7 +347,8 @@ convert_rectangle_gate <- function(gate, pop_name, extend_val, extend_to, correc
 #' Convert Polygon Gate
 #' @keywords internal
 #' @importFrom flowCore polygonGate
-convert_polygon_gate <- function(gate, pop_name, extend_val, extend_to, correct_faulty_gate = 0, use_transformed_coords = FALSE) {
+convert_polygon_gate <- function(gate, pop_name, extend_val, extend_to,
+    correct_faulty_gate = 0, use_transformed_coords = FALSE) {
     # Extract parameters
     x_param <- gate$xParameter %||%
     gate$xAxis$parameterSpec$name %||%
@@ -358,8 +381,10 @@ convert_polygon_gate <- function(gate, pop_name, extend_val, extend_to, correct_
     gate_resolution <- gate$gateResolution %||% gate$resolution
 
     # Transform coordinates to raw data space
-    x_raw <- display_to_raw(x_display, gate$xAxis$transform, gate_resolution, correct_faulty_gate, use_transformed_coords)
-    y_raw <- display_to_raw(y_display, gate$yAxis$transform, gate_resolution, correct_faulty_gate, use_transformed_coords)
+    x_raw <- display_to_raw(x_display, gate$xAxis$transform,
+        gate_resolution, correct_faulty_gate, use_transformed_coords)
+    y_raw <- display_to_raw(y_display, gate$yAxis$transform,
+        gate_resolution, correct_faulty_gate, use_transformed_coords)
 
     # Apply extension
     x_raw <- apply_extension(x_raw, extend_val, extend_to)
@@ -390,7 +415,8 @@ convert_polygon_gate <- function(gate, pop_name, extend_val, extend_to, correct_
 #' Convert Ellipse Gate
 #' @keywords internal
 #' @importFrom flowCore ellipsoidGate
-convert_ellipse_gate <- function(gate, pop_name, extend_val, extend_to, correct_faulty_gate = 0, use_transformed_coords = FALSE) {
+convert_ellipse_gate <- function(gate, pop_name, extend_val, extend_to,
+    correct_faulty_gate = 0, use_transformed_coords = FALSE) {
     # Extract parameters
     x_param <- gate$xAxis$parameterSpec$name %||% gate$xParameter
     y_param <- gate$yAxis$parameterSpec$name %||% gate$yParameter
@@ -425,12 +451,17 @@ convert_ellipse_gate <- function(gate, pop_name, extend_val, extend_to, correct_
             ), nrow = 2, ncol = 2)
 
         # Transform center to raw data space
-        center_x_raw <- display_to_raw(center_x_display, gate$xAxis$transform, gate_resolution, correct_faulty_gate, use_transformed_coords)
-        center_y_raw <- display_to_raw(center_y_display, gate$yAxis$transform, gate_resolution, correct_faulty_gate, use_transformed_coords)
+        center_x_raw <- display_to_raw(center_x_display,
+            gate$xAxis$transform, gate_resolution, correct_faulty_gate,
+                use_transformed_coords)
+        center_y_raw <- display_to_raw(center_y_display,
+            gate$yAxis$transform, gate_resolution, correct_faulty_gate,
+                use_transformed_coords)
 
         # Calculate scale factors for covariance transformation
         # This depends on the transform type
-        vector_length <- gate_resolution %||% gate$xAxis$transform$vectorLength %||% 256
+        vector_length <- gate_resolution %||% 
+            gate$xAxis$transform$vectorLength %||% 256
 
         # For Linear transform: scale from display to data
         # For Biex: we need the derivative of the inverse transform at the center point
@@ -440,7 +471,8 @@ convert_ellipse_gate <- function(gate, pop_name, extend_val, extend_to, correct_
 
         if (x_trans_type == "Linear") {
             max_range_x <- gate$xAxis$transform$maxRange %||% 262144
-            if (max_range_x == 0 && correct_faulty_gate != 0) max_range_x <- correct_faulty_gate
+            if (max_range_x == 0 && 
+                correct_faulty_gate != 0) max_range_x <- correct_faulty_gate
             scale_x <- max_range_x / vector_length
             } else {
             # For Biex, scaling is approximately 1 near the center (simplified)
@@ -449,7 +481,8 @@ convert_ellipse_gate <- function(gate, pop_name, extend_val, extend_to, correct_
 
         if (y_trans_type == "Linear") {
             max_range_y <- gate$yAxis$transform$maxRange %||% 262144
-            if (max_range_y == 0 && correct_faulty_gate != 0) max_range_y <- correct_faulty_gate
+            if (max_range_y == 0 && 
+                correct_faulty_gate != 0) max_range_y <- correct_faulty_gate
             scale_y <- max_range_y / vector_length
             } else {
             scale_y <- 1
@@ -485,7 +518,8 @@ convert_ellipse_gate <- function(gate, pop_name, extend_val, extend_to, correct_
 #' Convert Range Gate (1D)
 #' @keywords internal
 #' @importFrom flowCore rectangleGate
-convert_range_gate <- function(gate, pop_name, extend_val, extend_to, correct_faulty_gate = 0, use_transformed_coords = FALSE) {
+convert_range_gate <- function(gate, pop_name, extend_val, extend_to,
+    correct_faulty_gate = 0, use_transformed_coords = FALSE) {
     # Extract parameter
     param <- gate$parameter %||%
     gate$xParameter %||%
@@ -517,10 +551,12 @@ convert_range_gate <- function(gate, pop_name, extend_val, extend_to, correct_fa
     gate_resolution <- gate$gateResolution %||% gate$resolution
 
     # Get transform
-    transform_spec <- gate$xAxis$transform %||% gate$transform %||% gate$axis$transform
+    transform_spec <- gate$xAxis$transform %||% gate$transform %||% 
+        gate$axis$transform
 
     # Transform to raw space
-    x_raw <- display_to_raw(x_display, transform_spec, gate_resolution, correct_faulty_gate, use_transformed_coords)
+    x_raw <- display_to_raw(x_display, transform_spec, gate_resolution,
+        correct_faulty_gate, use_transformed_coords)
 
     # Get min/max BEFORE extension
     min_val <- min(x_raw, na.rm = TRUE)
@@ -549,15 +585,19 @@ convert_range_gate <- function(gate, pop_name, extend_val, extend_to, correct_fa
 #' Convert Quadrant Gate
 #' @keywords internal
 #' @importFrom flowCore quadGate
-convert_quadrant_gate <- function(gate, pop_name, extend_val, extend_to, correct_faulty_gate = 0, use_transformed_coords = FALSE) {
+convert_quadrant_gate <- function(gate, pop_name, extend_val, extend_to,
+    correct_faulty_gate = 0, use_transformed_coords = FALSE) {
     # Extract parameters
-    x_param <- gate$xAxis$parameterSpec$name %||% gate$xParameter %||% gate$xAxis
-    y_param <- gate$yAxis$parameterSpec$name %||% gate$yParameter %||% gate$yAxis
+    x_param <- gate$xAxis$parameterSpec$name %||% gate$xParameter %||% 
+        gate$xAxis
+    y_param <- gate$yAxis$parameterSpec$name %||% gate$yParameter %||% 
+        gate$yAxis
 
     if (is.null(x_param) || is.null(y_param) ||
         (is.character(x_param) && nchar(x_param) == 0) ||
         (is.character(y_param) && nchar(y_param) == 0)) {
-            stop("Quadrant gate missing valid parameters for: ", paste(pop_name, collapse = ", "))
+            stop("Quadrant gate missing valid parameters for: ",
+                paste(pop_name, collapse = ", "))
             }
 
     # Extract divider position
@@ -576,8 +616,10 @@ convert_quadrant_gate <- function(gate, pop_name, extend_val, extend_to, correct
     gate_resolution <- gate$gateResolution %||% gate$resolution
 
     # Transform dividers to raw space
-    x_div_raw <- display_to_raw(x_div_display, gate$xAxis$transform, gate_resolution, correct_faulty_gate, use_transformed_coords)
-    y_div_raw <- display_to_raw(y_div_display, gate$yAxis$transform, gate_resolution, correct_faulty_gate, use_transformed_coords)
+    x_div_raw <- display_to_raw(x_div_display, gate$xAxis$transform,
+        gate_resolution, correct_faulty_gate, use_transformed_coords)
+    y_div_raw <- display_to_raw(y_div_display, gate$yAxis$transform,
+        gate_resolution, correct_faulty_gate, use_transformed_coords)
 
     # Apply extension
     x_div_raw <- apply_extension(x_div_raw, extend_val, extend_to)
@@ -585,7 +627,8 @@ convert_quadrant_gate <- function(gate, pop_name, extend_val, extend_to, correct
 
     # Validate population names
     if (length(pop_name) != 4) {
-        stop("Quadrant gate must define exactly 4 populations, got: ", length(pop_name))
+        stop("Quadrant gate must define exactly 4 populations, got: ",
+            length(pop_name))
         }
 
     # Create boundary
@@ -625,7 +668,8 @@ convert_boolean_gate <- function(gate, pop_name) {
 
     if (length(specification) > 1) {
         specification <- specification[1]
-        warning("Boolean gate specification had multiple values for: ", pop_name, ". Using first value.")
+        warning("Boolean gate specification had multiple values for: ",
+            pop_name, ". Using first value.")
         }
 
     # Parse boolean expression
@@ -696,7 +740,8 @@ parse_boolean_expression <- function(spec) {
     expr <- tryCatch(
         parse(text = expr_string),
         error = function(e) {
-            stop("Failed to parse boolean expression '", expr_string, "': ", e$message)
+            stop("Failed to parse boolean expression '", expr_string, "': ",
+                e$message)
             }
         )
 
