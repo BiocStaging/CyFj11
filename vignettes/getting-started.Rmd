@@ -1,8 +1,11 @@
 ---
-title: "Getting Started with CyFj11" output: BiocStyle::html_document vignette:
-> %\VignetteIndexEntry{Getting Started with CyFj11}
-%\VignetteEngine{knitr::rmarkdown} %\VignetteEncoding{UTF-8}
-%\VignettePackage{CyFj11}
+title: "Getting Started with CyFj11"
+output: BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Getting Started with CyFj11}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignettePackage{CyFj11}
 ---
 
 ```{r setup-opts, include = FALSE}
