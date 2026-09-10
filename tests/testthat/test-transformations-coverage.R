@@ -35,87 +35,87 @@ library(flowWorkspace)
 # ============================================================================
 
 test_that("parse_transformation_info handles log transform with default values", {
-  # Lines 190-194: log transform parameter extraction
-  trans_info <- list(
-    transformType = "log",
-    channel = "FITC-A"
-  )
+    # Lines 190-194: log transform parameter extraction
+    trans_info <- list(
+        transformType = "log",
+        channel = "FITC-A"
+    )
 
-  params <- CyFj11:::parse_transformation_info(trans_info)
+    params <- CyFj11:::parse_transformation_info(trans_info)
 
-  expect_equal(params$type, "log")
-  expect_equal(params$channel, "FITC-A")
-  # Default values from lines 190-194
-  expect_equal(params$decadesOffset, 1)
-  expect_equal(params$numberDecades, 4)
-  expect_equal(params$shift, 0)
-  expect_equal(params$base, 10)
-  expect_equal(params$vectorLength, 256)
+    expect_equal(params$type, "log")
+    expect_equal(params$channel, "FITC-A")
+    # Default values from lines 190-194
+    expect_equal(params$decadesOffset, 1)
+    expect_equal(params$numberDecades, 4)
+    expect_equal(params$shift, 0)
+    expect_equal(params$base, 10)
+    expect_equal(params$vectorLength, 256)
 })
 
 test_that("parse_transformation_info handles log transform with custom values", {
-  # Lines 190-194: log transform with custom parameters
-  trans_info <- list(
-    transformType = "log",
-    channel = "SSC-H",
-    decadesOffset = 2,
-    numberDecades = 5,
-    shift = 100,
-    base = 2.718,  # Natural log
-    vectorLength = 512
-  )
+    # Lines 190-194: log transform with custom parameters
+    trans_info <- list(
+        transformType = "log",
+        channel = "SSC-H",
+        decadesOffset = 2,
+        numberDecades = 5,
+        shift = 100,
+        base = 2.718, # Natural log
+        vectorLength = 512
+    )
 
-  params <- CyFj11:::parse_transformation_info(trans_info)
+    params <- CyFj11:::parse_transformation_info(trans_info)
 
-  expect_equal(params$type, "log")
-  expect_equal(params$channel, "SSC-H")
-  expect_equal(params$decadesOffset, 2)
-  expect_equal(params$numberDecades, 5)
-  expect_equal(params$shift, 100)
-  expect_equal(params$base, 2.718)
-  expect_equal(params$vectorLength, 512)
+    expect_equal(params$type, "log")
+    expect_equal(params$channel, "SSC-H")
+    expect_equal(params$decadesOffset, 2)
+    expect_equal(params$numberDecades, 5)
+    expect_equal(params$shift, 100)
+    expect_equal(params$base, 2.718)
+    expect_equal(params$vectorLength, 512)
 })
 
 test_that("parse_transformation_info handles log transform with 'Log' type (capitalized)", {
-  # Line 141: "Log" = "log" normalization
-  trans_info <- list(
-    transformType = "Log",  # Capitalized
-    channel = "APC-H"
-  )
+    # Line 141: "Log" = "log" normalization
+    trans_info <- list(
+        transformType = "Log", # Capitalized
+        channel = "APC-H"
+    )
 
-  params <- CyFj11:::parse_transformation_info(trans_info)
+    params <- CyFj11:::parse_transformation_info(trans_info)
 
-  expect_equal(params$type, "log")
-  expect_equal(params$channel, "APC-H")
+    expect_equal(params$type, "log")
+    expect_equal(params$channel, "APC-H")
 })
 
 test_that("parse_transformation_info handles log transform with 'base' field (alternative capitalization)", {
-  # Line 193: params$base <- trans_info[["base"]] %||% trans_info[["Base"]] %||% 10
-  trans_info <- list(
-    transformType = "log",
-    channel = "PE-H",
-    Base = 2  # Alternative capitalization
-  )
+    # Line 193: params$base <- trans_info[["base"]] %||% trans_info[["Base"]] %||% 10
+    trans_info <- list(
+        transformType = "log",
+        channel = "PE-H",
+        Base = 2 # Alternative capitalization
+    )
 
-  params <- CyFj11:::parse_transformation_info(trans_info)
+    params <- CyFj11:::parse_transformation_info(trans_info)
 
-  expect_equal(params$base, 2)
+    expect_equal(params$base, 2)
 })
 
 test_that("parse_transformation_info handles log transform with partial parameters", {
-  # Test that only specified parameters are used, others get defaults
-  trans_info <- list(
-    transformType = "log",
-    channel = "FSC-H",
-    decadesOffset = 3  # Only specify one parameter
-  )
+    # Test that only specified parameters are used, others get defaults
+    trans_info <- list(
+        transformType = "log",
+        channel = "FSC-H",
+        decadesOffset = 3 # Only specify one parameter
+    )
 
-  params <- CyFj11:::parse_transformation_info(trans_info)
+    params <- CyFj11:::parse_transformation_info(trans_info)
 
-  expect_equal(params$decadesOffset, 3)  # Custom value
-  expect_equal(params$numberDecades, 4)  # Default
-  expect_equal(params$shift, 0)           # Default
-  expect_equal(params$base, 10)           # Default
+    expect_equal(params$decadesOffset, 3) # Custom value
+    expect_equal(params$numberDecades, 4) # Default
+    expect_equal(params$shift, 0) # Default
+    expect_equal(params$base, 10) # Default
 })
 
 # ============================================================================
@@ -123,66 +123,66 @@ test_that("parse_transformation_info handles log transform with partial paramete
 # ============================================================================
 
 test_that("parse_transformation_info handles biexponential transform with default values", {
-  # Lines 173-179: biexponential transform parameter extraction
-  trans_info <- list(
-    transformType = "biexponential",
-    channel = "FITC-A"
-  )
+    # Lines 173-179: biexponential transform parameter extraction
+    trans_info <- list(
+        transformType = "biexponential",
+        channel = "FITC-A"
+    )
 
-  params <- CyFj11:::parse_transformation_info(trans_info)
+    params <- CyFj11:::parse_transformation_info(trans_info)
 
-  expect_equal(params$type, "biexponential")
-  expect_equal(params$channel, "FITC-A")
-  # Default values from lines 175-178
-  expect_equal(params$t, 262144)
-  expect_equal(params$a, 0)
-  expect_equal(params$m, 3.55)
-  expect_equal(params$w, -25.11886)
+    expect_equal(params$type, "biexponential")
+    expect_equal(params$channel, "FITC-A")
+    # Default values from lines 175-178
+    expect_equal(params$t, 262144)
+    expect_equal(params$a, 0)
+    expect_equal(params$m, 3.55)
+    expect_equal(params$w, -25.11886)
 })
 
 test_that("parse_transformation_info handles biexponential transform with custom values", {
-  # Lines 173-179: biexponential with custom parameters
-  trans_info <- list(
-    transformType = "biexponential",
-    channel = "SSC-H",
-    t = 100000,
-    a = 50,
-    m = 4.0,
-    w = -20
-  )
+    # Lines 173-179: biexponential with custom parameters
+    trans_info <- list(
+        transformType = "biexponential",
+        channel = "SSC-H",
+        t = 100000,
+        a = 50,
+        m = 4.0,
+        w = -20
+    )
 
-  params <- CyFj11:::parse_transformation_info(trans_info)
+    params <- CyFj11:::parse_transformation_info(trans_info)
 
-  expect_equal(params$t, 100000)
-  expect_equal(params$a, 50)
-  expect_equal(params$m, 4.0)
-  expect_equal(params$w, -20)
+    expect_equal(params$t, 100000)
+    expect_equal(params$a, 50)
+    expect_equal(params$m, 4.0)
+    expect_equal(params$w, -20)
 })
 
 test_that("parse_transformation_info handles Biex transform type (alternative name)", {
-  # Line 139: "Biex" = "biexponential" normalization
-  trans_info <- list(
-    transformType = "Biex",  # Alternative name used in FlowJo
-    channel = "APC-H"
-  )
+    # Line 139: "Biex" = "biexponential" normalization
+    trans_info <- list(
+        transformType = "Biex", # Alternative name used in FlowJo
+        channel = "APC-H"
+    )
 
-  params <- CyFj11:::parse_transformation_info(trans_info)
+    params <- CyFj11:::parse_transformation_info(trans_info)
 
-  expect_equal(params$type, "biexponential")
-  expect_equal(params$channel, "APC-H")
+    expect_equal(params$type, "biexponential")
+    expect_equal(params$channel, "APC-H")
 })
 
 test_that("parse_transformation_info handles biex transform type (lowercase)", {
-  # Line 140: "biex" = "biexponential" normalization
-  trans_info <- list(
-    transformType = "biex",  # Lowercase alternative
-    channel = "PE-H"
-  )
+    # Line 140: "biex" = "biexponential" normalization
+    trans_info <- list(
+        transformType = "biex", # Lowercase alternative
+        channel = "PE-H"
+    )
 
-  params <- CyFj11:::parse_transformation_info(trans_info)
+    params <- CyFj11:::parse_transformation_info(trans_info)
 
-  expect_equal(params$type, "biexponential")
-  expect_equal(params$channel, "PE-H")
+    expect_equal(params$type, "biexponential")
+    expect_equal(params$channel, "PE-H")
 })
 
 # ============================================================================
@@ -190,49 +190,49 @@ test_that("parse_transformation_info handles biex transform type (lowercase)", {
 # ============================================================================
 
 test_that("parse_transformation_info handles linear transform with default values", {
-  # Lines 196-199: linear transform parameter extraction
-  trans_info <- list(
-    transformType = "linear",
-    channel = "FSC-H"
-  )
+    # Lines 196-199: linear transform parameter extraction
+    trans_info <- list(
+        transformType = "linear",
+        channel = "FSC-H"
+    )
 
-  params <- CyFj11:::parse_transformation_info(trans_info)
+    params <- CyFj11:::parse_transformation_info(trans_info)
 
-  expect_equal(params$type, "linear")
-  expect_equal(params$channel, "FSC-H")
-  # Default values from lines 197-198
-  expect_equal(params$a, 1)
-  expect_equal(params$b, 0)
+    expect_equal(params$type, "linear")
+    expect_equal(params$channel, "FSC-H")
+    # Default values from lines 197-198
+    expect_equal(params$a, 1)
+    expect_equal(params$b, 0)
 })
 
 test_that("parse_transformation_info handles linear transform with custom values", {
-  # Lines 196-199: linear with custom parameters
-  trans_info <- list(
-    transformType = "linear",
-    channel = "SSC-H",
-    a = 1000,
-    b = 100
-  )
+    # Lines 196-199: linear with custom parameters
+    trans_info <- list(
+        transformType = "linear",
+        channel = "SSC-H",
+        a = 1000,
+        b = 100
+    )
 
-  params <- CyFj11:::parse_transformation_info(trans_info)
+    params <- CyFj11:::parse_transformation_info(trans_info)
 
-  expect_equal(params$a, 1000)
-  expect_equal(params$b, 100)
+    expect_equal(params$a, 1000)
+    expect_equal(params$b, 100)
 })
 
 test_that("parse_transformation_info handles linear transform with maxRange/minRange", {
-  # Lines 197-198: Alternative parameter names
-  trans_info <- list(
-    transformType = "linear",
-    channel = "FSC-H",
-    maxRange = 2000,
-    minRange = 50
-  )
+    # Lines 197-198: Alternative parameter names
+    trans_info <- list(
+        transformType = "linear",
+        channel = "FSC-H",
+        maxRange = 2000,
+        minRange = 50
+    )
 
-  params <- CyFj11:::parse_transformation_info(trans_info)
+    params <- CyFj11:::parse_transformation_info(trans_info)
 
-  expect_equal(params$a, 2000)  # From maxRange
-  expect_equal(params$b, 50)    # From minRange
+    expect_equal(params$a, 2000) # From maxRange
+    expect_equal(params$b, 50) # From minRange
 })
 
 # ============================================================================
@@ -240,19 +240,19 @@ test_that("parse_transformation_info handles linear transform with maxRange/minR
 # ============================================================================
 
 test_that("parse_transformation_info warns and replaces unknown transform type", {
-  # Lines 153-156: Unknown transform type handling
-  trans_info <- list(
-    transformType = "unknown_type",
-    channel = "FITC-A"
-  )
+    # Lines 153-156: Unknown transform type handling
+    trans_info <- list(
+        transformType = "unknown_type",
+        channel = "FITC-A"
+    )
 
-  expect_warning(
-    params <- CyFj11:::parse_transformation_info(trans_info),
-    "Unknown transformation type 'unknown_type' replaced with biexponential"
-  )
+    expect_warning(
+        params <- CyFj11:::parse_transformation_info(trans_info),
+        "Unknown transformation type 'unknown_type' replaced with biexponential"
+    )
 
-  expect_equal(params$type, "biexponential")
-  expect_equal(params$channel, "FITC-A")
+    expect_equal(params$type, "biexponential")
+    expect_equal(params$channel, "FITC-A")
 })
 
 # ============================================================================
@@ -260,23 +260,23 @@ test_that("parse_transformation_info warns and replaces unknown transform type",
 # ============================================================================
 
 test_that("create_transformation_list handles log transform", {
-  # Line 224: "log" = create_log_transform(spec)
-  trans_spec <- list(
-    `FITC-A` = list(
-      type = "log",
-      channel = "FITC-A",
-      decadesOffset = 1,
-      numberDecades = 4,
-      shift = 0,
-      base = 10,
-      vectorLength = 256
+    # Line 224: "log" = create_log_transform(spec)
+    trans_spec <- list(
+        `FITC-A` = list(
+            type = "log",
+            channel = "FITC-A",
+            decadesOffset = 1,
+            numberDecades = 4,
+            shift = 0,
+            base = 10,
+            vectorLength = 256
+        )
     )
-  )
 
-  trans_list <- CyFj11:::create_transformation_list(trans_spec)
+    trans_list <- CyFj11:::create_transformation_list(trans_spec)
 
-  expect_named(trans_list, "FITC-A")
-  expect_s3_class(trans_list[[1]], "transform")
+    expect_named(trans_list, "FITC-A")
+    expect_s3_class(trans_list[[1]], "transform")
 })
 
 # ============================================================================
@@ -284,29 +284,29 @@ test_that("create_transformation_list handles log transform", {
 # ============================================================================
 
 test_that("create_log_transform creates log10 transform by default", {
-  spec <- list(
-    channel = "FITC-A",
-    base = 10,
-    decadesOffset = 1,
-    numberDecades = 4
-  )
+    spec <- list(
+        channel = "FITC-A",
+        base = 10,
+        decadesOffset = 1,
+        numberDecades = 4
+    )
 
-  trans <- CyFj11:::create_log_transform(spec)
+    trans <- CyFj11:::create_log_transform(spec)
 
-  expect_s3_class(trans, "transform")
-  # Just verify the transform object was created - actual application
-  # requires a flowFrame or numeric vector with proper method dispatch
+    expect_s3_class(trans, "transform")
+    # Just verify the transform object was created - actual application
+    # requires a flowFrame or numeric vector with proper method dispatch
 })
 
 test_that("create_log_transform handles natural log (base = exp(1))", {
-  spec <- list(
-    channel = "SSC-H",
-    base = exp(1),
-    decadesOffset = 1,
-    numberDecades = 4
-  )
+    spec <- list(
+        channel = "SSC-H",
+        base = exp(1),
+        decadesOffset = 1,
+        numberDecades = 4
+    )
 
-  trans <- CyFj11:::create_log_transform(spec)
+    trans <- CyFj11:::create_log_transform(spec)
 
-  expect_s3_class(trans, "transform")
+    expect_s3_class(trans, "transform")
 })

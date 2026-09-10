@@ -10,8 +10,8 @@ vignette: >
 
 ```{r setup-opts, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+    collapse = TRUE,
+    comment = "#>"
 )
 
 ```
@@ -43,8 +43,9 @@ The example data are bundled with the `FlowSOM` package. If it is not installed,
 you can install it from Bioconductor:
 
 ```{r install-flowsom, eval=FALSE}
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+    install.packages("BiocManager")
+}
 BiocManager::install("FlowSOM")
 ```
 
@@ -78,11 +79,11 @@ library(CytoML)
 
 ws <- CytoML::open_flowjo_xml(flowsom_wsp)
 gs <- CytoML::flowjo_to_gatingset(
-  ws,
-  path                = test_dir,
-  name                = "All Samples",
-  subset              = "68983.fcs",
-  sample_names_from   = "sampleID"
+    ws,
+    path = test_dir,
+    name = "All Samples",
+    subset = "68983.fcs",
+    sample_names_from = "sampleID"
 )
 
 cat("Samples:", length(gs), "\n")
@@ -118,11 +119,11 @@ counts. They should match the original import.
 ```{r reimport, eval=TRUE}
 ws2 <- CytoML::open_flowjo_xml(export_path)
 gs2 <- CytoML::flowjo_to_gatingset(
-  ws2,
-  path              = test_dir,
-  name              = "All Samples",
-  subset            = "68983.fcs",
-  sample_names_from = "sampleID"
+    ws2,
+    path = test_dir,
+    name = "All Samples",
+    subset = "68983.fcs",
+    sample_names_from = "sampleID"
 )
 
 stats_after <- flowWorkspace::gs_pop_get_count_fast(gs2)
@@ -131,12 +132,12 @@ all_equal <- all(stats_before$Count == stats_after$Count)
 cat("Population counts identical:", all_equal, "\n")
 
 if (!all_equal) {
-  diff_idx <- which(stats_before$Count != stats_after$Count)
-  print(cbind(
-    Population = stats_before$Population[diff_idx],
-    Before     = stats_before$Count[diff_idx],
-    After      = stats_after$Count[diff_idx]
-  ))
+    diff_idx <- which(stats_before$Count != stats_after$Count)
+    print(cbind(
+        Population = stats_before$Population[diff_idx],
+        Before = stats_before$Count[diff_idx],
+        After = stats_after$Count[diff_idx]
+    ))
 }
 ```
 
@@ -172,10 +173,9 @@ dir.create(test_dir)
 file.copy(flowsom_fcs, file.path(test_dir, "68983.fcs"))
 
 # 3. Import the FlowJo v10 workspace
-ws  <- CytoML::open_flowjo_xml(flowsom_wsp)
-gs  <- CytoML::flowjo_to_gatingset(ws, path = test_dir, name = "All Samples",
-                                    subset = "68983.fcs",
-                                    sample_names_from = "sampleID")
+ws <- CytoML::open_flowjo_xml(flowsom_wsp)
+gs <- CytoML::flowjo_to_gatingset(ws, path = test_dir, name = "All Samples",
+    subset = "68983.fcs", sample_names_from = "sampleID")
 
 # 4. Export with CyFj11
 export_path <- file.path(test_dir, "test14_export.wsp")
@@ -184,8 +184,7 @@ CyFj11::export_flowjo10_workspace(gs[[1]], export_path)
 # 5. Re-import and compare counts
 ws2 <- CytoML::open_flowjo_xml(export_path)
 gs2 <- CytoML::flowjo_to_gatingset(ws2, path = test_dir, name = "All Samples",
-                                    subset = "68983.fcs",
-                                    sample_names_from = "sampleID")
+    subset = "68983.fcs", sample_names_from = "sampleID")
 all(flowWorkspace::gs_pop_get_count_fast(gs)$Count ==
     flowWorkspace::gs_pop_get_count_fast(gs2)$Count)
 
@@ -197,8 +196,8 @@ ggcyto::autoplot(gs, pops[2], bins = 128)
 ## See also
 
 * `vignette("getting-started")` for the basic FlowJo v11 import workflow.
-* `?export_flowjo10_workspace` for details on exporting a `GatingSet` to FlowJo
-  v10 format.
+* `?export_flowjo10_workspace` for details on exporting a `GatingSet` to
+    FlowJo v10 format.
 * `?fj11_to_gatingset` for importing FlowJo v11 workspaces.
 
 ```{r sessioninfo}

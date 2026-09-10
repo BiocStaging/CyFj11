@@ -23,11 +23,11 @@
 .pkgenv <- new.env(parent = emptyenv())
 
 .onLoad <- function(libname, pkgname) {
-  # Initialize verbose to FALSE when package loads
-  .pkgenv$verbose <- FALSE
-  # Initialize sanitize_slashes to TRUE (default behavior: replace "/" with "_")
-  # This matches flowCore's behavior for parameter names
-  .pkgenv$sanitize_slashes <- TRUE
+    # Initialize verbose to FALSE when package loads
+    .pkgenv$verbose <- FALSE
+    # Initialize sanitize_slashes to TRUE (default behavior: replace "/" with "_")
+    # This matches flowCore's behavior for parameter names
+    .pkgenv$sanitize_slashes <- TRUE
 }
 
 #' Set verbose mode
@@ -43,7 +43,7 @@
 #' set_verbose(TRUE)
 #' set_verbose(FALSE)
 set_verbose <- function(v) {
-  .pkgenv$verbose <- v
+    .pkgenv$verbose <- v
 }
 
 #' Get verbose mode
@@ -55,9 +55,9 @@ set_verbose <- function(v) {
 #' @examples
 #' # Check current verbose setting
 #' is_verbose <- get_verbose()
-#' is_verbose  # Should be FALSE by default
+#' is_verbose # Should be FALSE by default
 get_verbose <- function() {
-  .pkgenv$verbose
+    .pkgenv$verbose
 }
 
 #' Set parameter name slash sanitization behavior
@@ -79,7 +79,7 @@ get_verbose <- function() {
 #' # Use default behavior (replace "/" with "_")
 #' set_sanitize_slashes(TRUE)
 set_sanitize_slashes <- function(v) {
-  .pkgenv$sanitize_slashes <- v
+    .pkgenv$sanitize_slashes <- v
 }
 
 #' Get slash sanitization mode
@@ -92,5 +92,5 @@ set_sanitize_slashes <- function(v) {
 #' # Check current setting
 #' is_sanitize_slashes <- get_sanitize_slashes()
 get_sanitize_slashes <- function() {
-  .pkgenv$sanitize_slashes
+    .pkgenv$sanitize_slashes
 }
