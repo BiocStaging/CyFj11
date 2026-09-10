@@ -121,9 +121,11 @@ search_fcs_files <- function(root_dir, pattern = "\\.fcs$") {
 #'
 #' @param dataSources Data sources from FlowJo workspace (from JSON)
 #' @param root_dir Root directory to search for FCS files
-#' @param stop_on_multiple Stop if any duplicate filenames found (default: FALSE)
+#' @param stop_on_multiple Stop if any duplicate filenames found (default:
+#  FALSE)
 #' @param stop_on_missing Stop if any files not found (default: TRUE)
-#' @return Data frame with columns: sample_id, flowjo_uri, filename, resolved_path, status
+#' @return Data frame with columns: sample_id, flowjo_uri, filename,
+#  resolved_path, status
 #' @keywords internal
 resolve_all_fcs_paths <- function(dataSources,
     root_dir,
@@ -235,11 +237,15 @@ resolve_all_fcs_paths <- function(dataSources,
 
     # Handle errors based on settings
                 if (stop_on_missing && n_missing > 0) {
-        stop("Missing FCS files detected. Set stop_on_missing=FALSE to continue anyway.")
+        stop(
+                 "Missing FCS files detected. Set stop_on_missing=FALSE to",
+                 " continue anyway.")
         }
 
                 if (stop_on_multiple && n_multiple > 0) {
-        stop("Multiple FCS file matches detected. Set stop_on_multiple=FALSE to continue anyway.")
+        stop(
+                 "Multiple FCS file matches detected. Set",
+                 " stop_on_multiple=FALSE to continue anyway.")
         }
 
                 return(resolution_results)
@@ -250,12 +256,15 @@ resolve_all_fcs_paths <- function(dataSources,
 #' Creates a simple lookup table mapping sample UUIDs to FCS file paths
 #'
 #' @param resolution_results Output from resolve_all_fcs_paths()
-#' @param include_status Include only samples with specific status (default: "FOUND")
+#' @param include_status Include only samples with specific status (default:
+#  "FOUND")
 #' @return Named vector where names are sample_ids and values are resolved_paths
 #' @keywords internal
 get_sample_file_map <- function(resolution_results, include_status = "FOUND") {
     # Filter by status
-    filtered <- resolution_results[resolution_results$status %in% include_status, ]
+    filtered <- resolution_results[
+        resolution_results$status %in% include_status,
+    ]
 
     # Create named vector
     file_map <- setNames(filtered$resolved_path, filtered$sample_id)

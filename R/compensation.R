@@ -47,7 +47,9 @@ extract_compensation <- function(dataSources,
                 sample_comp_map <- NULL
                 if (!is.null(platforms) && 
                     !is.null(platforms$spilloverMatrix)) {
-        sample_comp_map <- extract_compensation_from_platforms(platforms$spilloverMatrix, dataSources, sample_uuids)
+        sample_comp_map <- extract_compensation_from_platforms(
+            platforms$spilloverMatrix, dataSources, sample_uuids
+        )
         }
 
                 for (sample_uuid in sample_uuids) {
@@ -66,7 +68,8 @@ extract_compensation <- function(dataSources,
                     }
                 } else {
                 # Single compensation for all samples
-                comp_list[[sample_uuid]] <- validate_compensation(custom_compensation)
+                comp_list[[sample_uuid]] <-
+                    validate_compensation(custom_compensation)
                 next
                 }
             }
@@ -121,7 +124,8 @@ extract_compensation_from_platforms <- function(spillover_matrices,
                 coefficients <- do.call(rbind, coefficients)
                 }
 
-            # Get compensated channel names from parameters (e.g., "Comp-FITC-A", not "FITC-A")
+            # Get compensated channel names from parameters (e.g.,
+            #   "Comp-FITC-A", not "FITC-A")
             # FlowJo 11 stores the compensated names in the parameters list
             comp_names <- vapply(
                 comp_spec$parameters, function(p) p$name %||% NA_character_,
@@ -138,9 +142,12 @@ extract_compensation_from_platforms <- function(spillover_matrices,
                 ncol      = ncol(comp_matrix),
                 dimnames  = dimnames(comp_matrix)
                 )
-            # FlowJo v11 platform matrices are often scaled so that the diagonal is 100
-            # (i.e. they are 100 * the spillover matrix). flowCore::compensation()
-            # expects a true spillover matrix with a diagonal of 1, so normalize.
+            # FlowJo v11 platform matrices are often scaled so that the
+            #   diagonal is 100
+            # (i.e. they are 100 * the spillover matrix).
+            #   flowCore::compensation()
+            # expects a true spillover matrix with a diagonal of 1, so
+            #   normalize.
             if (all(diag(comp_matrix) > 50)) {
                 comp_matrix <- comp_matrix / 100
                 }
@@ -165,7 +172,8 @@ extract_compensation_from_platforms <- function(spillover_matrices,
                 ncol      = ncol(comp_matrix),
                 dimnames  = dimnames(comp_matrix)
                 )
-            # Normalize FlowJo's 100-diagonal platform matrices to true spillover units.
+            # Normalize FlowJo's 100-diagonal platform matrices to true
+            #   spillover units.
             if (all(diag(comp_matrix) > 50)) {
                 comp_matrix <- comp_matrix / 100
                 }
@@ -186,7 +194,8 @@ extract_compensation_from_platforms <- function(spillover_matrices,
         return(comp_map)
         }
 
-    # Map each sample to its compensation based on dataSources' parent references
+    # Map each sample to its compensation based on dataSources' parent
+    #   references
     sample_comp_map <- list()
     for (sample_uuid in sample_uuids) {
         ds <- dataSources[[sample_uuid]]
@@ -203,7 +212,8 @@ extract_compensation_from_platforms <- function(spillover_matrices,
             }
         }
 
-    # If no sample-specific mappings found but we have compensations, use the first one for all
+    # If no sample-specific mappings found but we have compensations, use the
+    #   first one for all
     if (length(sample_comp_map) == 0 && length(comp_map) > 0) {
         first_comp <- comp_map[[1]]
         for (sample_uuid in sample_uuids) {
@@ -317,7 +327,9 @@ validate_compensation <- function(comp) {
 
     if (is.matrix(comp)) {
         if (is.null(rownames(comp)) || is.null(colnames(comp))) {
-            stop("Compensation matrix must have row and column names (channel names)")
+            stop(
+                     "Compensation matrix must have row and column names",
+                     " (channel names)")
             }
         return(flowCore::compensation(comp))
         }
@@ -326,14 +338,18 @@ validate_compensation <- function(comp) {
         return(flowCore::compensation(as.matrix(comp)))
         }
 
-    stop("Invalid compensation object. Must be compensation, matrix, or data.frame")
+    stop(
+             "Invalid compensation object. Must be compensation, matrix, or",
+             " data.frame")
     }
 
 
 #' Map Compensation Channel Names to Cytoframe Parameter Names
 #'
-#' flowCore's compensation() function sanitizes channel names (e.g., "/" -> "_", spaces -> ".").
-#' This function creates a mapping between sanitized compensation names and original cytoframe
+#' flowCore's compensation() function sanitizes channel names (e.g., "/" ->
+#  "_", spaces -> ".").
+#' This function creates a mapping between sanitized compensation names and
+#  original cytoframe
 #' parameter names to ensure proper compensation application.
 #'
 #' @param comp_matrix Compensation matrix (may have sanitized names)
@@ -360,7 +376,8 @@ map_compensation_names <- function(comp_matrix, param_names) {
         }
 
     # Strip "Comp-" prefix for matching against cytoframe parameters
-    # The compensation matrix now has "Comp-" prefixed names (e.g., "Comp-FITC-A")
+    # The compensation matrix now has "Comp-" prefixed names (e.g.,
+    #   "Comp-FITC-A")
     # but the cytoframe has original names (e.g., "FITC-A")
     comp_names_base <- sub("^Comp-", "", comp_names)
 
@@ -382,7 +399,8 @@ map_compensation_names <- function(comp_matrix, param_names) {
             }
         }
 
-    # Apply mapping to create new compensation matrix with cytoframe parameter names
+    # Apply mapping to create new compensation matrix with cytoframe parameter
+    #   names
     # (without "Comp-" prefix, so flowCore::compensate can match them)
     mapped_names <- apply_param_mapping(comp_names_base, name_mapping,
         on_no_match = "keep")

@@ -47,7 +47,8 @@ process_zip_archive <- function(zip_path) {
     on.exit({
         if (dir.exists(work_dir)) {
             unlink(work_dir, recursive = TRUE)
-            if (.pkgenv$verbose) message("Cleaned up temporary directory:", work_dir, "\n") # nocov
+            if (.pkgenv$verbose) message("Cleaned up temporary directory:",
+                work_dir, "\n") # nocov
             }
         })
 
@@ -78,7 +79,8 @@ process_zip_archive <- function(zip_path) {
     # Read manifest files (plain text)
     for (manifest_file in manifest_files) {
         if (file.exists(manifest_file)) {
-            results$manifests[[basename(manifest_file)]] <- readLines(manifest_file, warn = FALSE)
+            results$manifests[[basename(manifest_file)]] <-
+                readLines(manifest_file, warn = FALSE)
             }
         }
 
@@ -91,7 +93,8 @@ process_zip_archive <- function(zip_path) {
                         simplifyMatrix = FALSE) # Parse JSON
                     },
                 error = function(e) {
-                    # If parsing fails, return error and raw content for debugging
+                    # If parsing fails, return error and raw content for
+                    #   debugging
                     list(error = e$message,
                         raw_content = readLines(json_file, warn = FALSE))
                     }
@@ -122,7 +125,9 @@ read_flowjo11_workspace <- function(workspace_path) {
 
     # Check file extension
     if (!grepl("\\.(fjw|flowjo)$", workspace_path)) {
-        warning("Workspace file does not have expected .flowjo or .flowjo extension")
+        warning(
+                    "Workspace file does not have expected .flowjo or .flowjo",
+                    " extension")
         }
 
     # Process the ZIP archive

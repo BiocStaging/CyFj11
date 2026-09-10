@@ -21,7 +21,8 @@
 
 #' Pretty Print FlowJo Workspace
 #'
-#' This function takes a FlowJo v11 workspace file (.flowjo) and extracts the JSON content,
+#' This function takes a FlowJo v11 workspace file (.flowjo) and extracts the
+#  JSON content,
 #' then pretty prints it to a text file with "_pretty.json" suffix.
 #'
 #' @param flowjo_file Path to the FlowJo workspace file (.flowjo)

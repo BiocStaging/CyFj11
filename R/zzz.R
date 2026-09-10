@@ -25,15 +25,18 @@
 .onLoad <- function(libname, pkgname) {
     # Initialize verbose to FALSE when package loads
     .pkgenv$verbose <- FALSE
-    # Initialize sanitize_slashes to TRUE (default behavior: replace "/" with "_")
+    # Initialize sanitize_slashes to TRUE (default behavior: replace "/" with
+    #   "_")
     # This matches flowCore's behavior for parameter names
     .pkgenv$sanitize_slashes <- TRUE
     }
 
 #' Set verbose mode
 #'
-#' Enable or disable verbose output for debugging and monitoring package operations.
-#' When enabled, the package will print detailed information about its operations,
+#' Enable or disable verbose output for debugging and monitoring package
+#  operations.
+#' When enabled, the package will print detailed information about its
+#  operations,
 #' including file processing, gate conversion, and data extraction steps.
 #'
 #' @param v Logical. TRUE to enable verbose output, FALSE to disable it
@@ -70,7 +73,8 @@ get_verbose <- function() {
 #' parameter names match the flowFrame column names. Set to FALSE if you want
 #' to preserve "/" in marker names (e.g., "CD3/CD4" stays as-is).
 #'
-#' @param v Logical. TRUE to replace "/" with "_" (default), FALSE to preserve "/"
+#' @param v Logical. TRUE to replace "/" with "_" (default), FALSE to preserve
+#  "/"
 #' @return Invisible NULL. Called for side effects.
 #' @export
 #' @examples
