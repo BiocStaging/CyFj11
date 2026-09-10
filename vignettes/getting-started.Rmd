@@ -1,11 +1,8 @@
 ---
-title: "Getting Started with CyFj11"
-output: BiocStyle::html_document
-vignette: >
-  %\VignetteIndexEntry{Getting Started with CyFj11}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
-  %\VignettePackage{CyFj11}
+title: "Getting Started with CyFj11" output: BiocStyle::html_document vignette:
+> %\VignetteIndexEntry{Getting Started with CyFj11}
+%\VignetteEngine{knitr::rmarkdown} %\VignetteEncoding{UTF-8}
+%\VignettePackage{CyFj11}
 ---
 
 ```{r setup-opts, include = FALSE}
@@ -25,34 +22,48 @@ library(ggcyto)
 
 ## Introduction
 
-CyFj11 is an R package designed to bridge the gap between FlowJo v11 workspaces and the R flowWorkspace ecosystem. It provides **asymmetric format conversion** capabilities:
+CyFj11 is an R package designed to bridge the gap between FlowJo v11 workspaces
+and the R flowWorkspace ecosystem. It provides **asymmetric format conversion**
+capabilities:
 
-* **Import**: Full support for parsing FlowJo v11 workspaces (.flowjo files) into R GatingSet objects
-* **Export**: Generation of FlowJo v10 workspace files (.wsp) from GatingSet objects with broad compatibility
+*  **Import**: Full support for parsing FlowJo v11 workspaces (.flowjo files)
+  into R GatingSet objects
+*  **Export**: Generation of FlowJo v10 workspace files (.wsp) from GatingSet
+  objects with broad compatibility
 
-This asymmetric design reflects the technical realities of developing against proprietary formats without vendor documentation. While FlowJo v11 uses a complex JSON schema with extensive UUID cross-referencing that makes direct export impractical, the v10 XML format follows the documented Gating-ML 2.0 standard, making it feasible to generate valid workspaces.
+This asymmetric design reflects the technical realities of developing against
+proprietary formats without vendor documentation. While FlowJo v11 uses a
+complex JSON schema with extensive UUID cross-referencing that makes direct
+export impractical, the v10 XML format follows the documented Gating-ML 2.0
+standard, making it feasible to generate valid workspaces.
 
 ## Comparison with Other FlowJo Import Packages
 
-Several Bioconductor packages can import FlowJo workspaces. Here's how CyFj11 compares:
+Several Bioconductor packages can import FlowJo workspaces. Here's how CyFj11
+compares:
 
 | Package | FlowJo Version | Input Format | Output | Key Features |
 |---------|---------------|--------------|--------|--------------|
-| **CyFj11** | v11 | `.flowjo` (ZIP/JSON) | `GatingSet` | Native v11 support, preserves hierarchy, extracts compensation |
-| **CytoML** | v10 | `.wsp` (XML) | `GatingSet` | Gating-ML 2.0 standard, well-established |
+| **CyFj11** | v11 | `.flowjo` (ZIP) | `GatingSet` | v11 native, comp |
+| **CytoML** | v10 | `.wsp` (XML) | `GatingSet` | Gating-ML 2.0 standard |
 | **flowWorkspace** | v10 | `.wsp` (XML) | `GatingSet` | Basic v10 import |
 | **flowWorkspaceData** | v10 | `.wsp` (XML) | `GatingSet` | Example datasets |
 
 **Key advantages of CyFj11:**
 
-1. **Native FlowJo v11 support**: CyFj11 is the only Bioconductor package that directly parses FlowJo v11's `.flowjo` format (ZIP archive with JSON)
-2. **No intermediate conversion needed**: Unlike CytoML which requires FlowJo v10 XML, CyFj11 reads v11 workspaces directly
-3. **Preserves v11-specific features**: Handles compensation matrices, transformations, and population definitions from v11
-4. **Export capability**: Can export `GatingSet` objects back to FlowJo v10 `.wsp` format for round-trip workflows
+1.  **Native FlowJo v11 support**: CyFj11 is the only Bioconductor package that
+   directly parses FlowJo v11's `.flowjo` format (ZIP archive with JSON)
+2.  **No intermediate conversion needed**: Unlike CytoML which requires FlowJo
+   v10 XML, CyFj11 reads v11 workspaces directly
+3.  **Preserves v11-specific features**: Handles compensation matrices,
+   transformations, and population definitions from v11
+4.  **Export capability**: Can export `GatingSet` objects back to FlowJo v10
+   `.wsp` format for round-trip workflows
 
 **When to use CyFj11:**
 - You have FlowJo v11 workspace files (`.flowjo` extension)
-- You want to import workspaces without manually exporting to v10 format in FlowJo
+- You want to import workspaces without manually exporting
+  to v10 format in FlowJo
 - You need to preserve v11-specific compensation and transformation information
 
 **When to use CytoML:**
@@ -97,11 +108,15 @@ ws <- read_flowjo11_workspace(workspace_path)
 print(names(ws))
 ```
 
-The `read_flowjo11_workspace()` function parses the ZIP-based FlowJo v11 format and extracts the JSON data structures. The returned object contains all the information from the workspace, including groups, samples, gates, and populations.
+The `read_flowjo11_workspace()` function parses the ZIP-based FlowJo v11 format
+and extracts the JSON data structures. The returned object contains all the
+information from the workspace, including groups, samples, gates, and
+populations.
 
 ### Converting to GatingSet
 
-Next, we convert the parsed workspace to a GatingSet object, which is the standard format for flow cytometry data in R:
+Next, we convert the parsed workspace to a GatingSet object, which is the
+standard format for flow cytometry data in R:
 
 ```{r convert-gs, eval=TRUE}
 workspace_fcs <- system.file("extdata", "", package = "CyFj11")
@@ -122,11 +137,13 @@ flowCore::sampleNames(gsList[[1]])
 # Work with a single sample directly
 gs <- gsList[[1]]
 
-# Or merge all samples into one GatingSet (may overwrite per-sample transform settings)
+# Or merge all samples into one GatingSet
+# (may overwrite per-sample transform settings)
 # gs_merged <- flowWorkspace::merge_list_to_gs(gsList)
 ```
 
-**Note:** If you don't know the group name you can leave it empty and you will be prompted to choose:
+**Note:** If you don't know the group name you can leave it empty and you will
+be prompted to choose:
 
 ```
 1: Acquired Data
@@ -134,9 +151,15 @@ gs <- gsList[[1]]
 3: Experiment Data
 ```
 
-**Note:** `fj11_to_gatingset()` returns a **list** of `GatingSet` objects, one per sample. This preserves per-sample gate variations (tailored gates) from FlowJo v11. To work with all samples in a single `GatingSet`, use `flowWorkspace::merge_list_to_gs(gsList)`, but be aware this may discard sample-specific transformation settings.
+**Note:** `fj11_to_gatingset()` returns a **list** of `GatingSet` objects, one
+per sample. This preserves per-sample gate variations (tailored gates) from
+FlowJo v11. To work with all samples in a single `GatingSet`, use
+`flowWorkspace::merge_list_to_gs(gsList)`, but be aware this may discard
+sample-specific transformation settings.
 
-Note that you'll need to provide the path to your FCS files. The `fj11_to_gatingset()` function will attempt to locate the FCS files referenced in the workspace.
+Note that you'll need to provide the path to your FCS files. The
+`fj11_to_gatingset()` function will attempt to locate the FCS files referenced
+in the workspace.
 
 ### Examining the GatingSet
 
@@ -163,7 +186,8 @@ gh_get_transformations(gh,channel = "APC-A")
 
 ### Exporting Back to FlowJo
 
-After performing analysis in R, you can export your results back to FlowJo v10 format:
+After performing analysis in R, you can export your results back to FlowJo v10
+format:
 
 ```{r export, eval=TRUE}
 # Export to FlowJo v10 format
@@ -175,15 +199,19 @@ file.exists(export_path)
 ```
 Note:
 
-warnings about invalid transformations are normal, as we don't have any transformations set in FlowJo 11 and the gatingset.
+warnings about invalid transformations are normal, as we don't have any
+transformations set in FlowJo 11 and the gatingset.
 
-The exported workspace can be opened in FlowJo v11, which maintains backward compatibility with v10 workspaces.
+The exported workspace can be opened in FlowJo v11, which maintains backward
+compatibility with v10 workspaces.
 
 ## Next Steps
 
-For more detailed information about compensation handling, see `vignette("compensation-workflow")`.
+For more detailed information about compensation handling, see
+`vignette("compensation-workflow")`.
 
-For exporting GatingSet objects back to FlowJo v10 format, see `?export_flowjo10_workspace`.
+For exporting GatingSet objects back to FlowJo v10 format, see
+`?export_flowjo10_workspace`.
 
 For function-specific documentation, use the help system:
 ```{r help, eval=FALSE}
