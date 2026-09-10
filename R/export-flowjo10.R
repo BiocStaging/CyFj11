@@ -1805,6 +1805,1052 @@ generate_logical_node_xml <- function(gate, pop_name,
 }
 
 
+#' Derive the data range for one channel from a sample's root frame
+#'
+#' Looks up the $P{n}R keyword matching the channel name to determine the
+#' maximum data value; for scatter channels (FSC/SSC) also inspects the
+#' expression matrix for a negative minimum. Returns c(0, 262144) when the
+#' channel cannot be resolved.
+#'
+#' @param sample_gh GatingHierarchy for the sample (may be NULL)
+#' @param channel Channel name to look up
+#' @return Numeric vector c(min, max)
+#' @importFrom flowWorkspace gh_pop_get_data
+#' @keywords internal
+fj10_channel_data_range <- function(sample_gh, channel) {
+    tryCatch(
+        {
+            fr <- gh_pop_get_data(sample_gh, "root")
+            kw <- flowCore::keyword(fr)
+            n_pattern <- "^\\$P[0-9]+N$"
+            n_keys <- grep(n_pattern, names(kw), value = TRUE)
+            n_values <- vapply(
+                n_keys,
+                function(k) as.character(kw[[k]]), character(1)
+            )
+            param_match <- which(n_values == channel)
+            if (length(param_match) > 0) {
+                param_num <- gsub("\\$|P|N", "", names(param_match)[1])
+                r_keyword <- paste0("$P", param_num, "R")
+                max_val <- as.numeric(kw[[r_keyword]] %||% 262144)
+                min_val <- 0
+                if (grepl("FSC|SSC", channel, ignore.case = TRUE)) {
+                    data_vals <- flowCore::exprs(fr)[, channel]
+                    actual_min <- min(data_vals, na.rm = TRUE)
+                    if (actual_min < 0) min_val <- actual_min
+                }
+                c(min_val, max_val)
+            } else {
+                c(0, 262144)
+            }
+        },
+        error = function(e) c(0, 262144)
+    )
+}
+
+#' Build the full FlowJo v10 workspace XML header block
+#'
+#' Produces the XML declaration, <Workspace> opening tag with all workspace
+#' attributes, and the WindowPosition, TextTraits, and Columns sections.
+#'
+#' @param output_path Path used for the nonAutoSaveFileName attribute
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_workspace_header <- function(output_path) {
+    current_time <- format(Sys.time(), "%a %b %d %H:%M:%S %Z %Y")
+    client_ts <- format(Sys.time(), "%s%OS3")
+    client_ts <- gsub("\\.", "", client_ts)
+
+    c(
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        " <Workspace",
+        '   version="20.0"',
+        sprintf('   modDate="%s"', current_time),
+        sprintf('   clientTimestamp="%s"', client_ts),
+        '   flowJoVersion="10.10.1"',
+        '   drawRowBorders="1"',
+        '   drawColumnBorders="1"',
+        '   curGroup="All Samples"',
+        '   groupPaneHeight="80"',
+        '   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+        paste0(
+            '   xmlns:gating="',
+            'http://www.isac-net.org/std/Gating-ML/v2.0/gating"'
+        ),
+        paste0(
+            '   xmlns:transforms="',
+            'http://www.isac-net.org/std/Gating-ML/v2.0/transformations"'
+        ),
+        paste0(
+            '   xmlns:data-type="',
+            'http://www.isac-net.org/std/Gating-ML/v2.0/datatypes"'
+        ),
+        paste0(
+            '   xsi:schemaLocation="',
+            "http://www.isac-net.org/std/Gating-ML/v2.0/gating ",
+            "http://www.isac-net.org/std/Gating-ML/v2.0/gating/",
+            "Gating-ML.v2.0.xsd ",
+            "http://www.isac-net.org/std/Gating-ML/v2.0/transformations ",
+            "http://www.isac-net.org/std/Gating-ML/v2.0/gating/",
+            "Transformations.v2.0.xsd ",
+            "http://www.isac-net.org/std/Gating-ML/v2.0/datatypes ",
+            "http://www.isac-net.org/std/Gating-ML/v2.0/gating/",
+            "DataTypes.v2.0.xsd \""
+        ),
+        sprintf(
+            '   nonAutoSaveFileName="file:%s"',
+            xml_encode(output_path)
+        ),
+        " >",
+        paste0(
+            '   <WindowPosition x="100" y="100" width="800" height="',
+            '600" displayed="1" panelState="" ',
+            "/>"
+        ),
+        paste0(
+            '   <TextTraits font="SansSerif" size="11" name="" style="',
+            'plain" color="#000000" background="#00ffffff" just="left" ',
+            "/>"
+        ),
+        "   <Columns>",
+        '     <TColumn width="371" >',
+        '       <Property key="fj.appnode.prop.name" />',
+        "     </TColumn>",
+        '     <TColumn width="211" >',
+        '       <Property key="fj.appnode.prop.statistic" />',
+        "     </TColumn>",
+        '     <TColumn width="210" >',
+        '       <Property key="fj.appnode.prop.ncells" />',
+        "     </TColumn>",
+        "   </Columns>"
+    )
+}
+
+#' Build the cytometer-level TransformStore XML
+#'
+#' Builds the <TransformStore> element from the first sample's transformations,
+#' using the original (uncompensated) parameter names, adding linear transforms
+#' for scatter channels and Time when missing.
+#'
+#' @param gating_set GatingSet (or list) holding sample hierarchies
+#' @param samples List of sample data as built by build_sample_list
+#' @param force_XSC_linear Ensure scatter channels have linear transforms
+#' @return Character vector of XML lines (either the populated TransformStore
+#'   or a self-closing <TransformStore/>)
+#' @keywords internal
+fj10_transform_store_xml <- function(gating_set, samples, force_XSC_linear) {
+    if (length(samples) == 0 || is.null(samples[[1]])) {
+        return("       <TransformStore/>")
+    }
+    sample_gh_for_ts <- NULL
+    tryCatch(
+        {
+            sample_gh_for_ts <- gating_set[[samples[[1]]$name]]
+        },
+        error = function(e) {}
+    )
+    if (is.null(sample_gh_for_ts)) {
+        return("       <TransformStore/>")
+    }
+
+    all_ts_transforms <-
+        flowWorkspace::gh_get_transformations(sample_gh_for_ts)
+    # Strip "Comp-" prefix to map to original channel names
+    # TODO verify that comp name has to be changed.
+    ts_transforms <- list()
+    for (nm in names(all_ts_transforms)) {
+        orig_nm <- sub("^Comp-", "", nm)
+        if (!(orig_nm %in% names(ts_transforms))) {
+            ts_transforms[[orig_nm]] <- all_ts_transforms[[nm]]
+        }
+    }
+    # Ensure scatter channels have linear transforms
+    if (force_XSC_linear) {
+        lin_trans <- flowCore::linearTransform(
+            transformationId = "defaultLin", a = 1, b = 0
+        )
+        for (marker in c(
+            "FSC-A", "FSC-H", "FSC-W", "SSC-A",
+            "SSC-H", "SSC-W"
+        )) {
+            if (is.null(ts_transforms[[marker]])) {
+                ts_transforms[[marker]] <- lin_trans@.Data
+                attr(ts_transforms[[marker]], "type") <- "Linear"
+            }
+        }
+    }
+    # Ensure Time has a linear transform
+    if (is.null(ts_transforms[["Time"]])) {
+        ts_transforms[["Time"]] <- flowCore::linearTransform(
+            transformationId = "defaultLin", a = 1, b = 0
+        )@.Data
+        attr(ts_transforms[["Time"]], "type") <- "Linear"
+    }
+
+    if (length(ts_transforms) == 0) {
+        return("       <TransformStore/>")
+    }
+
+    # Build transform lines using lapply (vectorized)
+    transform_xml_lines <- lapply(
+        seq_along(ts_transforms),
+        function(tr_idx) {
+            channel <- names(ts_transforms)[tr_idx]
+            atr_tr <- attributes(ts_transforms[[tr_idx]])
+            if (is.null(atr_tr$type)) atr_tr$type <- "Linear"
+
+            data_range <- fj10_channel_data_range(
+                sample_gh_for_ts, channel
+            )
+
+            emit_transform_xml(atr_tr$type, channel,
+                ts_transforms[[tr_idx]], atr_tr, data_range,
+                indent = "             "
+            )
+        }
+    )
+
+    c(
+        "       <TransformStore>",
+        paste0(
+            '         <MatrixID matrixId="',
+            '18405cb6-3c7f-485d-a690-1690f98d59a8" ',
+            ">"
+        ),
+        "           <Transforms>",
+        unlist(transform_xml_lines),
+        "           </Transforms>",
+        "         </MatrixID>",
+        "       </TransformStore>"
+    )
+}
+
+#' Render the <Cytometer> element
+#'
+#' Renders the opening <Cytometer ...> tag with all cytometer attributes and
+#' the fixed LinParams/LogParams/FilterParams children.
+#'
+#' @param cyt_attrs Cytometer attributes as returned by
+#'   derive_cytometer_attrs
+#' @param transform_store_lines TransformStore XML lines
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_cytometer_xml <- function(cyt_attrs, transform_store_lines) {
+    c(
+        "   <Cytometers>",
+        sprintf(
+            paste0(
+                '     <Cytometer name="%s" cyt="%s" useFCS3="%s" ',
+                'extraNegs="%s" widthBasis="%s" linMin="%s" logMin="%s"',
+                ' linMax="%s" logMax="%s" linearRescale="%s" ',
+                'logRescale="%s" linFromKW="%s" logFromKW="%s" useGain=',
+                '"%s" useTransform="%s" transformType="%s" ',
+                'manufacturer="%s" serialnumber="%s" homepage="%s" ',
+                'icon="%s" ',
+                ">"
+            ),
+            xml_encode(cyt_attrs$name),
+            xml_encode(cyt_attrs$cyt),
+            cyt_attrs$useFCS3,
+            cyt_attrs$extraNegs,
+            cyt_attrs$widthBasis,
+            cyt_attrs$linMin,
+            cyt_attrs$logMin,
+            cyt_attrs$linMax,
+            cyt_attrs$logMax,
+            cyt_attrs$linearRescale,
+            cyt_attrs$logRescale,
+            cyt_attrs$linFromKW,
+            cyt_attrs$logFromKW,
+            cyt_attrs$useGain,
+            cyt_attrs$useTransform,
+            cyt_attrs$transformType,
+            xml_encode(cyt_attrs$manufacturer),
+            xml_encode(cyt_attrs$serialnumber),
+            xml_encode(cyt_attrs$homepage),
+            xml_encode(cyt_attrs$icon)
+        ),
+        "       <LinParams>",
+        "         <Param>time</Param>",
+        "       </LinParams>",
+        "       <LogParams/>",
+        "       <FilterParams/>",
+        transform_store_lines,
+        "     </Cytometer>",
+        "   </Cytometers>"
+    )
+}
+
+#' Build the workspace Matrices and Cytometers sections
+#'
+#' Emits the workspace-level compensation matrix (when the first sample has a
+#' spillover matrix), derives cytometer attributes, builds the cytometer-level
+#' TransformStore from the first sample's transformations, and renders the
+#' <Cytometers> section.
+#'
+#' @param gating_set GatingSet (or list) holding sample hierarchies
+#' @param samples List of sample data as built by build_sample_list
+#' @param force_XSC_linear Ensure scatter channels have linear transforms
+#' @return List with `lines` (XML lines) and `ws_matrix_id` (workspace matrix
+#'   id, or NULL)
+#' @keywords internal
+fj10_workspace_cytometers_section <- function(gating_set, samples,
+                                              force_XSC_linear) {
+    lines <- character(0)
+
+    # Add workspace-level compensation matrix if available
+    ws_matrix_id <- NULL
+    if (length(samples) > 0 && !is.null(samples[[1]]$spill_matrix)) {
+        ws_matrix_id <- "18405cb6-3c7f-485d-a690-1690f98d59a8"
+        lines <- c(
+            lines,
+            "   <Matrices>",
+            build_spillover_matrix_xml(samples[[1]]$spill_matrix,
+                ws_matrix_id,
+                indent = "     "
+            ),
+            "   </Matrices>"
+        )
+    } else {
+        lines <- c(lines, "   <Matrices/>")
+    }
+
+    # Derive cytometer attributes from the first sample's FCS header if
+    #   possible
+    first_header <- if (length(samples) > 0) samples[[1]]$fcs_header
+    cyt_attrs <- derive_cytometer_attrs(first_header)
+
+    # Build TransformStore content from all channel transforms that will be
+    #   used in this workspace. We use the original (uncompensated) parameter
+    #   names for the cytometer-level TransformStore, matching FlowJo's
+    #   display transform list.
+    transform_store_lines <- fj10_transform_store_xml(
+        gating_set, samples, force_XSC_linear
+    )
+
+    lines <- c(
+        lines,
+        fj10_cytometer_xml(cyt_attrs, transform_store_lines)
+    )
+
+    list(lines = lines, ws_matrix_id = ws_matrix_id)
+}
+
+#' Graph chrome shared by group nodes
+#'
+#' Renders <GraphSettings>, <GraphEnvironment> with its TextTraits, and the
+#' GraphEnvironment close tag at the given indentation.
+#'
+#' @param indent Leading indentation string for the outer elements
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_graph_chrome_xml <- function(indent) {
+    d2 <- paste0(indent, "  ")
+    c(
+        paste0(
+            indent, '<GraphSettings level="5%" smoothingHighResolution="1"',
+            ' contourHighResolution="1" histogramSmoothingCount="0" ',
+            'graphResolution="256" showOutliers="0" drawLargeDots="0" ',
+            'dotsToDraw="8000" tint="le.chartfill.tinted.40" lineWeight="',
+            'le.lineweight.normal" lineStyle="le.linestyle.solid" ',
+            "/>"
+        ),
+        paste0(
+            indent, '<GraphEnvironment showGrid="0" showAxes="tnlTNL" ',
+            'showGates="1" showFreqOnPlots="1" showGateNameOnPlots="1" ',
+            'showMedians="0" showUncomped="0" addEventParam="0" ',
+            'lastYAxisName="" ',
+            ">"
+        ),
+        paste0(
+            d2, '<TextTraits font="SansSerif" size="11" name="',
+            'Labels" style="plain" color="#000000" background="#00ffffff" ',
+            'just="left" ',
+            "/>"
+        ),
+        paste0(
+            d2, '<TextTraits font="SansSerif" size="11" name="',
+            'LayoutGates" style="plain" color="#000000" background="',
+            '#00ffffff" just="left" ',
+            "/>"
+        ),
+        paste0(
+            d2, '<TextTraits font="SansSerif" size="9" name="',
+            'Numbers" style="plain" color="#000000" background="#00ffffff" ',
+            'just="left" ',
+            "/>"
+        ),
+        paste0(
+            d2, '<TextTraits font="SansSerif" size="9" name="Legend"',
+            ' style="plain" color="#000000" background="#00ffffff" just="',
+            'left" ',
+            "/>"
+        ),
+        paste0(indent, "</GraphEnvironment>")
+    )
+}
+
+#' Graph block shared by group nodes
+#'
+#' Renders the <Graph> element (opening tag, axes, graph settings chrome, and
+#' close tag) used inside both built-in group nodes.
+#'
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_group_graph_xml <- function() {
+    c(
+        paste0(
+            '       <Graph smoothing="0" backColor="#ffffff" foreColor="',
+            '#000000" type="Pseudocolor" fast="1" ',
+            ">"
+        ),
+        '         <Axis dimension="x" name="" label="" auto="auto" />',
+        '         <Axis dimension="y" name="" label="" auto="auto" />',
+        fj10_graph_chrome_xml("         "),
+        "       </Graph>"
+    )
+}
+
+#' User-defined groups XML
+#'
+#' Renders one <Group> element with Criteria and SampleRefs for each entry of
+#' the groups list.
+#'
+#' @param groups List of group data as built by build_group_list
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_user_groups_xml <- function(groups) {
+    lines <- character(0)
+    for (group_id in names(groups)) {
+        group <- groups[[group_id]]
+        lines <- c(
+            lines,
+            sprintf(paste0(
+                '    <Group name="%s"  live="1"  role="',
+                'ws.group.dlog.test"  key=""  synchronized="0"  ',
+                'foreground="#000000"  fontStyle="bold" ',
+                ">"
+            ), group$name),
+            "      <Criteria/>",
+            "      <SampleRefs>"
+        )
+
+        # Add sample references
+        for (sample_id in group$sample_ids) {
+            lines <- c(
+                lines,
+                sprintf('        <SampleRef sampleID="%d"/>', sample_id)
+            )
+        }
+
+        lines <- c(
+            lines,
+            "         </SampleRefs>",
+            "         <Keywords/>",
+            "       </Group>"
+        )
+    }
+    lines
+}
+
+#' Compensation group XML
+#'
+#' Renders the <Group name="Compensation"> element with its unstained/comp
+#' file criteria.
+#'
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_compensation_group_xml <- function() {
+    c(
+        paste0(
+            '       <Group name="Compensation" live="1" role="',
+            'ws.group.dlog.compensation" key="" synchronized="0" ',
+            'foreground="#bc1900" fontStyle="bold" ',
+            ">"
+        ),
+        "         <Criteria>",
+        paste0(
+            '           <Criterion connector="And" keyword="$FIL" function=',
+            '"Contains" value="unstained" ',
+            "/>"
+        ),
+        paste0(
+            '           <Criterion connector="Or" keyword="$FIL" function="',
+            'Contains" value="comp" ',
+            "/>"
+        ),
+        "         </Criteria>",
+        "         <Keywords/>",
+        "       </Group>"
+    )
+}
+
+#' Build one GroupNode element
+#'
+#' Renders a <GroupNode> with the given name (also used as owningGroup), the
+#' shared graph block, and the provided inner content.
+#'
+#' @param name Group node name (also used as owningGroup)
+#' @param inner_lines Character vector of XML lines placed before the close
+#'   tag
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_group_node_xml <- function(name, inner_lines) {
+    c(
+        paste0(
+            '     <GroupNode name="', name, '" annotation="" owningGroup=',
+            '"', name, '" expanded="1" sortPriority="10" count="-1" ',
+            ">"
+        ),
+        fj10_group_graph_xml(),
+        inner_lines,
+        "     </GroupNode>"
+    )
+}
+
+#' Build the workspace Groups section
+#'
+#' Renders the "All Samples" and "Compensation" group nodes together with any
+#' user-defined groups and their sample references.
+#'
+#' @param groups List of group data as built by build_group_list
+#' @return Character vector of XML lines for the Groups section content
+#' @keywords internal
+fj10_groups_section <- function(groups) {
+    c(
+        fj10_group_node_xml("All Samples", fj10_user_groups_xml(groups)),
+        fj10_group_node_xml(
+            "Compensation", fj10_compensation_group_xml()
+        )
+    )
+}
+
+#' Derive the heatmap parameter for a sample
+#'
+#' Returns the "Comp-" prefixed name of the first compensated channel, or ""
+#' when the sample has no spillover matrix.
+#'
+#' @param sample Sample data entry as built by build_sample_list
+#' @return Single character string ("" when no compensation is present)
+#' @keywords internal
+heat_map_param_for_sample <- function(sample) {
+    if (is.null(sample$spill_matrix)) {
+        return("")
+    }
+    first_chan <- colnames(sample$spill_matrix)[1]
+    if (!is.null(first_chan) && nzchar(first_chan)) {
+        paste0("Comp-", first_chan)
+    } else {
+        ""
+    }
+}
+
+#' Build the sample-level Transformations XML block
+#'
+#' Collects the sample's transformations restricted to the channels referenced
+#' by gates, optionally adds linear transforms for missing scatter channels,
+#' mirrors transforms between original and Comp- channel names when
+#' compensation is present, and renders the <Transformations> block.
+#'
+#' @param sample_gh GatingHierarchy for the sample (may be NULL)
+#' @param sample Sample data entry as built by build_sample_list
+#' @param gates List of gate data
+#' @param force_XSC_linear Ensure referenced channels have linear transforms
+#' @return Character vector of XML lines for the Transformations block
+#' @keywords internal
+fj10_sample_transforms_section <- function(sample_gh, sample, gates,
+                                           force_XSC_linear) {
+    lines <- character(0)
+
+    all_transforms <- flowWorkspace::gh_get_transformations(sample_gh)
+    referenced_channels <- get_referenced_channels(gates)
+    transforms <-
+        all_transforms[names(all_transforms) %in% referenced_channels]
+
+    if (force_XSC_linear) {
+        lin_trans <- flowCore::linearTransform(
+            transformationId = "defaultLin", a = 1, b = 0
+        )
+        for (marker in referenced_channels) {
+            if (is.null(transforms[[marker]])) {
+                transforms[[marker]] <- lin_trans@.Data
+                attr(transforms[[marker]], "type") <- "Linear"
+            }
+        }
+    }
+
+    # If compensation is present, add duplicate transforms for the original
+    # (uncompensated) channel names as well.
+    if (!is.null(sample$spill_matrix)) {
+        orig_names <- colnames(sample$spill_matrix)
+        for (nm in orig_names) {
+            # TODO verify that comp name has to be changed.
+            comp_nm <- paste0("Comp-", nm)
+            if (!is.null(transforms[[comp_nm]]) &&
+                is.null(transforms[[nm]])) {
+                transforms[[nm]] <- transforms[[comp_nm]]
+            }
+        }
+        # Also ensure all Comp- channels are present
+        for (nm in orig_names) {
+            # TODO verify that comp name has to be changed.
+            comp_nm <- paste0("Comp-", nm)
+            if (is.null(transforms[[comp_nm]]) &&
+                !is.null(transforms[[nm]])) {
+                transforms[[comp_nm]] <- transforms[[nm]]
+            }
+        }
+    }
+
+    lines <- c(lines, "      <Transformations>")
+    for (tr_idx in seq_along(transforms)) {
+        channel <- names(transforms)[tr_idx]
+        transform_obj <- transforms[[tr_idx]]
+        atr_tr <- attributes(transform_obj)
+        if (is.null(atr_tr$type)) atr_tr$type <- "Linear"
+
+        data_range <- fj10_channel_data_range(sample_gh, channel)
+
+        lines <- c(
+            lines,
+            emit_transform_xml(atr_tr$type, channel, transform_obj,
+                atr_tr, data_range,
+                indent = "        "
+            )
+        )
+    }
+    lines <- c(lines, "      </Transformations>")
+
+    lines
+}
+
+#' Build one sample's SampleNode/Graph XML block
+#'
+#' Renders the <SampleNode> opening tag, its <Graph> element with axes and
+#' graph settings, and closes </Graph>.
+#'
+#' @param sample Sample data entry as built by build_sample_list
+#' @param sample_gh GatingHierarchy for the sample (may be NULL)
+#' @param sample_id 1-based index of the sample
+#' @return Character vector of XML lines for the SampleNode/Graph block
+#' @keywords internal
+fj10_sample_graph_section <- function(sample, sample_gh, sample_id) {
+    # Get root population count
+    root_count <- sample$count # default to sample count
+    if (!is.null(sample_gh)) {
+        root_count <- tryCatch(
+            {
+                flowWorkspace::gh_pop_get_count(sample_gh, "root")
+            },
+            error = function(e) {
+                sample$count # fallback to sample count
+            }
+        )
+    }
+    # save(file = "generate_flowjo10_xml.debug.RData", list = ls())
+    gate_dims <- tryCatch(
+        {
+            parameters(gh_pop_get_gate(
+                sample_gh,
+                gh_get_pop_paths(sample_gh)[2]
+            ))
+        },
+        error = function(e) {
+            NULL
+        }
+    )
+    # Only add y-axis if second dimension exists
+    # Use $FIL keyword for sample name if available, otherwise use
+    #   sample$name
+    sample_display_name <- sample$keywords[["$FIL"]] %||% sample$name
+    #######
+
+    c(
+        sprintf(
+            paste0(
+                '       <SampleNode name="%s" annotation="" ',
+                'owningGroup="" expanded="1" sortPriority="10" count="',
+                '%d" sampleID="%d" ',
+                ">"
+            ),
+            xml_encode(sample_display_name), root_count, sample_id
+        ),
+        sprintf(
+            paste0(
+                '         <Graph smoothing="0" backColor="#ffffff" ',
+                'foreColor="#000000" heatMapStatParameter="%s" type="',
+                'Pseudocolor" fast="1" ',
+                ">"
+            ),
+            heat_map_param_for_sample(sample)
+        ),
+        sprintf(
+            paste0(
+                '           <Axis dimension="x" name="%s" label="" ',
+                'auto="auto" ',
+                "/>"
+            ),
+            if (is.null(gate_dims) ||
+                length(gate_dims) < 1) {
+                "FSC-A"
+            } else {
+                gate_dims[[1]]
+            }
+        ),
+        sprintf(
+            paste0(
+                '           <Axis dimension="y" name="%s" label="" ',
+                'auto="auto" ',
+                "/>"
+            ),
+            if (is.null(gate_dims) ||
+                length(gate_dims) < 2) {
+                ""
+            } else {
+                gate_dims[[2]]
+            }
+        ),
+        paste0(
+            '           <GraphSettings level="5%" ',
+            'smoothingHighResolution="1" contourHighResolution="1" ',
+            'histogramSmoothingCount="0" graphResolution="256" ',
+            'showOutliers="0" drawLargeDots="0" dotsToDraw="8000" tint=',
+            '"le.chartfill.tinted.40" lineWeight="le.lineweight.normal"',
+            ' lineStyle="le.linestyle.solid" ',
+            "/>"
+        ),
+        paste0(
+            '           <GraphEnvironment showGrid="0" showAxes="',
+            'tnlTNL" showGates="1" showFreqOnPlots="1" ',
+            'showGateNameOnPlots="1" showMedians="0" showUncomped="0" ',
+            'addEventParam="0" lastYAxisName="" ',
+            ">"
+        ),
+        paste0(
+            '             <TextTraits font="SansSerif" size="11" name="',
+            'Labels" style="plain" color="#000000" background="',
+            '#00ffffff" just="left" ',
+            "/>"
+        ),
+        paste0(
+            '             <TextTraits font="SansSerif" size="11" name="',
+            'LayoutGates" style="plain" color="#000000" background="',
+            '#00ffffff" just="left" ',
+            "/>"
+        ),
+        paste0(
+            '             <TextTraits font="SansSerif" size="9" name="',
+            'Numbers" style="plain" color="#000000" background="',
+            '#00ffffff" just="left" ',
+            "/>"
+        ),
+        paste0(
+            '             <TextTraits font="SansSerif" size="9" name="',
+            'Legend" style="plain" color="#000000" background="',
+            '#00ffffff" just="left" ',
+            "/>"
+        ),
+        paste0(
+            '             <WindowPosition x="247" y="-1415" width="390"',
+            ' height="679" displayed="0" panelState="---" ',
+            "/>"
+        ),
+        "           </GraphEnvironment>",
+        "         </Graph>"
+    )
+}
+
+#' Build the XML for one sample's SampleList entry
+#'
+#' Renders DataSet, sample-level spillover matrix, sample-level
+#' Transformations, Keywords, and the SampleNode/Graph block (including
+#' subpopulations) for a single sample.
+#'
+#' @param gating_set GatingSet (or list) holding sample hierarchies
+#' @param sample Sample data entry as built by build_sample_list
+#' @param sample_id 1-based index of the sample
+#' @param gates List of gate data
+#' @param populations List of population data
+#' @param ws_matrix_id Workspace-level matrix id, or NULL
+#' @param force_XSC_linear Ensure referenced channels have linear transforms
+#' @return Character vector of XML lines for this sample
+#' @keywords internal
+fj10_sample_section <- function(gating_set, sample, sample_id, gates,
+                                populations, ws_matrix_id, force_XSC_linear) {
+    lines <- character(0)
+
+    # Get gating hierarchy for this sample if available
+    sample_gh <- NULL
+    if (requireNamespace("flowWorkspace", quietly = TRUE)) {
+        tryCatch(
+            {
+                sample_gh <- gating_set[[sample$name]]
+            },
+            error = function(e) {
+                # Continue without sample_gh if not available
+            }
+        )
+    }
+
+    lines <- c(
+        lines,
+        sprintf("     <Sample>"),
+        sprintf(
+            '       <DataSet uri="file:%s" sampleID="%d" />',
+            xml_encode(sample$uri), sample_id
+        )
+    )
+
+    # Add sample-level spillover matrix if compensation is present
+    if (!is.null(sample$spill_matrix) && !is.null(ws_matrix_id)) {
+        lines <- c(
+            lines,
+            build_spillover_matrix_xml(sample$spill_matrix,
+                ws_matrix_id,
+                indent = "       "
+            )
+        )
+    }
+
+    # Sample-level Transformations: include both original and Comp-duplicate
+    # channels when compensation is applied, matching FlowJo's exported shape.
+    lines <- c(lines, fj10_sample_transforms_section(sample_gh, sample,
+        gates, force_XSC_linear
+    ))
+
+    # Add keywords
+    lines <- c(lines, "      <Keywords>")
+    for (kw_name in names(sample$keywords)) {
+        lines <- c(
+            lines,
+            sprintf(
+                '        <Keyword name="%s" value="%s"/>',
+                xml_encode(kw_name), xml_encode(sample$keywords[[kw_name]])
+            )
+        )
+    }
+    lines <- c(lines, "      </Keywords>")
+
+    # ---- SampleNode opening tag + Graph
+    #   -----------------------------------
+    heat_map_param <- heat_map_param_for_sample(sample)
+    lines <- c(
+        lines,
+        fj10_sample_graph_section(sample, sample_gh, sample_id)
+    )
+
+    # ---- Subpopulations for this sample
+    #   ------------------------------------
+    if (requireNamespace("flowWorkspace", quietly = TRUE) &&
+        !is.null(sample_gh)) {
+        lines <- c(lines, "         <Subpopulations>")
+
+        subpop_xml <- generate_sample_subpopulations_xml(
+            sample_gh,
+            gates,
+            populations = populations[
+                names(populations)[startsWith(
+                    names(populations),
+                    paste0("pop_", sample_id, "_")
+                )]
+            ],
+            parent_path = "root",
+            indent = "           ",
+            heat_map_param = heat_map_param # <-- threaded through
+        )
+        lines <- c(lines, subpop_xml)
+
+        lines <- c(lines, "         </Subpopulations>")
+    }
+
+    lines <- c(lines, "       </SampleNode>", "     </Sample>")
+
+    lines
+}
+
+#' PrintLayout XML fragment
+#'
+#' Renders the standard <PrintLayout> self-closing element used by the
+#' TableEditor, LayoutEditor, and Experiment sections.
+#'
+#' @param indent Leading indentation string
+#' @return Character vector of one XML line
+#' @keywords internal
+fj10_print_layout_xml <- function(indent) {
+    paste0(
+        indent, "<PrintLayout flipPattern0=\"0\" rows=\"1\" columns=\"1\" ",
+        "padding=\"36\" header=\"\" footer=\"\" headerActive=\"0\" ",
+        "footerActive=\"0\" scalingMode=\"fj.print.scale.none\" scaling=\"1\"",
+        " orientation=\"1\" width=\"595.2744\" height=\"841.8888\" ",
+        "imageableX=\"72\" imageableY=\"72\" imageableWidth=\"451.2744\" ",
+        "imageableHeight=\"697.8888\" ",
+        "/>"
+    )
+}
+
+#' PageSection header/footer XML pair
+#'
+#' Renders the standard <PageSection> header and footer pair used by the
+#' TableEditor and LayoutEditor sections.
+#'
+#' @param indent Leading indentation string for both elements
+#' @return Character vector of two XML lines
+#' @keywords internal
+fj10_page_sections_xml <- function(indent) {
+    c(
+        paste0(
+            indent, '<PageSection sectionName="header" >&lt;table ',
+            "width=&quot;100%&quot;&gt;&lt;tr&gt;&lt;td ",
+            "align=&quot;left&quot; ",
+            "valign=&quot;top&quot;&gt;&amp;NBSP&amp;NBSP&amp;NBSP&amp;NBSP",
+            "&lt;IMG SRC=&quot;file:/Applications/FlowJo.app/Contents/",
+            "Resources/Java/images/",
+            "fj_icon.png&quot;&gt;&lt;/IMG&gt;",
+            "&lt;br/&gt;FlowJo, LLC&lt;/td&gt;",
+            "&lt;td align=&quot;right&quot; valign=&quot;top&quot;&gt;",
+            "Page &lt;PageNumber/&gt;&lt;/td&gt;&lt;/tr&gt;",
+            "&lt;/table&gt;</PageSection>"
+        ),
+        paste0(
+            indent, '<PageSection sectionName="footer" >&lt;table ',
+            "width=&quot;100%&quot;&gt;&lt;tr&gt;&lt;td ",
+            "align=&quot;left&quot;  ",
+            "valign=&quot;bottom&quot;&gt;&lt;LongDate/&gt;&lt;/td&gt;",
+            "&lt;td align=&quot;right&quot; valign=&quot;bottom&quot;&gt;",
+            "&lt;Version/&gt;&lt;/td&gt;&lt;/tr&gt;",
+            "&lt;/table&gt;</PageSection>"
+        )
+    )
+}
+
+#' TableEditor section XML
+#'
+#' Renders the <TableEditor> block of the FlowJo v10 workspace.
+#'
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_table_editor_xml <- function() {
+    c(
+        '   <TableEditor title="FlowJo Tables" current="Table" >',
+        paste0(
+            '     <Table name="Table" outputFile="" color="#00ffffff" ',
+            'isBatch="0" quickclose="0" destination="toDisplay" ',
+            'outputFormat="fj.document.type.table" ',
+            ">"
+        ),
+        fj10_print_layout_xml("       "),
+        fj10_page_sections_xml("       "),
+        paste0(
+            '       <Iteration iterationType="SAMPLE" iterationValue="1" ',
+            'iterationKeyword="" discriminator="" panelSize="1" groupName="',
+            'workspaceSelection" ',
+            "/>"
+        ),
+        "     </Table>",
+        "   </TableEditor>"
+    )
+}
+
+#' LayoutEditor section XML
+#'
+#' Renders the <LayoutEditor> block of the FlowJo v10 workspace.
+#'
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_layout_editor_xml <- function() {
+    c(
+        paste0(
+            '   <LayoutEditor title="FlowJo Layouts" current="Layout" ',
+            'showGrid="0" showPageBreaks="0" showGuides="0" ',
+            'showDebugOutput="0" ',
+            ">"
+        ),
+        paste0(
+            '     <Layout name="Layout" outputFile="" color="#00ffffff" ',
+            'isBatch="0" showGrid="0" showRulers="1" showDebugOutput="0" ',
+            'showGuides="0" showPageBreaks="1" scale="1" ',
+            ">"
+        ),
+        fj10_print_layout_xml("       "),
+        fj10_page_sections_xml("       "),
+        paste0(
+            '       <Iteration iterationType="OFF" iterationValue="1" ',
+            'iterationKeyword="" discriminator="" panelSize="1" groupName="',
+            'workspaceSelection" ',
+            "/>"
+        ),
+        paste0(
+            '       <BatchSettings useCurrentGroup="1" length="3" name="" ',
+            'order="ACROSS" direction="COLUMNS" append="0" destination="',
+            'toLayout" separatePages="0" launchApp="1" header="0" footer="',
+            '0" commandLineBatch="0" ',
+            "/>"
+        ),
+        "       <FigList/>",
+        "     </Layout>",
+        '     <WindowPosition x="0" y="3" width="900" height="600" />',
+        "   </LayoutEditor>"
+    )
+}
+
+#' Experiment section XML
+#'
+#' Renders the <Experiment> block of the FlowJo v10 workspace.
+#'
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_experiment_xml <- function() {
+    c(
+        "   <Experiment>",
+        paste0(
+            '     <PlateModel name="Plate" color="#00ffffff" rows="8" ',
+            'columns="12" plateID="00000" expID="000-00000" format="Plate" ',
+            'showNEntries="1" peHeatmap="1" peShowEnums="1" peThickBorders=',
+            '"1" ',
+            ">"
+        ),
+        fj10_print_layout_xml("       "),
+        "     </PlateModel>",
+        "     <PlateEditorState>",
+        "       <KeywordList>",
+        '         <Keyword attribute="Assay" value="GFP Reporter" />',
+        '         <Keyword attribute="Time point" value="24hr" />',
+        paste0(
+            '         <Keyword attribute="Treatment &quot;Drug A&quot;" ',
+            'value="10ug/L" ',
+            "/>"
+        ),
+        "       </KeywordList>",
+        "       <StagingArea>",
+        "         <StagingWell/>",
+        "         <StagingWell/>",
+        "         <StagingWell/>",
+        "         <StagingWell/>",
+        "       </StagingArea>",
+        "     </PlateEditorState>",
+        "   </Experiment>"
+    )
+}
+
+#' Build the workspace report editor sections
+#'
+#' Renders the TableEditor, LayoutEditor, and Scripts sections of the FlowJo
+#' v10 workspace XML (static template content).
+#'
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_report_sections <- function() {
+    # Scripts section
+    c(
+        fj10_table_editor_xml(),
+        fj10_layout_editor_xml(),
+        "   <Scripts>",
+        '     <Script lang="text/javascript" name="New Script     " />',
+        "   </Scripts>",
+        fj10_experiment_xml()
+    )
+}
+
 #' Generate FlowJo v10 XML Content
 #'
 #' @param samples List of sample data
@@ -1830,491 +2876,18 @@ generate_flowjo10_xml <- function(gating_set, samples, gates,
             "<Matrices />"
         )
     } else {
-        # Full FJ10 format with all attributes
-        current_time <- format(Sys.time(), "%a %b %d %H:%M:%S %Z %Y")
-        client_ts <- format(Sys.time(), "%s%OS3")
-        client_ts <- gsub("\\.", "", client_ts)
+        xml_lines <- fj10_workspace_header(output_path)
 
-        xml_lines <- c(
-            '<?xml version="1.0" encoding="UTF-8"?>',
-            " <Workspace",
-            '   version="20.0"',
-            sprintf('   modDate="%s"', current_time),
-            sprintf('   clientTimestamp="%s"', client_ts),
-            '   flowJoVersion="10.10.1"',
-            '   drawRowBorders="1"',
-            '   drawColumnBorders="1"',
-            '   curGroup="All Samples"',
-            '   groupPaneHeight="80"',
-            '   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
-            paste0(
-                '   xmlns:gating="',
-                'http://www.isac-net.org/std/Gating-ML/v2.0/gating"'
-            ),
-            paste0(
-                '   xmlns:transforms="',
-                'http://www.isac-net.org/std/Gating-ML/v2.0/transformations"'
-            ),
-            paste0(
-                '   xmlns:data-type="',
-                'http://www.isac-net.org/std/Gating-ML/v2.0/datatypes"'
-            ),
-            paste0(
-                '   xsi:schemaLocation="',
-                "http://www.isac-net.org/std/Gating-ML/v2.0/gating ",
-                "http://www.isac-net.org/std/Gating-ML/v2.0/gating/",
-                "Gating-ML.v2.0.xsd ",
-                "http://www.isac-net.org/std/Gating-ML/v2.0/transformations ",
-                "http://www.isac-net.org/std/Gating-ML/v2.0/gating/",
-                "Transformations.v2.0.xsd ",
-                "http://www.isac-net.org/std/Gating-ML/v2.0/datatypes ",
-                "http://www.isac-net.org/std/Gating-ML/v2.0/gating/",
-                "DataTypes.v2.0.xsd \""
-            ),
-            sprintf(
-                '   nonAutoSaveFileName="file:%s"',
-                xml_encode(output_path)
-            ),
-            " >"
+        cyt_section <- fj10_workspace_cytometers_section(
+            gating_set, samples, force_XSC_linear
         )
-        # Add window position
-        xml_lines <- c(
-            xml_lines,
-            paste0(
-                '   <WindowPosition x="100" y="100" width="800" height="',
-                '600" displayed="1" panelState="" ',
-                "/>"
-            )
-        )
-
-        # Add workspace-level TextTraits
-        xml_lines <- c(
-            xml_lines,
-            paste0(
-                '   <TextTraits font="SansSerif" size="11" name="" style="',
-                'plain" color="#000000" background="#00ffffff" just="left" ',
-                "/>"
-            )
-        )
-
-        # Add Columns section
-        xml_lines <- c(
-            xml_lines,
-            "   <Columns>",
-            '     <TColumn width="371" >',
-            '       <Property key="fj.appnode.prop.name" />',
-            "     </TColumn>",
-            '     <TColumn width="211" >',
-            '       <Property key="fj.appnode.prop.statistic" />',
-            "     </TColumn>",
-            '     <TColumn width="210" >',
-            '       <Property key="fj.appnode.prop.ncells" />',
-            "     </TColumn>",
-            "   </Columns>"
-        )
-
-        # Add workspace-level compensation matrix if available
-        ws_matrix_id <- NULL
-        if (length(samples) > 0 && !is.null(samples[[1]]$spill_matrix)) {
-            ws_matrix_id <- "18405cb6-3c7f-485d-a690-1690f98d59a8"
-            xml_lines <- c(
-                xml_lines,
-                "   <Matrices>",
-                build_spillover_matrix_xml(samples[[1]]$spill_matrix,
-                    ws_matrix_id,
-                    indent = "     "
-                ),
-                "   </Matrices>"
-            )
-        } else {
-            xml_lines <- c(xml_lines, "   <Matrices/>")
-        }
-
-        # Derive cytometer attributes from the first sample's FCS header if
-        #   possible
-        first_header <- if (length(samples) > 0) samples[[1]]$fcs_header
-        cyt_attrs <- derive_cytometer_attrs(first_header)
-
-        # Build TransformStore content from all channel transforms that will
-        #   be used
-        # in this workspace. We use the original (uncompensated) parameter
-        #   names for
-        # the cytometer-level TransformStore, matching FlowJo's display
-        #   transform list.
-        transform_store_lines <- character(0)
-        if (length(samples) > 0 && !is.null(samples[[1]])) {
-            sample_gh_for_ts <- NULL
-            tryCatch(
-                {
-                    sample_gh_for_ts <- gating_set[[samples[[1]]$name]]
-                },
-                error = function(e) {}
-            )
-
-            if (!is.null(sample_gh_for_ts)) {
-                all_ts_transforms <-
-                    flowWorkspace::gh_get_transformations(sample_gh_for_ts)
-                # Strip "Comp-" prefix to map to original channel names
-                # TODO verify that comp name has to be changed.
-                ts_transforms <- list()
-                for (nm in names(all_ts_transforms)) {
-                    orig_nm <- sub("^Comp-", "", nm)
-                    if (!(orig_nm %in% names(ts_transforms))) {
-                        ts_transforms[[orig_nm]] <- all_ts_transforms[[nm]]
-                    }
-                }
-                # Ensure scatter channels have linear transforms
-                if (force_XSC_linear) {
-                    lin_trans <- flowCore::linearTransform(
-                        transformationId = "defaultLin", a = 1, b = 0
-                    )
-                    for (marker in c(
-                        "FSC-A", "FSC-H", "FSC-W", "SSC-A",
-                        "SSC-H", "SSC-W"
-                    )) {
-                        if (is.null(ts_transforms[[marker]])) {
-                            ts_transforms[[marker]] <- lin_trans@.Data
-                            attr(ts_transforms[[marker]], "type") <- "Linear"
-                        }
-                    }
-                }
-                # Ensure Time has a linear transform
-                if (is.null(ts_transforms[["Time"]])) {
-                    ts_transforms[["Time"]] <- flowCore::linearTransform(
-                        transformationId = "defaultLin", a = 1, b = 0
-                    )@.Data
-                    attr(ts_transforms[["Time"]], "type") <- "Linear"
-                }
-
-                if (length(ts_transforms) > 0) {
-                    # Build transform lines using lapply (vectorized)
-                    transform_xml_lines <- lapply(
-                        seq_along(ts_transforms),
-                        function(tr_idx) {
-                            channel <- names(ts_transforms)[tr_idx]
-                            atr_tr <- attributes(ts_transforms[[tr_idx]])
-                            if (is.null(atr_tr$type)) atr_tr$type <- "Linear"
-
-                            data_range <- tryCatch(
-                                {
-                                    fr <- gh_pop_get_data(sample_gh_for_ts,
-                                        "root")
-                                    kw <- flowCore::keyword(fr)
-                                    n_pattern <- "^\\$P[0-9]+N$"
-                                    n_keys <- grep(n_pattern, names(kw),
-                                        value = TRUE
-                                    )
-                                    n_values <- vapply(
-                                        n_keys,
-                                        function(k) as.character(kw[[k]]),
-                                        character(1)
-                                    )
-                                    param_match <- which(n_values == channel)
-                                    if (length(param_match) > 0) {
-                                        param_num <- gsub(
-                                            "\\$|P|N", "",
-                                            names(param_match)[1]
-                                        )
-                                        r_keyword <- paste0(
-                                            "$P", param_num, "R"
-                                        )
-                                        max_val <- as.numeric(
-                                            kw[[r_keyword]] %||% 262144
-                                        )
-                                        min_val <- 0
-                                        if (grepl("FSC|SSC", channel,
-                                            ignore.case = TRUE
-                                        )) {
-                                            data_vals <- flowCore::exprs(fr)[
-                                                ,
-                                                channel
-                                            ]
-                                            actual_min <- min(data_vals,
-                                                na.rm = TRUE
-                                            )
-                                            if (actual_min < 0) {
-                                                min_val <- actual_min
-                                            }
-                                        }
-                                        c(min_val, max_val)
-                                    } else {
-                                        c(0, 262144)
-                                    }
-                                },
-                                error = function(e) c(0, 262144)
-                            )
-
-                            emit_transform_xml(atr_tr$type, channel,
-                                ts_transforms[[tr_idx]], atr_tr, data_range,
-                                indent = "             "
-                            )
-                        }
-                    )
-
-                    transform_store_lines <- c(
-                        "       <TransformStore>",
-                        paste0(
-                            '         <MatrixID matrixId="',
-                            '18405cb6-3c7f-485d-a690-1690f98d59a8" ',
-                            ">"
-                        ),
-                        "           <Transforms>",
-                        unlist(transform_xml_lines),
-                        "           </Transforms>",
-                        "         </MatrixID>",
-                        "       </TransformStore>"
-                    )
-                }
-            }
-        }
-        if (length(transform_store_lines) == 0) {
-            transform_store_lines <- "       <TransformStore/>"
-        }
-
-        # Add Cytometers section
-        xml_lines <- c(
-            xml_lines,
-            "   <Cytometers>",
-            sprintf(
-                paste0(
-                    '     <Cytometer name="%s" cyt="%s" useFCS3="%s" ',
-                    'extraNegs="%s" widthBasis="%s" linMin="%s" logMin="%s"',
-                    ' linMax="%s" logMax="%s" linearRescale="%s" ',
-                    'logRescale="%s" linFromKW="%s" logFromKW="%s" useGain=',
-                    '"%s" useTransform="%s" transformType="%s" ',
-                    'manufacturer="%s" serialnumber="%s" homepage="%s" ',
-                    'icon="%s" ',
-                    ">"
-                ),
-                xml_encode(cyt_attrs$name),
-                xml_encode(cyt_attrs$cyt),
-                cyt_attrs$useFCS3,
-                cyt_attrs$extraNegs,
-                cyt_attrs$widthBasis,
-                cyt_attrs$linMin,
-                cyt_attrs$logMin,
-                cyt_attrs$linMax,
-                cyt_attrs$logMax,
-                cyt_attrs$linearRescale,
-                cyt_attrs$logRescale,
-                cyt_attrs$linFromKW,
-                cyt_attrs$logFromKW,
-                cyt_attrs$useGain,
-                cyt_attrs$useTransform,
-                cyt_attrs$transformType,
-                xml_encode(cyt_attrs$manufacturer),
-                xml_encode(cyt_attrs$serialnumber),
-                xml_encode(cyt_attrs$homepage),
-                xml_encode(cyt_attrs$icon)
-            ),
-            "       <LinParams>",
-            "         <Param>time</Param>",
-            "       </LinParams>",
-            "       <LogParams/>",
-            "       <FilterParams/>",
-            transform_store_lines,
-            "     </Cytometer>",
-            "   </Cytometers>"
-        )
+        xml_lines <- c(xml_lines, cyt_section$lines)
+        ws_matrix_id <- cyt_section$ws_matrix_id
     }
 
     # Add groups
     xml_lines <- c(xml_lines, "   <Groups>")
-    # Add group nodes
-    xml_lines <- c(
-        xml_lines,
-        paste0(
-            '     <GroupNode name="All Samples" annotation="" owningGroup="',
-            'All Samples" expanded="1" sortPriority="10" count="-1" ',
-            ">"
-        )
-    )
-    xml_lines <- c(
-        xml_lines,
-        paste0(
-            '       <Graph smoothing="0" backColor="#ffffff" foreColor="',
-            '#000000" type="Pseudocolor" fast="1" ',
-            ">"
-        )
-    )
-    xml_lines <- c(
-        xml_lines,
-        '         <Axis dimension="x" name="" label="" auto="auto" />'
-    )
-    xml_lines <- c(
-        xml_lines,
-        '         <Axis dimension="y" name="" label="" auto="auto" />'
-    )
-    xml_lines <- c(
-        xml_lines,
-        paste0(
-            '         <GraphSettings level="5%" smoothingHighResolution="1"',
-            ' contourHighResolution="1" histogramSmoothingCount="0" ',
-            'graphResolution="256" showOutliers="0" drawLargeDots="0" ',
-            'dotsToDraw="8000" tint="le.chartfill.tinted.40" lineWeight="',
-            'le.lineweight.normal" lineStyle="le.linestyle.solid" ',
-            "/>"
-        )
-    )
-    xml_lines <- c(
-        xml_lines,
-        paste0(
-            '         <GraphEnvironment showGrid="0" showAxes="tnlTNL" ',
-            'showGates="1" showFreqOnPlots="1" showGateNameOnPlots="1" ',
-            'showMedians="0" showUncomped="0" addEventParam="0" ',
-            'lastYAxisName="" ',
-            ">"
-        )
-    )
-    xml_lines <- c(
-        xml_lines,
-        paste0(
-            '           <TextTraits font="SansSerif" size="11" name="',
-            'Labels" style="plain" color="#000000" background="#00ffffff" ',
-            'just="left" ',
-            "/>"
-        )
-    )
-    xml_lines <- c(
-        xml_lines,
-        paste0(
-            '           <TextTraits font="SansSerif" size="11" name="',
-            'LayoutGates" style="plain" color="#000000" background="',
-            '#00ffffff" just="left" ',
-            "/>"
-        )
-    )
-    xml_lines <- c(
-        xml_lines,
-        paste0(
-            '           <TextTraits font="SansSerif" size="9" name="',
-            'Numbers" style="plain" color="#000000" background="#00ffffff" ',
-            'just="left" ',
-            "/>"
-        )
-    )
-    xml_lines <- c(
-        xml_lines,
-        paste0(
-            '           <TextTraits font="SansSerif" size="9" name="Legend"',
-            ' style="plain" color="#000000" background="#00ffffff" just="',
-            'left" ',
-            "/>"
-        )
-    )
-    xml_lines <- c(xml_lines, "         </GraphEnvironment>")
-    xml_lines <- c(xml_lines, "       </Graph>")
-    # xml_lines <- c(xml_lines, '       <Subpopulations/>')
-    for (group_id in names(groups)) {
-        group <- groups[[group_id]]
-        xml_lines <- c(
-            xml_lines,
-            sprintf(paste0(
-                '    <Group name="%s"  live="1"  role="',
-                'ws.group.dlog.test"  key=""  synchronized="0"  ',
-                'foreground="#000000"  fontStyle="bold" ',
-                ">"
-            ), group$name),
-            "      <Criteria/>",
-            "      <SampleRefs>"
-        )
-
-        # Add sample references
-        for (sample_id in group$sample_ids) {
-            xml_lines <- c(
-                xml_lines,
-                sprintf('        <SampleRef sampleID="%d"/>', sample_id)
-            )
-        }
-
-        xml_lines <- c(
-            xml_lines,
-            "         </SampleRefs>",
-            "         <Keywords/>",
-            "       </Group>"
-        )
-    }
-    xml_lines <- c(xml_lines, "     </GroupNode>")
-
-    # Add Compensation group node
-    xml_lines <- c(
-        xml_lines,
-        paste0(
-            '     <GroupNode name="Compensation" annotation="" owningGroup=',
-            '"Compensation" expanded="1" sortPriority="10" count="-1" ',
-            ">"
-        ),
-        paste0(
-            '       <Graph smoothing="0" backColor="#ffffff" foreColor="',
-            '#000000" type="Pseudocolor" fast="1" ',
-            ">"
-        ),
-        '         <Axis dimension="x" name="" label="" auto="auto" />',
-        '         <Axis dimension="y" name="" label="" auto="auto" />',
-        paste0(
-            '         <GraphSettings level="5%" smoothingHighResolution="1"',
-            ' contourHighResolution="1" histogramSmoothingCount="0" ',
-            'graphResolution="256" showOutliers="0" drawLargeDots="0" ',
-            'dotsToDraw="8000" tint="le.chartfill.tinted.40" lineWeight="',
-            'le.lineweight.normal" lineStyle="le.linestyle.solid" ',
-            "/>"
-        ),
-        paste0(
-            '         <GraphEnvironment showGrid="0" showAxes="tnlTNL" ',
-            'showGates="1" showFreqOnPlots="1" showGateNameOnPlots="1" ',
-            'showMedians="0" showUncomped="0" addEventParam="0" ',
-            'lastYAxisName="" ',
-            ">"
-        ),
-        paste0(
-            '           <TextTraits font="SansSerif" size="11" name="',
-            'Labels" style="plain" color="#000000" background="#00ffffff" ',
-            'just="left" ',
-            "/>"
-        ),
-        paste0(
-            '           <TextTraits font="SansSerif" size="11" name="',
-            'LayoutGates" style="plain" color="#000000" background="',
-            '#00ffffff" just="left" ',
-            "/>"
-        ),
-        paste0(
-            '           <TextTraits font="SansSerif" size="9" name="',
-            'Numbers" style="plain" color="#000000" background="#00ffffff" ',
-            'just="left" ',
-            "/>"
-        ),
-        paste0(
-            '           <TextTraits font="SansSerif" size="9" name="Legend"',
-            ' style="plain" color="#000000" background="#00ffffff" just="',
-            'left" ',
-            "/>"
-        ),
-        "         </GraphEnvironment>",
-        "       </Graph>",
-        paste0(
-            '       <Group name="Compensation" live="1" role="',
-            'ws.group.dlog.compensation" key="" synchronized="0" ',
-            'foreground="#bc1900" fontStyle="bold" ',
-            ">"
-        ),
-        "         <Criteria>",
-        paste0(
-            '           <Criterion connector="And" keyword="$FIL" function=',
-            '"Contains" value="unstained" ',
-            "/>"
-        ),
-        paste0(
-            '           <Criterion connector="Or" keyword="$FIL" function="',
-            'Contains" value="comp" ',
-            "/>"
-        ),
-        "         </Criteria>",
-        "         <Keywords/>",
-        "       </Group>",
-        "     </GroupNode>"
-    )
-
+    xml_lines <- c(xml_lines, fj10_groups_section(groups))
     xml_lines <- c(xml_lines, "   </Groups>")
 
     # Add sample list
@@ -2322,480 +2895,23 @@ generate_flowjo10_xml <- function(gating_set, samples, gates,
     # Add samples (each containing DataSet, Transformations, Keywords, and
     #   SampleNode)
     for (sample_id in seq_along(samples)) {
-        sample <- samples[[sample_id]]
-
-        # Get gating hierarchy for this sample if available
-        sample_gh <- NULL
-        if (requireNamespace("flowWorkspace", quietly = TRUE)) {
-            tryCatch(
-                {
-                    sample_gh <- gating_set[[sample$name]]
-                },
-                error = function(e) {
-                    # Continue without sample_gh if not available
-                }
-            )
-        }
-
         xml_lines <- c(
             xml_lines,
-            sprintf("     <Sample>"),
-            sprintf(
-                '       <DataSet uri="file:%s" sampleID="%d" />',
-                xml_encode(sample$uri), sample_id
-            )
-        )
-
-        # Add sample-level spillover matrix if compensation is present
-        if (!is.null(sample$spill_matrix) && !is.null(ws_matrix_id)) {
-            xml_lines <- c(
-                xml_lines,
-                build_spillover_matrix_xml(sample$spill_matrix,
-                    ws_matrix_id,
-                    indent = "       "
-                )
-            )
-        }
-
-        # Sample-level Transformations: include both original and Comp-
-        #   duplicate
-        # channels when compensation is applied, matching FlowJo's exported
-        #   shape.
-        all_transforms <- flowWorkspace::gh_get_transformations(sample_gh)
-        referenced_channels <- get_referenced_channels(gates)
-        transforms <-
-            all_transforms[names(all_transforms) %in% referenced_channels]
-
-        if (force_XSC_linear) {
-            lin_trans <- flowCore::linearTransform(
-                transformationId = "defaultLin", a = 1, b = 0
-            )
-            for (marker in referenced_channels) {
-                if (is.null(transforms[[marker]])) {
-                    transforms[[marker]] <- lin_trans@.Data
-                    attr(transforms[[marker]], "type") <- "Linear"
-                }
-            }
-        }
-
-        # If compensation is present, add duplicate transforms for the original
-        # (uncompensated) channel names as well.
-        if (!is.null(sample$spill_matrix)) {
-            orig_names <- colnames(sample$spill_matrix)
-            for (nm in orig_names) {
-                # TODO verify that comp name has to be changed.
-                comp_nm <- paste0("Comp-", nm)
-                if (!is.null(transforms[[comp_nm]]) &&
-                    is.null(transforms[[nm]])) {
-                    transforms[[nm]] <- transforms[[comp_nm]]
-                }
-            }
-            # Also ensure all Comp- channels are present
-            for (nm in orig_names) {
-                # TODO verify that comp name has to be changed.
-                comp_nm <- paste0("Comp-", nm)
-                if (is.null(transforms[[comp_nm]]) &&
-                    !is.null(transforms[[nm]])) {
-                    transforms[[comp_nm]] <- transforms[[nm]]
-                }
-            }
-        }
-
-        xml_lines <- c(xml_lines, "      <Transformations>")
-        for (tr_idx in seq_along(transforms)) {
-            channel <- names(transforms)[tr_idx]
-            transform_obj <- transforms[[tr_idx]]
-            atr_tr <- attributes(transform_obj)
-            if (is.null(atr_tr$type)) atr_tr$type <- "Linear"
-
-            data_range <- tryCatch(
-                {
-                    fr <- gh_pop_get_data(sample_gh, "root")
-                    kw <- flowCore::keyword(fr)
-                    n_pattern <- "^\\$P[0-9]+N$"
-                    n_keys <- grep(n_pattern, names(kw), value = TRUE)
-                    n_values <- vapply(
-                        n_keys,
-                        function(k) as.character(kw[[k]]), character(1)
-                    )
-                    param_match <- which(n_values == channel)
-                    if (length(param_match) > 0) {
-                        param_num <- gsub("\\$|P|N", "", names(param_match)[1])
-                        r_keyword <- paste0("$P", param_num, "R")
-                        max_val <- as.numeric(kw[[r_keyword]] %||% 262144)
-                        min_val <- 0
-                        if (grepl("FSC|SSC", channel, ignore.case = TRUE)) {
-                            data_vals <- flowCore::exprs(fr)[, channel]
-                            actual_min <- min(data_vals, na.rm = TRUE)
-                            if (actual_min < 0) min_val <- actual_min
-                        }
-                        c(min_val, max_val)
-                    } else {
-                        c(0, 262144)
-                    }
-                },
-                error = function(e) c(0, 262144)
-            )
-
-            xml_lines <- c(
-                xml_lines,
-                emit_transform_xml(atr_tr$type, channel, transform_obj,
-                    atr_tr, data_range,
-                    indent = "        "
-                )
-            )
-        }
-        xml_lines <- c(xml_lines, "      </Transformations>")
-
-        # Add keywords
-        xml_lines <- c(xml_lines, "      <Keywords>")
-        for (kw_name in names(sample$keywords)) {
-            xml_lines <- c(
-                xml_lines,
-                sprintf(
-                    '        <Keyword name="%s" value="%s"/>',
-                    xml_encode(kw_name), xml_encode(sample$keywords[[kw_name]])
-                )
-            )
-        }
-        xml_lines <- c(xml_lines, "      </Keywords>")
-
-        # Get root population count
-        root_count <- sample$count # default to sample count
-        if (!is.null(sample_gh)) {
-            root_count <- tryCatch(
-                {
-                    flowWorkspace::gh_pop_get_count(sample_gh, "root")
-                },
-                error = function(e) {
-                    sample$count # fallback to sample count
-                }
-            )
-        }
-        # save(file = "generate_flowjo10_xml.debug.RData", list = ls())
-        gate_dims <- tryCatch(
-            {
-                parameters(gh_pop_get_gate(
-                    sample_gh,
-                    gh_get_pop_paths(sample_gh)[2]
-                ))
-            },
-            error = function(e) {
-                NULL
-            }
-        )
-        # Only add y-axis if second dimension exists
-        # Use $FIL keyword for sample name if available, otherwise use
-        #   sample$name
-        sample_display_name <- sample$keywords[["$FIL"]] %||% sample$name
-        #######
-
-        # ---- derive heatmap parameter from first compensated channel
-        #   ------------
-        heat_map_param <- ""
-        if (!is.null(sample$spill_matrix)) {
-            first_chan <- colnames(sample$spill_matrix)[1]
-            if (!is.null(first_chan) && nzchar(first_chan)) {
-                heat_map_param <- paste0("Comp-", first_chan)
-            }
-        }
-
-        # ---- SampleNode opening tag + Graph
-        #   -----------------------------------
-        xml_lines <- c(
-            xml_lines,
-            sprintf(
-                paste0(
-                    '       <SampleNode name="%s" annotation="" ',
-                    'owningGroup="" expanded="1" sortPriority="10" count="',
-                    '%d" sampleID="%d" ',
-                    ">"
-                ),
-                xml_encode(sample_display_name), root_count, sample_id
-            ),
-            sprintf(
-                paste0(
-                    '         <Graph smoothing="0" backColor="#ffffff" ',
-                    'foreColor="#000000" heatMapStatParameter="%s" type="',
-                    'Pseudocolor" fast="1" ',
-                    ">"
-                ),
-                heat_map_param
-            ),
-            sprintf(
-                paste0(
-                    '           <Axis dimension="x" name="%s" label="" ',
-                    'auto="auto" ',
-                    "/>"
-                ),
-                if (is.null(gate_dims) ||
-                    length(gate_dims) < 1) {
-                    "FSC-A"
-                } else {
-                    gate_dims[[1]]
-                }
-            )
-        )
-        xml_lines <- c(
-            xml_lines,
-            sprintf(
-                paste0(
-                    '           <Axis dimension="y" name="%s" label="" ',
-                    'auto="auto" ',
-                    "/>"
-                ),
-                if (is.null(gate_dims) ||
-                    length(gate_dims) < 2) {
-                    ""
-                } else {
-                    gate_dims[[2]]
-                }
-            )
-        )
-        xml_lines <- c(
-            xml_lines,
-            paste0(
-                '           <GraphSettings level="5%" ',
-                'smoothingHighResolution="1" contourHighResolution="1" ',
-                'histogramSmoothingCount="0" graphResolution="256" ',
-                'showOutliers="0" drawLargeDots="0" dotsToDraw="8000" tint=',
-                '"le.chartfill.tinted.40" lineWeight="le.lineweight.normal"',
-                ' lineStyle="le.linestyle.solid" ',
-                "/>"
-            ),
-            paste0(
-                '           <GraphEnvironment showGrid="0" showAxes="',
-                'tnlTNL" showGates="1" showFreqOnPlots="1" ',
-                'showGateNameOnPlots="1" showMedians="0" showUncomped="0" ',
-                'addEventParam="0" lastYAxisName="" ',
-                ">"
-            ),
-            paste0(
-                '             <TextTraits font="SansSerif" size="11" name="',
-                'Labels" style="plain" color="#000000" background="',
-                '#00ffffff" just="left" ',
-                "/>"
-            ),
-            paste0(
-                '             <TextTraits font="SansSerif" size="11" name="',
-                'LayoutGates" style="plain" color="#000000" background="',
-                '#00ffffff" just="left" ',
-                "/>"
-            ),
-            paste0(
-                '             <TextTraits font="SansSerif" size="9" name="',
-                'Numbers" style="plain" color="#000000" background="',
-                '#00ffffff" just="left" ',
-                "/>"
-            ),
-            paste0(
-                '             <TextTraits font="SansSerif" size="9" name="',
-                'Legend" style="plain" color="#000000" background="',
-                '#00ffffff" just="left" ',
-                "/>"
-            ),
-            paste0(
-                '             <WindowPosition x="247" y="-1415" width="390"',
-                ' height="679" displayed="0" panelState="---" ',
-                "/>"
-            ),
-            "           </GraphEnvironment>",
-            "         </Graph>"
-        )
-
-        # ---- Subpopulations for this sample
-        #   ------------------------------------
-        if (requireNamespace("flowWorkspace", quietly = TRUE) &&
-            !is.null(sample_gh)) {
-            xml_lines <- c(xml_lines, "         <Subpopulations>")
-
-            subpop_xml <- generate_sample_subpopulations_xml(
-                sample_gh,
+            fj10_sample_section(
+                gating_set,
+                samples[[sample_id]],
+                sample_id,
                 gates,
-                populations = populations[
-                    names(populations)[startsWith(
-                        names(populations),
-                        paste0("pop_", sample_id, "_")
-                    )]
-                ],
-                parent_path = "root",
-                indent = "           ",
-                heat_map_param = heat_map_param # <-- threaded through
+                populations,
+                ws_matrix_id,
+                force_XSC_linear
             )
-            xml_lines <- c(xml_lines, subpop_xml)
-
-            xml_lines <- c(xml_lines, "         </Subpopulations>")
-        }
-
-        xml_lines <- c(xml_lines, "       </SampleNode>", "     </Sample>")
+        )
     }
 
     xml_lines <- c(xml_lines, "   </SampleList>")
 
-    # Add TableEditor section
-    xml_lines <- c(
-        xml_lines,
-        '   <TableEditor title="FlowJo Tables" current="Table" >',
-        paste0(
-            '     <Table name="Table" outputFile="" color="#00ffffff" ',
-            'isBatch="0" quickclose="0" destination="toDisplay" ',
-            'outputFormat="fj.document.type.table" ',
-            ">"
-        ),
-        paste0(
-            '       <PrintLayout flipPattern0="0" rows="1" columns="1" ',
-            'padding="36" header="" footer="" headerActive="0" ',
-            'footerActive="0" scalingMode="fj.print.scale.none" scaling="1"',
-            ' orientation="1" width="595.2744" height="841.8888" ',
-            'imageableX="72" imageableY="72" imageableWidth="451.2744" ',
-            'imageableHeight="697.8888" ',
-            "/>"
-        ),
-        paste0(
-            '       <PageSection sectionName="header" >&lt;table ',
-            "width=&quot;100%&quot;&gt;&lt;tr&gt;&lt;td ",
-            "align=&quot;left&quot; ",
-            "valign=&quot;top&quot;&gt;&amp;NBSP&amp;NBSP&amp;NBSP&amp;NBSP",
-            "&lt;IMG SRC=&quot;file:/Applications/FlowJo.app/Contents/",
-            "Resources/Java/images/",
-            "fj_icon.png&quot;&gt;&lt;/IMG&gt;",
-            "&lt;br/&gt;FlowJo, LLC&lt;/td&gt;",
-            "&lt;td align=&quot;right&quot; valign=&quot;top&quot;&gt;",
-            "Page &lt;PageNumber/&gt;&lt;/td&gt;&lt;/tr&gt;",
-            "&lt;/table&gt;</PageSection>"
-        ),
-        paste0(
-            '       <PageSection sectionName="footer" >&lt;table ',
-            "width=&quot;100%&quot;&gt;&lt;tr&gt;&lt;td ",
-            "align=&quot;left&quot;  ",
-            "valign=&quot;bottom&quot;&gt;&lt;LongDate/&gt;&lt;/td&gt;",
-            "&lt;td align=&quot;right&quot; valign=&quot;bottom&quot;&gt;",
-            "&lt;Version/&gt;&lt;/td&gt;&lt;/tr&gt;",
-            "&lt;/table&gt;</PageSection>"
-        ),
-        paste0(
-            '       <Iteration iterationType="SAMPLE" iterationValue="1" ',
-            'iterationKeyword="" discriminator="" panelSize="1" groupName="',
-            'workspaceSelection" ',
-            "/>"
-        ),
-        "     </Table>",
-        "   </TableEditor>"
-    )
-
-    # Add LayoutEditor section
-    xml_lines <- c(
-        xml_lines,
-        paste0(
-            '   <LayoutEditor title="FlowJo Layouts" current="Layout" ',
-            'showGrid="0" showPageBreaks="0" showGuides="0" ',
-            'showDebugOutput="0" ',
-            ">"
-        ),
-        paste0(
-            '     <Layout name="Layout" outputFile="" color="#00ffffff" ',
-            'isBatch="0" showGrid="0" showRulers="1" showDebugOutput="0" ',
-            'showGuides="0" showPageBreaks="1" scale="1" ',
-            ">"
-        ),
-        paste0(
-            '       <PrintLayout flipPattern0="0" rows="1" columns="1" ',
-            'padding="36" header="" footer="" headerActive="0" ',
-            'footerActive="0" scalingMode="fj.print.scale.none" scaling="1"',
-            ' orientation="1" width="595.2744" height="841.8888" ',
-            'imageableX="72" imageableY="72" imageableWidth="451.2744" ',
-            'imageableHeight="697.8888" ',
-            "/>"
-        ),
-        paste0(
-            '       <PageSection sectionName="header" >&lt;table ',
-            "width=&quot;100%&quot;&gt;&lt;tr&gt;&lt;td ",
-            "align=&quot;left&quot; ",
-            "valign=&quot;top&quot;&gt;&amp;NBSP&amp;NBSP&amp;NBSP&amp;NBSP",
-            "&lt;IMG SRC=&quot;file:/Applications/FlowJo.app/Contents/",
-            "Resources/Java/images/",
-            "fj_icon.png&quot;&gt;&lt;/IMG&gt;",
-            "&lt;br/&gt;FlowJo, LLC&lt;/td&gt;",
-            "&lt;td align=&quot;right&quot; valign=&quot;top&quot;&gt;",
-            "Page &lt;PageNumber/&gt;&lt;/td&gt;&lt;/tr&gt;",
-            "&lt;/table&gt;</PageSection>"
-        ),
-        paste0(
-            '       <PageSection sectionName="footer" >&lt;table ',
-            "width=&quot;100%&quot;&gt;&lt;tr&gt;&lt;td ",
-            "align=&quot;left&quot;  ",
-            "valign=&quot;bottom&quot;&gt;&lt;LongDate/&gt;&lt;/td&gt;",
-            "&lt;td align=&quot;right&quot; valign=&quot;bottom&quot;&gt;",
-            "&lt;Version/&gt;&lt;/td&gt;&lt;/tr&gt;",
-            "&lt;/table&gt;</PageSection>"
-        ),
-        paste0(
-            '       <Iteration iterationType="OFF" iterationValue="1" ',
-            'iterationKeyword="" discriminator="" panelSize="1" groupName="',
-            'workspaceSelection" ',
-            "/>"
-        ),
-        paste0(
-            '       <BatchSettings useCurrentGroup="1" length="3" name="" ',
-            'order="ACROSS" direction="COLUMNS" append="0" destination="',
-            'toLayout" separatePages="0" launchApp="1" header="0" footer="',
-            '0" commandLineBatch="0" ',
-            "/>"
-        ),
-        "       <FigList/>",
-        "     </Layout>",
-        '     <WindowPosition x="0" y="3" width="900" height="600" />',
-        "   </LayoutEditor>"
-    )
-
-    # Add Scripts section
-    xml_lines <- c(
-        xml_lines,
-        "   <Scripts>",
-        '     <Script lang="text/javascript" name="New Script     " />',
-        "   </Scripts>"
-    )
-
-    # Add Experiment section
-    xml_lines <- c(
-        xml_lines,
-        "   <Experiment>",
-        paste0(
-            '     <PlateModel name="Plate" color="#00ffffff" rows="8" ',
-            'columns="12" plateID="00000" expID="000-00000" format="Plate" ',
-            'showNEntries="1" peHeatmap="1" peShowEnums="1" peThickBorders=',
-            '"1" ',
-            ">"
-        ),
-        paste0(
-            '       <PrintLayout flipPattern0="0" rows="1" columns="1" ',
-            'padding="36" header="" footer="" headerActive="0" ',
-            'footerActive="0" scalingMode="fj.print.scale.none" scaling="1"',
-            ' orientation="1" width="595.2744" height="841.8888" ',
-            'imageableX="72" imageableY="72" imageableWidth="451.2744" ',
-            'imageableHeight="697.8888" ',
-            "/>"
-        ),
-        "     </PlateModel>",
-        "     <PlateEditorState>",
-        "       <KeywordList>",
-        '         <Keyword attribute="Assay" value="GFP Reporter" />',
-        '         <Keyword attribute="Time point" value="24hr" />',
-        paste0(
-            '         <Keyword attribute="Treatment &quot;Drug A&quot;" ',
-            'value="10ug/L" ',
-            "/>"
-        ),
-        "       </KeywordList>",
-        "       <StagingArea>",
-        "         <StagingWell/>",
-        "         <StagingWell/>",
-        "         <StagingWell/>",
-        "         <StagingWell/>",
-        "       </StagingArea>",
-        "     </PlateEditorState>",
-        "   </Experiment>"
-    )
+    xml_lines <- c(xml_lines, fj10_report_sections())
 
     # Add Exports section
     xml_lines <- c(xml_lines, "   <Exports/>")
