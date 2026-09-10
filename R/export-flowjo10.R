@@ -1922,7 +1922,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates, populations, group
   # Add Scripts section
   xml_lines <- c(xml_lines,
                  '   <Scripts>',
-                 '     <Script lang="text/javascript" name="New Script 		 " />',
+                 '     <Script lang="text/javascript" name="New Script     " />',
                  '   </Scripts>'
   )
   
