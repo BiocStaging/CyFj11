@@ -2928,6 +2928,404 @@ generate_flowjo10_xml <- function(gating_set, samples, gates,
     return(paste(xml_lines, collapse = "\n"))
 }
 
+#' Build one subpopulation Graph block
+#'
+#' Renders the <Graph> element for a subpopulation node: derives the axes from
+#' the node's first child gate (or its own gate when it is a leaf), and emits
+#' the shared GraphSettings/GraphEnvironment/TextTraits chrome.
+#'
+#' @param gating_hierarchy GatingHierarchy object
+#' @param child_path Path of the population whose graph is rendered
+#' @param heat_map_param Channel name used for heatMapStatParameter
+#' @return Character vector of XML lines for the Graph block
+#' @keywords internal
+fj10_subpop_graph_xml <- function(gating_hierarchy, child_path,
+                                  heat_map_param) {
+    grandchild_path <- tryCatch(
+        flowWorkspace::gs_pop_get_children(gating_hierarchy, child_path,
+            path = "auto"
+        )[[1]],
+        error = function(e) NA_character_
+    )
+    if (is.na(grandchild_path)) {
+        grandchild_path <- child_path # leaf -> show own gate
+    }
+
+    gate_dims <- tryCatch(
+        flowCore::parameters(
+            flowWorkspace::gh_pop_get_gate(
+                gating_hierarchy,
+                grandchild_path
+            )
+        ),
+        error = function(e) NULL
+    )
+
+    c(
+        sprintf(
+            paste0(
+                '        <Graph smoothing="0" backColor="#ffffff" ',
+                'foreColor="#000000" heatMapStatParameter="%s" type="',
+                'Pseudocolor" fast="1"',
+                ">"
+            ),
+            heat_map_param
+        ),
+        sprintf(
+            paste0(
+                '          <Axis dimension="x" name="%s" label="" auto=',
+                '"auto" ',
+                "/>"
+            ),
+            if (is.null(gate_dims) ||
+                length(gate_dims) < 1) {
+                "FSC-A"
+            } else {
+                gate_dims[[1]]
+            }
+        ),
+        sprintf(
+            paste0(
+                '          <Axis dimension="y" name="%s" label="" auto=',
+                '"auto" ',
+                "/>"
+            ),
+            if (is.null(gate_dims) ||
+                length(gate_dims) < 2) {
+                ""
+            } else {
+                gate_dims[[2]]
+            }
+        ),
+        paste0(
+            '          <GraphSettings level="5%" ',
+            'smoothingHighResolution="1" contourHighResolution="1" ',
+            'histogramSmoothingCount="0" graphResolution="256" ',
+            'showOutliers="0" drawLargeDots="0" dotsToDraw="8000" tint=',
+            '"le.chartfill.tinted.40" lineWeight="le.lineweight.normal"',
+            ' lineStyle="le.linestyle.solid" ',
+            "/>"
+        ),
+        paste0(
+            '          <GraphEnvironment showGrid="0" showAxes="tnlTNL"',
+            ' showGates="1" showFreqOnPlots="1" showGateNameOnPlots="1"',
+            ' showMedians="0" showUncomped="0" addEventParam="0" ',
+            'lastYAxisName=""',
+            ">"
+        ),
+        paste0(
+            '            <TextTraits font="SansSerif" size="11" name="',
+            'Labels" style="plain" color="#000000" background="',
+            '#00ffffff" just="left" ',
+            "/>"
+        ),
+        paste0(
+            '            <TextTraits font="SansSerif" size="11" name="',
+            'LayoutGates" style="plain" color="#000000" background="',
+            '#00ffffff" just="left" ',
+            "/>"
+        ),
+        paste0(
+            '            <TextTraits font="SansSerif" size="9" name="',
+            'Numbers" style="plain" color="#000000" background="',
+            '#00ffffff" just="left" ',
+            "/>"
+        ),
+        paste0(
+            '            <TextTraits font="SansSerif" size="9" name="',
+            'Legend" style="plain" color="#000000" background="',
+            '#00ffffff" just="left" ',
+            "/>"
+        ),
+        paste0(
+            '            <WindowPosition x="247" y="-1415" width="390" ',
+            'height="582" displayed="0" panelState="---" ',
+            "/>"
+        ),
+        "          </GraphEnvironment>",
+        "        </Graph>"
+    )
+}
+
+#' Emit the inner content of one subpopulation Gate element
+#'
+#' Dispatches on the gate definition type and renders the matching
+#' Gating-ML gate element (Rectangle, Polygon, or Ellipsoid).
+#'
+#' @param matching_pop Population record holding the gate id
+#' @param gates List of gate data
+#' @param indent Current indentation string
+#' @return Character vector of XML lines for the gate content
+#' @keywords internal
+fj10_subpop_gate_xml <- function(matching_pop, gates, indent) {
+    gate <- gates$gates[[matching_pop$gate_id]]
+    gate_def <- gate$definition
+
+    parent_id_attr <- if (gate$parent != "root") {
+        sprintf('gating:parent_id="%s" ', gate$parent_id)
+    } else {
+        ""
+    }
+
+    lines <- c(
+        sprintf(
+            '%s  <Gate gating:id="%s" %s>', indent, gate$id,
+            parent_id_attr
+        )
+    )
+
+    # ---- RectangleGate
+    #   ---------------------------------------------------
+    if (!is.null(gate_def) && gate_def$type == "rectangle") {
+        lines <- c(lines, fj10_subpop_rect_gate_xml(gate_def, indent))
+
+        # ---- PolygonGate
+        #   -----------------------------------------------------
+    } else if (!is.null(gate_def) && gate_def$type == "polygon") {
+        lines <- c(lines, fj10_subpop_poly_gate_xml(gate_def, indent))
+
+        # ---- EllipsoidGate
+        #   ---------------------------------------------------
+    } else if (!is.null(gate_def) && gate_def$type == "ellipsoid") {
+        lines <- c(lines, fj10_subpop_ellip_gate_xml(gate_def, indent))
+    }
+
+    lines <- c(lines, sprintf("%s  </Gate>", indent))
+
+    lines
+}
+
+#' Emit a Gating-ML RectangleGate element
+#'
+#' @param gate_def Gate definition with dimensions
+#' @param indent Current indentation string
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_subpop_rect_gate_xml <- function(gate_def, indent) {
+    lines <- c(
+        sprintf(
+            paste0(
+                '%s    <gating:RectangleGate eventsInside="1"',
+                ' annoOffsetX="0" annoOffsetY="0"',
+                ' tint="#000000" isTinted="0"',
+                ' lineWeight="Normal" userDefined="1"',
+                ' percentX="0" percentY="0" >'
+            ),
+            indent
+        )
+    )
+
+    is_1d <- length(gate_def$dimensions) == 1L
+    for (dim in gate_def$dimensions) {
+        if (is_1d) {
+            lines <- c(
+                lines,
+                sprintf(
+                    paste0(
+                        "%s      <gating:dimension",
+                        ' gating:min="%s" gating:max="%s"',
+                        ' yRatio="0.5" >'
+                    ),
+                    indent, format_gate_num(dim$min),
+                    format_gate_num(dim$max)
+                ),
+                sprintf(
+                    paste0(
+                        "%s        <data-type:fcs-dimension",
+                        ' data-type:name="%s" />'
+                    ),
+                    indent, xml_encode(dim$parameter)
+                ),
+                sprintf("%s      </gating:dimension>", indent)
+            )
+        } else {
+            lines <- c(
+                lines,
+                sprintf(
+                    paste0(
+                        "%s      <gating:dimension",
+                        ' gating:min="%s" gating:max="%s" >'
+                    ),
+                    indent, format_gate_num(dim$min),
+                    format_gate_num(dim$max)
+                ),
+                sprintf(
+                    paste0(
+                        "%s        <data-type:fcs-dimension",
+                        ' data-type:name="%s" />'
+                    ),
+                    indent, xml_encode(dim$parameter)
+                ),
+                sprintf("%s      </gating:dimension>", indent)
+            )
+        }
+    }
+    lines <- c(lines, sprintf("%s    </gating:RectangleGate>", indent))
+
+    lines
+}
+
+#' Emit a Gating-ML PolygonGate element
+#'
+#' @param gate_def Gate definition with dimensions and vertices
+#' @param indent Current indentation string
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_subpop_poly_gate_xml <- function(gate_def, indent) {
+    lines <- c(
+        sprintf(
+            paste0(
+                '%s    <gating:PolygonGate eventsInside="1"',
+                ' annoOffsetX="0" annoOffsetY="0"',
+                ' tint="#000000" isTinted="0"',
+                ' lineWeight="Normal" userDefined="1"',
+                ' quadId="-1" gateResolution="256" >'
+            ),
+            indent
+        )
+    )
+    for (dim in gate_def$dimensions) {
+        lines <- c(
+            lines,
+            sprintf("%s      <gating:dimension>", indent),
+            sprintf(
+                paste0(
+                    "%s        <data-type:fcs-dimension",
+                    ' data-type:name="%s" />'
+                ),
+                indent, xml_encode(dim$parameter)
+            ),
+            sprintf("%s      </gating:dimension>", indent)
+        )
+    }
+    for (vertex in gate_def$vertices) {
+        lines <- c(
+            lines,
+            sprintf("%s      <gating:vertex>", indent),
+            sprintf(
+                paste0(
+                    "%s        <gating:coordinate",
+                    ' data-type:value="%s" />'
+                ),
+                indent, format_gate_num(vertex$x)
+            ),
+            sprintf(
+                paste0(
+                    "%s        <gating:coordinate",
+                    ' data-type:value="%s" />'
+                ),
+                indent, format_gate_num(vertex$y)
+            ),
+            sprintf("%s      </gating:vertex>", indent)
+        )
+    }
+    lines <- c(lines, sprintf("%s    </gating:PolygonGate>", indent))
+
+    lines
+}
+
+#' Emit a Gating-ML EllipsoidGate element
+#'
+#' @param gate_def Gate definition with x/y parameters, foci, and edge points
+#' @param indent Current indentation string
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_subpop_ellip_gate_xml <- function(gate_def, indent) {
+    lines <- c(
+        sprintf(
+            paste0(
+                '%s    <gating:EllipsoidGate eventsInside="1"',
+                ' annoOffsetX="0" annoOffsetY="0"',
+                ' tint="#000000" isTinted="0"',
+                ' lineWeight="Normal" userDefined="1"',
+                ' gating:distance="%s" >'
+            ),
+            indent, format_gate_num(gate_def$distance)
+        ),
+        sprintf("%s      <gating:dimension>", indent),
+        sprintf(
+            paste0(
+                "%s        <data-type:fcs-dimension",
+                ' data-type:name="%s" />'
+            ),
+            indent, xml_encode(gate_def$x_param)
+        ),
+        sprintf("%s      </gating:dimension>", indent),
+        sprintf("%s      <gating:dimension>", indent),
+        sprintf(
+            paste0(
+                "%s        <data-type:fcs-dimension",
+                ' data-type:name="%s" />'
+            ),
+            indent, xml_encode(gate_def$y_param)
+        ),
+        sprintf("%s      </gating:dimension>", indent),
+        sprintf("%s      <gating:foci>", indent),
+        sprintf("%s        <gating:vertex>", indent),
+        sprintf(
+            paste0(
+                "%s          <gating:coordinate",
+                ' data-type:value="%s" />'
+            ),
+            indent, format_gate_num(gate_def$foci$focus1$x)
+        ),
+        sprintf(
+            paste0(
+                "%s          <gating:coordinate",
+                ' data-type:value="%s" />'
+            ),
+            indent, format_gate_num(gate_def$foci$focus1$y)
+        ),
+        sprintf("%s        </gating:vertex>", indent),
+        sprintf("%s        <gating:vertex>", indent),
+        sprintf(
+            paste0(
+                "%s          <gating:coordinate",
+                ' data-type:value="%s" />'
+            ),
+            indent, format_gate_num(gate_def$foci$focus2$x)
+        ),
+        sprintf(
+            paste0(
+                "%s          <gating:coordinate",
+                ' data-type:value="%s" />'
+            ),
+            indent, format_gate_num(gate_def$foci$focus2$y)
+        ),
+        sprintf("%s        </gating:vertex>", indent),
+        sprintf("%s      </gating:foci>", indent),
+        sprintf("%s      <gating:edge>", indent)
+    )
+    for (ep in gate_def$edge) {
+        lines <- c(
+            lines,
+            sprintf("%s        <gating:vertex>", indent),
+            sprintf(
+                paste0(
+                    "%s          <gating:coordinate",
+                    ' data-type:value="%s" />'
+                ),
+                indent, format_gate_num(ep$x)
+            ),
+            sprintf(
+                paste0(
+                    "%s          <gating:coordinate",
+                    ' data-type:value="%s" />'
+                ),
+                indent, format_gate_num(ep$y)
+            ),
+            sprintf("%s        </gating:vertex>", indent)
+        )
+    }
+    lines <- c(
+        lines,
+        sprintf("%s      </gating:edge>", indent),
+        sprintf("%s    </gating:EllipsoidGate>", indent)
+    )
+
+    lines
+}
+
 #' Generate Sample Subpopulations XML
 #'
 #' Recursively generates XML for sample-specific population hierarchy.
@@ -3014,356 +3412,23 @@ generate_sample_subpopulations_xml <- function(
             )
         )
 
-        # ---- Graph axes (show first-child gate dimensions)
-        #   --------------------
-        grandchild_path <- tryCatch(
-            flowWorkspace::gs_pop_get_children(gating_hierarchy, child_path,
-                path = "auto"
-            )[[1]],
-            error = function(e) NA_character_
-        )
-        if (is.na(grandchild_path)) {
-            grandchild_path <- child_path # leaf -> show own gate
-        }
-
-        gate_dims <- tryCatch(
-            flowCore::parameters(
-                flowWorkspace::gh_pop_get_gate(
-                    gating_hierarchy,
-                    grandchild_path
-                )
-            ),
-            error = function(e) NULL
-        )
 
         xml_lines <- c(
             xml_lines,
-            sprintf(
-                paste0(
-                    '        <Graph smoothing="0" backColor="#ffffff" ',
-                    'foreColor="#000000" heatMapStatParameter="%s" type="',
-                    'Pseudocolor" fast="1"',
-                    ">"
-                ),
+            fj10_subpop_graph_xml(gating_hierarchy, child_path,
                 heat_map_param
-            ),
-            sprintf(
-                paste0(
-                    '          <Axis dimension="x" name="%s" label="" auto=',
-                    '"auto" ',
-                    "/>"
-                ),
-                if (is.null(gate_dims) ||
-                    length(gate_dims) < 1) {
-                    "FSC-A"
-                } else {
-                    gate_dims[[1]]
-                }
-            ),
-            sprintf(
-                paste0(
-                    '          <Axis dimension="y" name="%s" label="" auto=',
-                    '"auto" ',
-                    "/>"
-                ),
-                if (is.null(gate_dims) ||
-                    length(gate_dims) < 2) {
-                    ""
-                } else {
-                    gate_dims[[2]]
-                }
-            ),
-            paste0(
-                '          <GraphSettings level="5%" ',
-                'smoothingHighResolution="1" contourHighResolution="1" ',
-                'histogramSmoothingCount="0" graphResolution="256" ',
-                'showOutliers="0" drawLargeDots="0" dotsToDraw="8000" tint=',
-                '"le.chartfill.tinted.40" lineWeight="le.lineweight.normal"',
-                ' lineStyle="le.linestyle.solid" ',
-                "/>"
-            ),
-            paste0(
-                '          <GraphEnvironment showGrid="0" showAxes="tnlTNL"',
-                ' showGates="1" showFreqOnPlots="1" showGateNameOnPlots="1"',
-                ' showMedians="0" showUncomped="0" addEventParam="0" ',
-                'lastYAxisName=""',
-                ">"
-            ),
-            paste0(
-                '            <TextTraits font="SansSerif" size="11" name="',
-                'Labels" style="plain" color="#000000" background="',
-                '#00ffffff" just="left" ',
-                "/>"
-            ),
-            paste0(
-                '            <TextTraits font="SansSerif" size="11" name="',
-                'LayoutGates" style="plain" color="#000000" background="',
-                '#00ffffff" just="left" ',
-                "/>"
-            ),
-            paste0(
-                '            <TextTraits font="SansSerif" size="9" name="',
-                'Numbers" style="plain" color="#000000" background="',
-                '#00ffffff" just="left" ',
-                "/>"
-            ),
-            paste0(
-                '            <TextTraits font="SansSerif" size="9" name="',
-                'Legend" style="plain" color="#000000" background="',
-                '#00ffffff" just="left" ',
-                "/>"
-            ),
-            paste0(
-                '            <WindowPosition x="247" y="-1415" width="390" ',
-                'height="582" displayed="0" panelState="---" ',
-                "/>"
-            ),
-            "          </GraphEnvironment>",
-            "        </Graph>"
+            )
         )
+
 
         # ---- Gate element
         #   ------------------------------------------------------
         if (!is.null(matching_pop) && !is.null(matching_pop$gate_id) &&
             matching_pop$gate_id %in% names(gates$gates)) {
-            gate <- gates$gates[[matching_pop$gate_id]]
-            gate_def <- gate$definition
-
-            parent_id_attr <- if (gate$parent != "root") {
-                sprintf('gating:parent_id="%s" ', gate$parent_id)
-            } else {
-                ""
-            }
-
             xml_lines <- c(
                 xml_lines,
-                sprintf(
-                    '%s  <Gate gating:id="%s" %s>', indent, gate$id,
-                    parent_id_attr
-                )
+                fj10_subpop_gate_xml(matching_pop, gates, indent)
             )
-
-            # ---- RectangleGate
-            #   ---------------------------------------------------
-            if (!is.null(gate_def) && gate_def$type == "rectangle") {
-                xml_lines <- c(
-                    xml_lines,
-                    sprintf(
-                        paste0(
-                            '%s    <gating:RectangleGate eventsInside="1"',
-                            ' annoOffsetX="0" annoOffsetY="0"',
-                            ' tint="#000000" isTinted="0"',
-                            ' lineWeight="Normal" userDefined="1"',
-                            ' percentX="0" percentY="0" >'
-                        ),
-                        indent
-                    )
-                )
-
-                is_1d <- length(gate_def$dimensions) == 1L
-                for (dim in gate_def$dimensions) {
-                    if (is_1d) {
-                        xml_lines <- c(
-                            xml_lines,
-                            sprintf(
-                                paste0(
-                                    "%s      <gating:dimension",
-                                    ' gating:min="%s" gating:max="%s"',
-                                    ' yRatio="0.5" >'
-                                ),
-                                indent, format_gate_num(dim$min),
-                                format_gate_num(dim$max)
-                            ),
-                            sprintf(
-                                paste0(
-                                    "%s        <data-type:fcs-dimension",
-                                    ' data-type:name="%s" />'
-                                ),
-                                indent, xml_encode(dim$parameter)
-                            ),
-                            sprintf("%s      </gating:dimension>", indent)
-                        )
-                    } else {
-                        xml_lines <- c(
-                            xml_lines,
-                            sprintf(
-                                paste0(
-                                    "%s      <gating:dimension",
-                                    ' gating:min="%s" gating:max="%s" >'
-                                ),
-                                indent, format_gate_num(dim$min),
-                                format_gate_num(dim$max)
-                            ),
-                            sprintf(
-                                paste0(
-                                    "%s        <data-type:fcs-dimension",
-                                    ' data-type:name="%s" />'
-                                ),
-                                indent, xml_encode(dim$parameter)
-                            ),
-                            sprintf("%s      </gating:dimension>", indent)
-                        )
-                    }
-                }
-                xml_lines <- c(
-                    xml_lines,
-                    sprintf("%s    </gating:RectangleGate>", indent)
-                )
-
-                # ---- PolygonGate
-                #   -----------------------------------------------------
-            } else if (!is.null(gate_def) && gate_def$type == "polygon") {
-                xml_lines <- c(
-                    xml_lines,
-                    sprintf(
-                        paste0(
-                            '%s    <gating:PolygonGate eventsInside="1"',
-                            ' annoOffsetX="0" annoOffsetY="0"',
-                            ' tint="#000000" isTinted="0"',
-                            ' lineWeight="Normal" userDefined="1"',
-                            ' quadId="-1" gateResolution="256" >'
-                        ),
-                        indent
-                    )
-                )
-                for (dim in gate_def$dimensions) {
-                    xml_lines <- c(
-                        xml_lines,
-                        sprintf("%s      <gating:dimension>", indent),
-                        sprintf(
-                            paste0(
-                                "%s        <data-type:fcs-dimension",
-                                ' data-type:name="%s" />'
-                            ),
-                            indent, xml_encode(dim$parameter)
-                        ),
-                        sprintf("%s      </gating:dimension>", indent)
-                    )
-                }
-                for (vertex in gate_def$vertices) {
-                    xml_lines <- c(
-                        xml_lines,
-                        sprintf("%s      <gating:vertex>", indent),
-                        sprintf(
-                            paste0(
-                                "%s        <gating:coordinate",
-                                ' data-type:value="%s" />'
-                            ),
-                            indent, format_gate_num(vertex$x)
-                        ),
-                        sprintf(
-                            paste0(
-                                "%s        <gating:coordinate",
-                                ' data-type:value="%s" />'
-                            ),
-                            indent, format_gate_num(vertex$y)
-                        ),
-                        sprintf("%s      </gating:vertex>", indent)
-                    )
-                }
-                xml_lines <- c(
-                    xml_lines,
-                    sprintf("%s    </gating:PolygonGate>", indent)
-                )
-
-                # ---- EllipsoidGate
-                #   ---------------------------------------------------
-            } else if (!is.null(gate_def) && gate_def$type == "ellipsoid") {
-                xml_lines <- c(
-                    xml_lines,
-                    sprintf(
-                        paste0(
-                            '%s    <gating:EllipsoidGate eventsInside="1"',
-                            ' annoOffsetX="0" annoOffsetY="0"',
-                            ' tint="#000000" isTinted="0"',
-                            ' lineWeight="Normal" userDefined="1"',
-                            ' gating:distance="%s" >'
-                        ),
-                        indent, format_gate_num(gate_def$distance)
-                    ),
-                    sprintf("%s      <gating:dimension>", indent),
-                    sprintf(
-                        paste0(
-                            "%s        <data-type:fcs-dimension",
-                            ' data-type:name="%s" />'
-                        ),
-                        indent, xml_encode(gate_def$x_param)
-                    ),
-                    sprintf("%s      </gating:dimension>", indent),
-                    sprintf("%s      <gating:dimension>", indent),
-                    sprintf(
-                        paste0(
-                            "%s        <data-type:fcs-dimension",
-                            ' data-type:name="%s" />'
-                        ),
-                        indent, xml_encode(gate_def$y_param)
-                    ),
-                    sprintf("%s      </gating:dimension>", indent),
-                    sprintf("%s      <gating:foci>", indent),
-                    sprintf("%s        <gating:vertex>", indent),
-                    sprintf(
-                        paste0(
-                            "%s          <gating:coordinate",
-                            ' data-type:value="%s" />'
-                        ),
-                        indent, format_gate_num(gate_def$foci$focus1$x)
-                    ),
-                    sprintf(
-                        paste0(
-                            "%s          <gating:coordinate",
-                            ' data-type:value="%s" />'
-                        ),
-                        indent, format_gate_num(gate_def$foci$focus1$y)
-                    ),
-                    sprintf("%s        </gating:vertex>", indent),
-                    sprintf("%s        <gating:vertex>", indent),
-                    sprintf(
-                        paste0(
-                            "%s          <gating:coordinate",
-                            ' data-type:value="%s" />'
-                        ),
-                        indent, format_gate_num(gate_def$foci$focus2$x)
-                    ),
-                    sprintf(
-                        paste0(
-                            "%s          <gating:coordinate",
-                            ' data-type:value="%s" />'
-                        ),
-                        indent, format_gate_num(gate_def$foci$focus2$y)
-                    ),
-                    sprintf("%s        </gating:vertex>", indent),
-                    sprintf("%s      </gating:foci>", indent),
-                    sprintf("%s      <gating:edge>", indent)
-                )
-                for (ep in gate_def$edge) {
-                    xml_lines <- c(
-                        xml_lines,
-                        sprintf("%s        <gating:vertex>", indent),
-                        sprintf(
-                            paste0(
-                                "%s          <gating:coordinate",
-                                ' data-type:value="%s" />'
-                            ),
-                            indent, format_gate_num(ep$x)
-                        ),
-                        sprintf(
-                            paste0(
-                                "%s          <gating:coordinate",
-                                ' data-type:value="%s" />'
-                            ),
-                            indent, format_gate_num(ep$y)
-                        ),
-                        sprintf("%s        </gating:vertex>", indent)
-                    )
-                }
-                xml_lines <- c(
-                    xml_lines,
-                    sprintf("%s      </gating:edge>", indent),
-                    sprintf("%s    </gating:EllipsoidGate>", indent)
-                )
-            }
-
-            xml_lines <- c(xml_lines, sprintf("%s  </Gate>", indent))
         } # end gate block
 
         # ---- Subpopulations (only when children exist)
@@ -3393,6 +3458,502 @@ generate_sample_subpopulations_xml <- function(
     } # end for child_path
 
     xml_lines
+}
+
+#' Emit the Gate element for one group-level population
+#'
+#' Renders the <Gate> element with the population's gate definition,
+#' dispatching on gate type.
+#'
+#' @param gate Gate record from the gates list
+#' @param indent Current indentation string
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_group_gate_xml <- function(gate, indent) {
+    lines <- c(
+        sprintf(
+            '%s  <Gate gating:id="%s">', indent,
+            xml_encode(gate$id)
+        )
+    )
+
+    # Add gate definition based on type with proper attributes
+    gate_def <- gate$definition
+
+    if (!is.null(gate_def)) {
+        if (gate_def$type == "rectangle") {
+            lines <- c(lines, fj10_group_rect_gate_xml(gate_def, indent))
+        } else if (gate_def$type == "polygon") {
+            lines <- c(lines, fj10_group_poly_gate_xml(gate_def, indent))
+        } else if (gate_def$type == "ellipsoid") {
+            lines <- c(lines, fj10_group_ellip_gate_xml(gate_def, indent))
+        }
+    }
+
+    lines <- c(lines, sprintf("%s  </Gate>", indent))
+
+    lines
+}
+
+#' Emit a Gating-ML RectangleGate element (group variant)
+#'
+#' Group-level rectangles use Hairline line weight and %f coordinate
+#' formatting, matching the group-node shape FlowJo emits.
+#'
+#' @param gate_def Gate definition with dimensions
+#' @param indent Current indentation string
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_group_rect_gate_xml <- function(gate_def, indent) {
+    lines <- c(
+        sprintf(
+            paste0(
+                "%s    <gating:RectangleGate",
+                ' eventsInside="1" annoOffsetX="0"',
+                ' annoOffsetY="0" tint="#000000"',
+                ' isTinted="0" lineWeight="Hairline"',
+                ' userDefined="1">'
+            ),
+            indent
+        )
+    )
+
+    # yRatio is a display hint for histogram-style (1-D)
+    #   gates. It should only
+    # be emitted when the rectangle gate has a single
+    #   dimension.
+    is_1d_rect <- length(gate_def$dimensions) == 1L
+    # Add dimensions
+    for (dim in gate_def$dimensions) {
+        if (is_1d_rect) {
+            lines <- c(
+                lines,
+                sprintf(
+                    paste0(
+                        "%s      <gating:dimension",
+                        ' gating:min="%f"',
+                        ' gating:max="%f" yRatio="0.5">'
+                    ),
+                    indent, dim$min, dim$max
+                ),
+                sprintf(
+                    paste0(
+                        "%s       ",
+                        " <data-type:fcs-dimension",
+                        ' data-type:name="%s"/>'
+                    ),
+                    indent, xml_encode(dim$parameter)
+                ),
+                sprintf(
+                    "%s      </gating:dimension>",
+                    indent
+                )
+            )
+        } else {
+            lines <- c(
+                lines,
+                sprintf(
+                    paste0(
+                        "%s      <gating:dimension",
+                        ' gating:min="%f"',
+                        ' gating:max="%f">'
+                    ),
+                    indent, dim$min, dim$max
+                ),
+                sprintf(
+                    paste0(
+                        "%s       ",
+                        " <data-type:fcs-dimension",
+                        ' data-type:name="%s"/>'
+                    ),
+                    indent, xml_encode(dim$parameter)
+                ),
+                sprintf(
+                    "%s      </gating:dimension>",
+                    indent
+                )
+            )
+        }
+    }
+
+    lines <- c(
+        lines,
+        sprintf("%s    </gating:RectangleGate>", indent)
+    )
+
+    lines
+}
+
+#' Emit a Gating-ML PolygonGate element (group variant)
+#'
+#' @param gate_def Gate definition with dimensions and vertices
+#' @param indent Current indentation string
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_group_poly_gate_xml <- function(gate_def, indent) {
+    lines <- c(
+        sprintf(
+            paste0(
+                "%s    <gating:PolygonGate",
+                ' eventsInside="1" annoOffsetX="0"',
+                ' annoOffsetY="0" tint="#000000"',
+                ' isTinted="0" lineWeight="Hairline"',
+                ' userDefined="1">'
+            ),
+            indent
+        )
+    )
+
+    # Add dimensions
+    for (dim in gate_def$dimensions) {
+        lines <- c(
+            lines,
+            sprintf("%s      <gating:dimension>", indent),
+            sprintf(
+                paste0(
+                    "%s        <data-type:fcs-dimension",
+                    ' data-type:name="%s"/>'
+                ),
+                indent, xml_encode(dim$parameter)
+            ),
+            sprintf("%s      </gating:dimension>", indent)
+        )
+    }
+
+    # Add vertices
+    for (vertex in gate_def$vertices) {
+        lines <- c(
+            lines,
+            sprintf("%s      <gating:vertex>", indent),
+            sprintf(
+                paste0(
+                    "%s        <gating:coordinate",
+                    ' data-type:value="%f"/>'
+                ),
+                indent, vertex$x
+            ),
+            sprintf(
+                paste0(
+                    "%s        <gating:coordinate",
+                    ' data-type:value="%f"/>'
+                ),
+                indent, vertex$y
+            ),
+            sprintf("%s      </gating:vertex>", indent)
+        )
+    }
+
+    lines <- c(
+        lines,
+        sprintf("%s    </gating:PolygonGate>", indent)
+    )
+
+    lines
+}
+
+#' Emit a Gating-ML EllipsoidGate element (group variant)
+#'
+#' @param gate_def Gate definition with x/y parameters, foci, and edge points
+#' @param indent Current indentation string
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_group_ellip_gate_xml <- function(gate_def, indent) {
+    lines <- c(
+        sprintf(
+            paste0(
+                "%s    <gating:EllipsoidGate",
+                ' eventsInside="1" annoOffsetX="0"',
+                ' annoOffsetY="0" tint="#000000"',
+                ' isTinted="0" lineWeight="Normal"',
+                ' userDefined="1" gating:distance="%f">'
+            ),
+            indent, gate_def$distance
+        )
+    )
+
+    # Add dimensions
+    lines <- c(
+        lines,
+        sprintf("%s      <gating:dimension>", indent),
+        sprintf(
+            paste0(
+                "%s        <data-type:fcs-dimension",
+                ' data-type:name="%s" />'
+            ),
+            indent, xml_encode(gate_def$x_param)
+        ),
+        sprintf("%s      </gating:dimension>", indent),
+        sprintf("%s      <gating:dimension>", indent),
+        sprintf(
+            paste0(
+                "%s        <data-type:fcs-dimension",
+                ' data-type:name="%s" />'
+            ),
+            indent, xml_encode(gate_def$y_param)
+        ),
+        sprintf("%s      </gating:dimension>", indent)
+    )
+
+    # Add foci
+    lines <- c(
+        lines,
+        sprintf("%s      <gating:foci>", indent),
+        sprintf("%s        <gating:vertex>", indent),
+        sprintf(
+            paste0(
+                "%s          <gating:coordinate",
+                ' data-type:value="%f" />'
+            ),
+            indent, gate_def$foci$focus1$x
+        ),
+        sprintf(
+            paste0(
+                "%s          <gating:coordinate",
+                ' data-type:value="%f" />'
+            ),
+            indent, gate_def$foci$focus1$y
+        ),
+        sprintf("%s        </gating:vertex>", indent),
+        sprintf("%s        <gating:vertex>", indent),
+        sprintf(
+            paste0(
+                "%s          <gating:coordinate",
+                ' data-type:value="%f" />'
+            ),
+            indent, gate_def$foci$focus2$x
+        ),
+        sprintf(
+            paste0(
+                "%s          <gating:coordinate",
+                ' data-type:value="%f" />'
+            ),
+            indent, gate_def$foci$focus2$y
+        ),
+        sprintf("%s        </gating:vertex>", indent),
+        sprintf("%s      </gating:foci>", indent)
+    )
+
+    # Add edge points
+    lines <- c(
+        lines,
+        sprintf("%s      <gating:edge>", indent)
+    )
+    for (edge_point in gate_def$edge) {
+        lines <- c(
+            lines,
+            sprintf("%s        <gating:vertex>", indent),
+            sprintf(
+                paste0(
+                    "%s          <gating:coordinate",
+                    ' data-type:value="%f" />'
+                ),
+                indent, edge_point$x
+            ),
+            sprintf(
+                paste0(
+                    "%s          <gating:coordinate",
+                    ' data-type:value="%f" />'
+                ),
+                indent, edge_point$y
+            ),
+            sprintf("%s        </gating:vertex>", indent)
+        )
+    }
+    lines <- c(
+        lines,
+        sprintf("%s      </gating:edge>", indent)
+    )
+
+    lines <- c(
+        lines,
+        sprintf("%s    </gating:EllipsoidGate>", indent)
+    )
+
+    lines
+}
+
+#' Collect group-level children of a parent path
+#'
+#' @param populations List of population data
+#' @param parent_path Parent population path
+#' @return Named list of child populations
+#' @keywords internal
+fj10_group_children_of <- function(populations, parent_path) {
+    child_populations <- list()
+    for (pop_id in names(populations)) {
+        pop <- populations[[pop_id]]
+        if (pop$parent_path == parent_path) {
+            child_populations[[pop_id]] <- pop
+        }
+    }
+    child_populations
+}
+
+#' Emit the XML for one group-node child population
+#'
+#' Dispatches to a logical node for boolean gates, or to the regular
+#' Population element otherwise. Returns NULL for the Ungated
+#' placeholder so the caller skips it.
+#'
+#' @param population Population record
+#' @param gates List of gate data
+#' @param parent_path Parent population path
+#' @param indent Current indentation string
+#' @param visited_paths Character vector of visited paths (cycle detection)
+#' @param gh GatingHierarchy object (for boolean gate processing)
+#' @return Character vector of XML lines, or NULL when nothing is emitted
+#' @keywords internal
+fj10_group_child_xml <- function(population, gates, parent_path, indent,
+                                 visited_paths, gh) {
+    if (population$name == "Ungated") {
+        return(NULL)
+    }
+
+    boolean_xml <- fj10_group_boolean_gate_xml(population, gates, indent, gh)
+    if (!is.null(boolean_xml)) {
+        return(boolean_xml)
+    }
+
+    fj10_group_population_xml(
+        population, gates, parent_path, indent, visited_paths, gh
+    )
+}
+
+#' Emit a boolean-gate logical node for a group population
+#'
+#' Returns the logical node XML when the population's gate is a boolean
+#' gate, or NULL otherwise. Logical nodes have no recursive
+#' subpopulations here.
+#'
+#' @param population Population record
+#' @param gates List of gate data
+#' @param indent Current indentation string
+#' @param gh GatingHierarchy object (for boolean gate processing)
+#' @return Character vector of XML lines, or NULL when not a boolean gate
+#' @keywords internal
+fj10_group_boolean_gate_xml <- function(population, gates, indent, gh) {
+    if (is.null(population$gate_id) ||
+        !(population$gate_id %in% names(gates$gates))) {
+        return(NULL)
+    }
+    gate <- gates$gates[[population$gate_id]]
+    if (is.null(gate$definition) || gate$definition$type != "boolean") {
+        return(NULL)
+    }
+
+    # Generate logical node instead of Population
+    # Use population$name as the path, and basename for display
+    pop_display_name <- basename(population$name)
+
+    generate_logical_node_xml(
+        gate = gate,
+        pop_name = pop_display_name,
+        child_path = population$name,
+        indent = indent,
+        gh = gh,
+        gates = gates
+    )
+}
+
+#' Render one group-node population element
+#'
+#' Emits the <Population> element, its Gate, the recursive Subpopulations
+#' block, and the closing tag.
+#'
+#' @param population Population record
+#' @param gates List of gate data
+#' @param parent_path Parent population path
+#' @param indent Current indentation string
+#' @param visited_paths Character vector of visited paths (cycle detection)
+#' @param gh GatingHierarchy object (for boolean gate processing)
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_group_population_xml <- function(population, gates, parent_path, indent,
+                                      visited_paths, gh) {
+    # Add population element with correct attributes
+    lines <- c(
+        sprintf(
+            paste0(
+                '%s<Population name="%s" annotation=""',
+                ' owningGroup="All Samples" expanded="1"',
+                ' sortPriority="10" count="%d">'
+            ),
+            indent, xml_encode(basename(population$name)),
+            population$count
+        )
+    )
+
+    # Add gate if exists
+    if (!is.null(population$gate_id) &&
+        population$gate_id %in% names(gates$gates)) {
+        gate <- gates$gates[[population$gate_id]]
+        lines <- c(lines, fj10_group_gate_xml(gate, indent))
+    }
+
+    lines <- c(
+        lines,
+        fj10_group_subpop_recursion_xml(
+            population, gates, parent_path, indent, visited_paths, gh
+        ),
+        # Close population element
+        sprintf("%s</Population>", indent)
+    )
+
+    lines
+}
+
+#' Render the recursive Subpopulations block for a group population
+#'
+#' Opens <Subpopulations>, recurses into
+#' generate_group_subpopulations_xml with cycle detection (self-parent
+#' and previously-visited paths are skipped with a warning), and closes
+#' the block.
+#'
+#' @param population Population record
+#' @param gates List of gate data
+#' @param parent_path Parent population path
+#' @param indent Current indentation string
+#' @param visited_paths Character vector of visited paths (cycle detection)
+#' @param gh GatingHierarchy object (for boolean gate processing)
+#' @return Character vector of XML lines
+#' @keywords internal
+fj10_group_subpop_recursion_xml <- function(population, gates, parent_path,
+                                            indent, visited_paths, gh) {
+    lines <- sprintf("%s  <Subpopulations>", indent)
+
+    # Prevent a population from being its own parent (cycle detection)
+    if (population$name == parent_path) {
+        warning(
+            "Population '", population$name,
+            "' cannot be its own parent. Skipping recursion."
+        )
+    } else {
+        # Check if we've already visited this population
+        if (population$name %in% visited_paths) {
+            warning(
+                "Cycle detected - population '",
+                population$name,
+                "' already visited. Skipping recursion."
+            )
+        } else {
+            new_visited_paths <- unique(c(
+                visited_paths,
+                population$name
+            ))
+            subpop_xml <- generate_group_subpopulations_xml(
+                populations = populations,
+                gates = gates,
+                parent_path = population$name,
+                indent = paste0(indent, "    "),
+                visited_paths = new_visited_paths,
+                gh = gh # Pass gh down for boolean gate processing
+            )
+            lines <- c(lines, subpop_xml)
+        }
+    }
+    lines <- c(lines, sprintf("%s  </Subpopulations>", indent))
+
+    lines
 }
 
 #' Generate Group Node Subpopulations XML
@@ -3432,379 +3993,18 @@ generate_group_subpopulations_xml <- function(populations,
     xml_lines <- character(0)
 
     # Find all populations that have the current parent path
-    child_populations <- list()
-    for (pop_id in names(populations)) {
-        pop <- populations[[pop_id]]
-        if (pop$parent_path == parent_path) {
-            child_populations[[pop_id]] <- pop
-        }
-    }
-
-    # cat(file = stderr(), parent_path, ":",
-    # sapply(child_populations, function(x) x$name) %>% unlist() %>%
-    #   paste(collapse = " "), "\n")
+    child_populations <- fj10_group_children_of(populations, parent_path)
 
     # Process each child population
     for (pop_id in names(child_populations)) {
         population <- child_populations[[pop_id]]
 
-
-        if (population$name == "Ungated") {
-            next()
-        }
-
-        # Check if this is a boolean gate
-        is_boolean_gate <- FALSE
-        if (!is.null(population$gate_id) &&
-            population$gate_id %in% names(gates$gates)) {
-            gate <- gates$gates[[population$gate_id]]
-            if (!is.null(gate$definition) &&
-                gate$definition$type == "boolean") {
-                is_boolean_gate <- TRUE
-
-                # Generate logical node instead of Population
-                # Use population$name as the path, and basename for display
-                pop_display_name <- basename(population$name)
-
-                logical_xml <- generate_logical_node_xml(
-                    gate = gate,
-                    pop_name = pop_display_name,
-                    child_path = population$name,
-                    indent = indent,
-                    gh = gh,
-                    gates = gates
-                )
-                xml_lines <- c(xml_lines, logical_xml)
-
-                # Skip to next child - logical nodes don't have recursive
-                #   subpopulations here
-                next
-            }
-        }
-
-        # Continue with regular Population handling if not boolean
-        if (!is_boolean_gate) {
-            # Add population element with correct attributes
-            xml_lines <- c(
-                xml_lines,
-                sprintf(
-                    paste0(
-                        '%s<Population name="%s" annotation=""',
-                        ' owningGroup="All Samples" expanded="1"',
-                        ' sortPriority="10" count="%d">'
-                    ),
-                    indent, xml_encode(basename(population$name)),
-                    population$count
-                )
+        xml_lines <- c(
+            xml_lines,
+            fj10_group_child_xml(
+                population, gates, parent_path, indent, visited_paths, gh
             )
-
-            # Add gate if exists
-            if (!is.null(population$gate_id) &&
-                population$gate_id %in% names(gates$gates)) {
-                gate <- gates$gates[[population$gate_id]]
-                xml_lines <- c(
-                    xml_lines,
-                    sprintf(
-                        '%s  <Gate gating:id="%s">', indent,
-                        xml_encode(gate$id)
-                    )
-                )
-
-                # Add gate definition based on type with proper attributes
-                gate_def <- gate$definition
-
-                if (!is.null(gate_def)) {
-                    if (gate_def$type == "rectangle") {
-                        xml_lines <- c(
-                            xml_lines,
-                            sprintf(
-                                paste0(
-                                    "%s    <gating:RectangleGate",
-                                    ' eventsInside="1" annoOffsetX="0"',
-                                    ' annoOffsetY="0" tint="#000000"',
-                                    ' isTinted="0" lineWeight="Hairline"',
-                                    ' userDefined="1">'
-                                ),
-                                indent
-                            )
-                        )
-
-                        # yRatio is a display hint for histogram-style (1-D)
-                        #   gates. It should only
-                        # be emitted when the rectangle gate has a single
-                        #   dimension.
-                        is_1d_rect <- length(gate_def$dimensions) == 1L
-                        # Add dimensions
-                        for (dim in gate_def$dimensions) {
-                            if (is_1d_rect) {
-                                xml_lines <- c(
-                                    xml_lines,
-                                    sprintf(
-                                        paste0(
-                                            "%s      <gating:dimension",
-                                            ' gating:min="%f"',
-                                            ' gating:max="%f" yRatio="0.5">'
-                                        ),
-                                        indent, dim$min, dim$max
-                                    ),
-                                    sprintf(
-                                        paste0(
-                                            "%s       ",
-                                            " <data-type:fcs-dimension",
-                                            ' data-type:name="%s"/>'
-                                        ),
-                                        indent, xml_encode(dim$parameter)
-                                    ),
-                                    sprintf(
-                                        "%s      </gating:dimension>",
-                                        indent
-                                    )
-                                )
-                            } else {
-                                xml_lines <- c(
-                                    xml_lines,
-                                    sprintf(
-                                        paste0(
-                                            "%s      <gating:dimension",
-                                            ' gating:min="%f"',
-                                            ' gating:max="%f">'
-                                        ),
-                                        indent, dim$min, dim$max
-                                    ),
-                                    sprintf(
-                                        paste0(
-                                            "%s       ",
-                                            " <data-type:fcs-dimension",
-                                            ' data-type:name="%s"/>'
-                                        ),
-                                        indent, xml_encode(dim$parameter)
-                                    ),
-                                    sprintf(
-                                        "%s      </gating:dimension>",
-                                        indent
-                                    )
-                                )
-                            }
-                        }
-
-                        xml_lines <- c(
-                            xml_lines,
-                            sprintf("%s    </gating:RectangleGate>", indent)
-                        )
-                    } else if (gate_def$type == "polygon") {
-                        xml_lines <- c(
-                            xml_lines,
-                            sprintf(
-                                paste0(
-                                    "%s    <gating:PolygonGate",
-                                    ' eventsInside="1" annoOffsetX="0"',
-                                    ' annoOffsetY="0" tint="#000000"',
-                                    ' isTinted="0" lineWeight="Hairline"',
-                                    ' userDefined="1">'
-                                ),
-                                indent
-                            )
-                        )
-
-                        # Add dimensions
-                        for (dim in gate_def$dimensions) {
-                            xml_lines <- c(
-                                xml_lines,
-                                sprintf("%s      <gating:dimension>", indent),
-                                sprintf(
-                                    paste0(
-                                        "%s        <data-type:fcs-dimension",
-                                        ' data-type:name="%s"/>'
-                                    ),
-                                    indent, xml_encode(dim$parameter)
-                                ),
-                                sprintf("%s      </gating:dimension>", indent)
-                            )
-                        }
-
-                        # Add vertices
-                        for (vertex in gate_def$vertices) {
-                            xml_lines <- c(
-                                xml_lines,
-                                sprintf("%s      <gating:vertex>", indent),
-                                sprintf(
-                                    paste0(
-                                        "%s        <gating:coordinate",
-                                        ' data-type:value="%f"/>'
-                                    ),
-                                    indent, vertex$x
-                                ),
-                                sprintf(
-                                    paste0(
-                                        "%s        <gating:coordinate",
-                                        ' data-type:value="%f"/>'
-                                    ),
-                                    indent, vertex$y
-                                ),
-                                sprintf("%s      </gating:vertex>", indent)
-                            )
-                        }
-
-                        xml_lines <- c(
-                            xml_lines,
-                            sprintf("%s    </gating:PolygonGate>", indent)
-                        )
-                    } else if (gate_def$type == "ellipsoid") {
-                        xml_lines <- c(
-                            xml_lines,
-                            sprintf(
-                                paste0(
-                                    "%s    <gating:EllipsoidGate",
-                                    ' eventsInside="1" annoOffsetX="0"',
-                                    ' annoOffsetY="0" tint="#000000"',
-                                    ' isTinted="0" lineWeight="Normal"',
-                                    ' userDefined="1" gating:distance="%f">'
-                                ),
-                                indent, gate_def$distance
-                            )
-                        )
-
-                        # Add dimensions
-                        xml_lines <- c(
-                            xml_lines,
-                            sprintf("%s      <gating:dimension>", indent),
-                            sprintf(
-                                paste0(
-                                    "%s        <data-type:fcs-dimension",
-                                    ' data-type:name="%s" />'
-                                ),
-                                indent, xml_encode(gate_def$x_param)
-                            ),
-                            sprintf("%s      </gating:dimension>", indent),
-                            sprintf("%s      <gating:dimension>", indent),
-                            sprintf(
-                                paste0(
-                                    "%s        <data-type:fcs-dimension",
-                                    ' data-type:name="%s" />'
-                                ),
-                                indent, xml_encode(gate_def$y_param)
-                            ),
-                            sprintf("%s      </gating:dimension>", indent)
-                        )
-
-                        # Add foci
-                        xml_lines <- c(
-                            xml_lines,
-                            sprintf("%s      <gating:foci>", indent),
-                            sprintf("%s        <gating:vertex>", indent),
-                            sprintf(
-                                paste0(
-                                    "%s          <gating:coordinate",
-                                    ' data-type:value="%f" />'
-                                ),
-                                indent, gate_def$foci$focus1$x
-                            ),
-                            sprintf(
-                                paste0(
-                                    "%s          <gating:coordinate",
-                                    ' data-type:value="%f" />'
-                                ),
-                                indent, gate_def$foci$focus1$y
-                            ),
-                            sprintf("%s        </gating:vertex>", indent),
-                            sprintf("%s        <gating:vertex>", indent),
-                            sprintf(
-                                paste0(
-                                    "%s          <gating:coordinate",
-                                    ' data-type:value="%f" />'
-                                ),
-                                indent, gate_def$foci$focus2$x
-                            ),
-                            sprintf(
-                                paste0(
-                                    "%s          <gating:coordinate",
-                                    ' data-type:value="%f" />'
-                                ),
-                                indent, gate_def$foci$focus2$y
-                            ),
-                            sprintf("%s        </gating:vertex>", indent),
-                            sprintf("%s      </gating:foci>", indent)
-                        )
-
-                        # Add edge points
-                        xml_lines <- c(
-                            xml_lines,
-                            sprintf("%s      <gating:edge>", indent)
-                        )
-                        for (edge_point in gate_def$edge) {
-                            xml_lines <- c(
-                                xml_lines,
-                                sprintf("%s        <gating:vertex>", indent),
-                                sprintf(
-                                    paste0(
-                                        "%s          <gating:coordinate",
-                                        ' data-type:value="%f" />'
-                                    ),
-                                    indent, edge_point$x
-                                ),
-                                sprintf(
-                                    paste0(
-                                        "%s          <gating:coordinate",
-                                        ' data-type:value="%f" />'
-                                    ),
-                                    indent, edge_point$y
-                                ),
-                                sprintf("%s        </gating:vertex>", indent)
-                            )
-                        }
-                        xml_lines <- c(
-                            xml_lines,
-                            sprintf("%s      </gating:edge>", indent)
-                        )
-
-                        xml_lines <- c(
-                            xml_lines,
-                            sprintf("%s    </gating:EllipsoidGate>", indent)
-                        )
-                    }
-                }
-
-                xml_lines <- c(xml_lines, sprintf("%s  </Gate>", indent))
-            }
-
-            # Recursively process child populations
-            xml_lines <- c(xml_lines, sprintf("%s  <Subpopulations>", indent))
-
-            # Prevent a population from being its own parent (cycle detection)
-            if (population$name == parent_path) {
-                warning(
-                    "Population '", population$name,
-                    "' cannot be its own parent. Skipping recursion."
-                )
-            } else {
-                # Check if we've already visited this population
-                if (population$name %in% visited_paths) {
-                    warning(
-                        "Cycle detected - population '",
-                        population$name,
-                        "' already visited. Skipping recursion."
-                    )
-                } else {
-                    new_visited_paths <- unique(c(
-                        visited_paths,
-                        population$name
-                    ))
-                    subpop_xml <- generate_group_subpopulations_xml(
-                        populations = populations,
-                        gates = gates,
-                        parent_path = population$name,
-                        indent = paste0(indent, "    "),
-                        visited_paths = new_visited_paths,
-                        gh = gh # Pass gh down for boolean gate processing
-                    )
-                    xml_lines <- c(xml_lines, subpop_xml)
-                }
-            }
-            xml_lines <- c(xml_lines, sprintf("%s  </Subpopulations>", indent))
-
-            # Close population element
-            xml_lines <- c(xml_lines, sprintf("%s</Population>", indent))
-        }
+        )
     }
     return(xml_lines)
 }

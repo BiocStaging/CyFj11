@@ -199,12 +199,17 @@ find_root_population <- function(
 }
 
 
-#' Build Gating Tree for given Sample
+#' Identify logical gates and report the summary
+#'
+#' Runs identify_logical_gates and, when verbose, prints the count and
+#' a formatted summary table of the logical gates found.
+#'
+#' @param populations Populations list from the workspace
+#' @param populationDefinitions Population definitions list
+#' @return List with \code{gates} (logical gate info) and the updated
+#'   \code{populationDefinitions}
 #' @keywords internal
-build_gating_tree <- function(
-  sample_uuid, populations,
-  populationDefinitions, root_uuid
-) {
+tree_identify_logical_gates <- function(populations, populationDefinitions) {
     # First, identify all logical gates before building the tree
     if (.pkgenv$verbose) message("Identifying logical gates...") # nocov
     gate_result <- identify_logical_gates(populations, populationDefinitions)
@@ -227,225 +232,385 @@ build_gating_tree <- function(
         if (.pkgenv$verbose) message("No logical gates found") # nocov
     }
 
+    list(
+        gates = logical_gates_info,
+        populationDefinitions = populationDefinitions
+    )
+}
+
+#' Post-process the gating tree after construction
+#'
+#' Moves logical gates up one level, deduplicates the tree, and prints
+#' the updated summary when verbose. Only applied when logical gates
+#' exist.
+#'
+#' @param tree The built gating tree
+#' @param logical_gates_info Logical gate info list
+#' @return The post-processed tree
+#' @keywords internal
+tree_postprocess <- function(tree, logical_gates_info) {
+    if (length(logical_gates_info) == 0) {
+        return(tree)
+    }
+
+    if (.pkgenv$verbose) {
+        message(
+            "\nMoving logical gates up in",
+            " hierarchy..."
+        )
+    } # nocov
+    tree <- move_logical_gates_up(tree)
+
+    # Remove duplicates at each level (after moving)
+    if (.pkgenv$verbose) message("\nRemoving duplicates...") # nocov
+    tree <- deduplicate_tree(tree)
+
+    # Get updated summary
+    summary_after <- summarize_logical_gates(tree)
+    if (!is.null(summary_after)) {
+        if (.pkgenv$verbose) {
+            message("\nLogical gates in final tree:")
+        } # nocov
+        if (.pkgenv$verbose) {
+            message(paste(capture.output(format(summary_after)),
+                collapse = "\n"
+            ))
+        } # nocov
+    }
+
+    tree
+}
+
+#' Check recursion state and resolve the population
+#'
+#' Guards against circular references and missing populations,
+#' then returns the population, its parents, and its definition.
+#' Returns NULL when the node must be skipped.
+#'
+#' @param pop_uuid Population identifier
+#' @param visited Environment of visited population UUIDs
+#' @param populations Populations list from the workspace
+#' @param populationDefinitions Population definitions list
+#' @return List with \code{pop}, \code{pop_parents},
+#'   \code{pop_def}, and \code{pop_def_uuid}, or NULL when the node
+#'   must be skipped
+#' @keywords internal
+tree_resolve_population <- function(pop_uuid, visited, populations,
+                                    populationDefinitions) {
+    # Prevent infinite recursion
+    if (!is.null(visited[[pop_uuid]])) {
+        if (.pkgenv$verbose) {
+            warning(
+                "Circular reference detected for population: ",
+                pop_uuid
+            )
+        } # nocov
+        return(NULL)
+    }
+    visited[[pop_uuid]] <- TRUE
+
+    pop <- populations[[pop_uuid]]
+    if (is.null(pop)) {
+        warning("Population not found: ", pop_uuid)
+        return(NULL)
+    }
+
+    # Get population definition
+    pop_parents <- pop$parents
+    if (is.null(pop_parents)) {
+        warning("Population has no parents: ", pop_uuid)
+        return(NULL)
+    }
+    pop_def_uuid <- pop_parents[["populationDefinitions"]]
+    if (is.null(pop_def_uuid)) {
+        warning(
+            "Population has no populationDefinitions parent: ",
+            pop_uuid
+        )
+        return(NULL)
+    }
+
+    pop_def <- populationDefinitions[[pop_def_uuid[[1]]]]
+    if (is.null(pop_def)) {
+        warning("Population definition not found: ", pop_def_uuid)
+        return(NULL)
+    }
+
+    list(
+        pop = pop,
+        pop_parents = pop_parents,
+        pop_def = pop_def,
+        pop_def_uuid = pop_def_uuid
+    )
+}
+
+#' Construct a tree node from a population definition
+#'
+#' Sanitizes the node name and builds the base node list.
+#'
+#' @param pop_uuid Population identifier
+#' @param pop_parents Parents list of the population
+#' @param pop_def Population definition
+#' @param pop_def_uuid Definition UUID
+#' @param parent_path Path of the parent node (or NULL)
+#' @return The constructed node list
+#' @keywords internal
+tree_make_node <- function(pop_uuid, pop_parents, pop_def,
+                           pop_def_uuid, parent_path) {
+    # Extract definition details safely
+    node_name <- if (!is.null(pop_def$definition$name)) {
+        pop_def$definition$name
+    } else "Unnamed"
+    # flowWorkspace uses '/' as the path separator, so population names
+    #   containing
+    # '/' get rewritten (e.g. "CD45, l/d subset" -> "CD45, l:d subset").
+    #   Sanitize
+    # names here so parent/child paths stay consistent.
+    node_name <- sanitize_population_name(node_name)
+
+    node <- list(
+        uuid = pop_uuid,
+        name = node_name,
+        parent = parent_path,
+        data_uuid = pop_parents$dataSources,
+        parentDef = pop_parents$populationDefinitions,
+        pop_def = pop_def,
+        definition_uuid = pop_def_uuid,
+        type = pop_def$definition$type,
+        kind = pop_def$definition$kind
+    )
+}
+
+#' Attach logical gate information to a tree node
+#'
+#' Looks up logical gate info for the population and fills the
+#' node's \code{logical_gate_info} and gateDefinition fields.
+#'
+#' @param node The tree node to modify
+#' @param pop_uuid Population identifier
+#' @param logical_gates_info Logical gate info list
+#' @return The updated node
+#' @keywords internal
+tree_attach_logical_gate <- function(node, pop_uuid,
+                                     logical_gates_info) {
+    # Add logical gate information if this is a logical gate
+    gate_info <- find_gate_info(pop_uuid, logical_gates_info)
+    if (!is.null(gate_info)) {
+        if (.pkgenv$verbose) {
+            message(sprintf(
+                "Adding gate info for: %s",
+                unlist(node$name)
+            ))
+        } # nocov
+
+        node$logical_gate_info <- list(
+            operator = gate_info$gate_type,
+            combined_populations = gate_info$combined_populations,
+            combined_population_uuids = gate_info$combined_population_uuids,
+            combined_definition_uuids = gate_info$combined_definition_uuids
+        )
+
+        # The gateDefinition should already be in pop_def from
+        #   identify_logical_gates
+        # But verify and add if missing
+        if (is.null(node$pop_def$definition$gateDefinition)) {
+            if (.pkgenv$verbose) {
+                message(
+                    sprintf(
+                        "  -> Adding missing gateDefinition for %s",
+                        unlist(node$name)
+                    )
+                )
+            } # nocov
+            node$pop_def$definition$gateDefinition <- list(
+                type = "logical",
+                operator = gate_info$gate_type,
+                components = gate_info$combined_populations,
+                component_uuids = gate_info$combined_population_uuids
+            )
+        } else {
+            if (.pkgenv$verbose) {
+                message(
+                    sprintf(
+                        "  -> gateDefinition already exists for %s",
+                        unlist(node$name)
+                    )
+                )
+            } # nocov
+        }
+    }
+    node
+}
+
+#' Collect valid child populations of a node
+#'
+#' Orders children by populationNumber and keeps only those with
+#' a data source parent.
+#'
+#' @param pop The parent population
+#' @param populations Populations list from the workspace
+#' @return Named list of child populations
+#' @keywords internal
+tree_collect_children <- function(pop, populations) {
+    # Find children populations
+    child_populations <- list()
+
+    if (!is.null(pop$children) && !is.null(pop$children$populations)) {
+        child_uuids <- pop$children$populations
+
+        if (length(child_uuids) > 0) {
+            # get order
+            # here we need to use populationNumber if available.
+            pop_order <- c()
+            idx <- 1
+            for (child_pop_uuid in child_uuids) {
+                child_pop <- populations[[child_pop_uuid]]
+                if (is.null(child_pop$definition$populationNumber)) {
+                    pop_order <- c(pop_order, idx)
+                } else {
+                    pop_order <- c(
+                        pop_order,
+                        child_pop$definition$populationNumber
+                    )
+                }
+                idx <- idx + 1
+            }
+            # browser() # nocov
+            for (child_pop_uuid in child_uuids[order(pop_order)]) {
+                child_pop <- populations[[child_pop_uuid]]
+                pop_num <- child_pop$definition$populationNumber
+                if (!is.null(child_pop)) {
+                    child_sample_uuid <-
+                        child_pop$parents[["_dataSource"]] %||%
+                        child_pop$parents[["dataSource"]]
+                    if (!is.null(child_sample_uuid)) {
+                        child_populations[[child_pop_uuid]] <- child_pop
+                    }
+                }
+            }
+        }
+    }
+    child_populations
+}
+
+#' Build child nodes for a populated node
+#'
+#' Recursively builds child nodes via \code{build_node} and
+#' attaches them to the parent node when non-empty.
+#'
+#' @param node The tree node to modify
+#' @param child_populations Named list of child populations
+#' @param current_path Path of the current node
+#' @param pop_uuid Population identifier of the current node
+#' @param build_node Recursive node builder function
+#' @return The updated node
+#' @keywords internal
+tree_build_children <- function(node, child_populations,
+                                current_path, pop_uuid, build_node) {
+    # Build children nodes
+    if (length(child_populations) > 0) {
+        children_list <- list()
+        for (child_pop_uuid in names(child_populations)) {
+            child_node <- build_node(child_pop_uuid, current_path, pop_uuid)
+            if (!is.null(child_node)) {
+                children_list[[child_pop_uuid]] <- child_node
+            }
+        }
+
+        children_list <- Filter(Negate(is.null), children_list)
+
+        if (length(children_list) > 0) {
+            node$children <- unname(children_list)
+        }
+    }
+    node
+}
+
+#' Create a recursive tree node builder
+#'
+#' Returns the \code{build_node} function used by
+#' \code{build_gating_tree}, closed over the workspace state.
+#'
+#' @param populations Populations list from the workspace
+#' @param populationDefinitions Population definitions list
+#' @param visited Environment of visited population UUIDs
+#' @param logical_gates_info Logical gate info list
+#' @return The \code{build_node} function
+#' @keywords internal
+tree_make_builder <- function(populations, populationDefinitions,
+                              visited, logical_gates_info) {
+    build_node <- function(pop_uuid, parent_path = NULL,
+                           parent_pop_uuid = NULL) {
+        resolved <- tree_resolve_population(
+            pop_uuid, visited, populations, populationDefinitions
+        )
+        if (is.null(resolved)) {
+            return(NULL)
+        }
+        pop <- resolved$pop
+        pop_parents <- resolved$pop_parents
+        pop_def <- resolved$pop_def
+        pop_def_uuid <- resolved$pop_def_uuid
+
+        node <- tree_make_node(
+            pop_uuid, pop_parents, pop_def, pop_def_uuid,
+            parent_path
+        )
+        node <- tree_attach_logical_gate(
+            node, pop_uuid, logical_gates_info
+        )
+
+        # Build current path. Both parts are already sanitized, but
+        #   keep the path separator as '/' (flowWorkspace convention)
+        #   while ensuring no stray '/' from names leaks in.
+        current_path <- if (is.null(parent_path)) {
+            node$name
+        } else {
+            paste(parent_path, node$name, sep = "/")
+        }
+
+        child_populations <- tree_collect_children(pop, populations)
+        node <- tree_build_children(
+            node, child_populations, current_path, pop_uuid,
+            build_node
+        )
+
+        return(node)
+    }
+    build_node
+}
+
+#' Build Gating Tree for given Sample
+#' @keywords internal
+build_gating_tree <- function(
+  sample_uuid, populations,
+  populationDefinitions, root_uuid
+) {
+    # First, identify all logical gates before building the tree
+    if (.pkgenv$verbose) message("Identifying logical gates...") # nocov
+    gate_result <- tree_identify_logical_gates(
+        populations, populationDefinitions
+    )
+    logical_gates_info <- gate_result$gates
+    populationDefinitions <- gate_result$populationDefinitions
+    # Use updated version!
+
+
     # Track visited population UUIDs to prevent infinite loops
     visited <- new.env(parent = emptyenv())
 
     # Recursive function to build tree
-    build_node <- function(pop_uuid, parent_path = NULL,
-                           parent_pop_uuid = NULL) {
-        # Prevent infinite recursion
-        if (!is.null(visited[[pop_uuid]])) {
-            if (.pkgenv$verbose) {
-                warning(
-                    "Circular reference detected for population: ",
-                    pop_uuid
-                )
-            } # nocov
-            return(NULL)
-        }
-        visited[[pop_uuid]] <- TRUE
-
-        pop <- populations[[pop_uuid]]
-        if (is.null(pop)) {
-            warning("Population not found: ", pop_uuid)
-            return(NULL)
-        }
-
-        # Get population definition
-        pop_parents <- pop$parents
-        if (is.null(pop_parents)) {
-            warning("Population has no parents: ", pop_uuid)
-            return(NULL)
-        }
-        pop_def_uuid <- pop_parents[["populationDefinitions"]]
-        if (is.null(pop_def_uuid)) {
-            warning(
-                "Population has no populationDefinitions parent: ",
-                pop_uuid
-            )
-            return(NULL)
-        }
-
-        pop_def <- populationDefinitions[[pop_def_uuid[[1]]]]
-        if (is.null(pop_def)) {
-            warning("Population definition not found: ", pop_def_uuid)
-            return(NULL)
-        }
-
-        # Extract definition details safely
-        node_name <- if (!is.null(pop_def$definition$name)) {
-            pop_def$definition$name
-        } else "Unnamed"
-        # flowWorkspace uses '/' as the path separator, so population names
-        #   containing
-        # '/' get rewritten (e.g. "CD45, l/d subset" -> "CD45, l:d subset").
-        #   Sanitize
-        # names here so parent/child paths stay consistent.
-        node_name <- sanitize_population_name(node_name)
-
-        node <- list(
-            uuid = pop_uuid,
-            name = node_name,
-            parent = parent_path,
-            data_uuid = pop_parents$dataSources,
-            parentDef = pop_parents$populationDefinitions,
-            pop_def = pop_def,
-            definition_uuid = pop_def_uuid,
-            type = pop_def$definition$type,
-            kind = pop_def$definition$kind
-        )
-
-        # Add logical gate information if this is a logical gate
-        gate_info <- find_gate_info(pop_uuid, logical_gates_info)
-        if (!is.null(gate_info)) {
-            if (.pkgenv$verbose) {
-                message(sprintf(
-                    "Adding gate info for: %s",
-                    unlist(node_name)
-                ))
-            } # nocov
-
-            node$logical_gate_info <- list(
-                operator = gate_info$gate_type,
-                combined_populations = gate_info$combined_populations,
-                combined_population_uuids = gate_info$combined_population_uuids,
-                combined_definition_uuids = gate_info$combined_definition_uuids
-            )
-
-            # The gateDefinition should already be in pop_def from
-            #   identify_logical_gates
-            # But verify and add if missing
-            if (is.null(node$pop_def$definition$gateDefinition)) {
-                if (.pkgenv$verbose) {
-                    message(
-                        sprintf(
-                            "  -> Adding missing gateDefinition for %s",
-                            unlist(node_name)
-                        )
-                    )
-                } # nocov
-                node$pop_def$definition$gateDefinition <- list(
-                    type = "logical",
-                    operator = gate_info$gate_type,
-                    components = gate_info$combined_populations,
-                    component_uuids = gate_info$combined_population_uuids
-                )
-            } else {
-                if (.pkgenv$verbose) {
-                    message(
-                        sprintf(
-                            "  -> gateDefinition already exists for %s",
-                            unlist(node_name)
-                        )
-                    )
-                } # nocov
-            }
-        }
-
-        # Build current path. Both parts are already sanitized, but keep the
-        #   path
-        # separator as '/' (flowWorkspace convention) while ensuring no stray
-        #   '/' from
-        # names leaks in.
-        current_path <- if (is.null(parent_path)) {
-            node_name
-        } else {
-            paste(parent_path, node_name, sep = "/")
-        }
-
-        # Find children populations
-        child_populations <- list()
-
-        if (!is.null(pop$children) && !is.null(pop$children$populations)) {
-            child_uuids <- pop$children$populations
-
-            if (length(child_uuids) > 0) {
-                # get order
-                # here we need to use populationNumber if available.
-                pop_order <- c()
-                idx <- 1
-                for (child_pop_uuid in child_uuids) {
-                    child_pop <- populations[[child_pop_uuid]]
-                    if (is.null(child_pop$definition$populationNumber)) {
-                        pop_order <- c(pop_order, idx)
-                    } else {
-                        pop_order <- c(
-                            pop_order,
-                            child_pop$definition$populationNumber
-                        )
-                    }
-                    idx <- idx + 1
-                }
-                # browser() # nocov
-                for (child_pop_uuid in child_uuids[order(pop_order)]) {
-                    child_pop <- populations[[child_pop_uuid]]
-                    pop_num <- child_pop$definition$populationNumber
-                    if (!is.null(child_pop)) {
-                        child_sample_uuid <-
-                            child_pop$parents[["_dataSource"]] %||%
-                            child_pop$parents[["dataSource"]]
-                        if (!is.null(child_sample_uuid)) {
-                            child_populations[[child_pop_uuid]] <- child_pop
-                        }
-                    }
-                }
-            }
-        }
-
-        # Build children nodes
-        if (length(child_populations) > 0) {
-            children_list <- list()
-            for (child_pop_uuid in names(child_populations)) {
-                child_node <- build_node(child_pop_uuid, current_path, pop_uuid)
-                if (!is.null(child_node)) {
-                    children_list[[child_pop_uuid]] <- child_node
-                }
-            }
-
-            children_list <- Filter(Negate(is.null), children_list)
-
-            if (length(children_list) > 0) {
-                node$children <- unname(children_list)
-            }
-        }
-
-        # Don't remove from visited - this prevents circular references
-        # rm(list = pop_uuid, envir = visited)
-
-        return(node)
-    }
+    build_node <- tree_make_builder(
+        populations, populationDefinitions, visited,
+        logical_gates_info
+    )
 
     # Build the tree
     if (.pkgenv$verbose) message("Building tree...") # nocov
     tree <- build_node(root_uuid)
 
-    # Move logical gates up one level (if any exist)
-    if (length(logical_gates_info) > 0) {
-        if (.pkgenv$verbose) {
-            message(
-                "\nMoving logical gates up in",
-                " hierarchy..."
-            )
-        } # nocov
-        tree <- move_logical_gates_up(tree)
+    tree <- tree_postprocess(tree, logical_gates_info)
 
-        # Remove duplicates at each level (after moving)
-        if (.pkgenv$verbose) message("\nRemoving duplicates...") # nocov
-        tree <- deduplicate_tree(tree)
-
-        # Get updated summary
-        summary_after <- summarize_logical_gates(tree)
-        if (!is.null(summary_after)) {
-            if (.pkgenv$verbose) {
-                message("\nLogical gates in final tree:")
-            } # nocov
-            if (.pkgenv$verbose) {
-                message(paste(capture.output(format(summary_after)),
-                    collapse = "\n"
-                ))
-            } # nocov
-        }
-    }
 
     # Clean up visited environment
     rm(list = ls(envir = visited), envir = visited)

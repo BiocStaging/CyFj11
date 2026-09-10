@@ -597,6 +597,812 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
     return(gate_obj)
 }
 
+#' Resolve a node's population name
+#'
+#' Extracts the node name from the FlowJo v11 list-or-character form,
+#' sanitizes it for the flowWorkspace path separator, and returns it as
+#' a character vector.
+#'
+#' @param node Population node from the gating tree
+#' @return Sanitized character vector of the node name
+#' @keywords internal
+pop_node_name <- function(node) {
+    node_name <- if (is.list(node$name) && length(node$name) > 0) {
+        node$name %>% unlist()
+    } else if (is.character(node$name)) {
+        node$name
+    } else {
+        "Unnamed"
+    }
+    # flowWorkspace uses '/' as the path separator, so population names
+    #   containing
+    # '/' get rewritten inconsistently. Sanitize once here so parent/child
+    #   paths
+    # built later match the node names actually created in the GatingSet.
+    sanitize_population_name(node_name)
+}
+
+#' Recurse into a node's children (tree-stored parent path)
+#'
+#' Builds the child's parent path from the stored full path when
+#' available (sanitized), otherwise from the current parent plus the
+#' node name, then recurses into add_population_node.
+#'
+#' @param children List of child nodes (or NULL)
+#' @param gh GatingHierarchy object
+#' @param gates Named list of gate objects
+#' @param sample_uuid UUID of the sample being processed
+#' @param parent Current parent path in gh
+#' @param node_name Sanitized name of the current node
+#' @param strip_comp_prefix Whether to strip the "Comp-" prefix
+#' @param verbose Whether to emit diagnostic messages
+#' @param deferred Deferred-gates environment (or NULL)
+#' @return NULL invisibly; recurses as a side effect
+#' @keywords internal
+pop_recurse_children <- function(children, gh, gates, sample_uuid, parent,
+                                 node_name, strip_comp_prefix, verbose,
+                                 deferred) {
+    if (is.null(children)) {
+        return()
+    }
+    for (child in children) {
+        # Use the path stored in the tree when available; otherwise
+        #   build it
+        # consistently from sanitized names.
+        child_parent <- if (!is.null(child$parent) &&
+            is.character(child$parent)) {
+            sanitize_population_name(child$parent)
+        } else {
+            paste0(parent, "/", node_name)
+        }
+        add_population_node(
+            gh = gh,
+            node = child,
+            gates = gates,
+            sample_uuid = sample_uuid,
+            parent = child_parent,
+            strip_comp_prefix = strip_comp_prefix,
+            verbose = verbose,
+            deferred = deferred
+        )
+    }
+}
+
+#' Handle the root-skip case for a population node
+#'
+#' When the node is root/Ungated directly under the root, recurse
+#' into its children and return TRUE so the caller can skip the
+#' normal gate handling.
+#'
+#' @param node Population node
+#' @param node_name Sanitized node name
+#' @param parent_sanitized Sanitized parent path
+#' @param gh GatingHierarchy object
+#' @param gates Named list of gate objects
+#' @param sample_uuid UUID of the sample being processed
+#' @param strip_comp_prefix Whether to strip the "Comp-" prefix
+#' @param verbose Whether to emit diagnostic messages
+#' @param deferred Deferred-gates environment (or NULL)
+#' @return TRUE when the node was handled (caller must return), FALSE
+#'   otherwise
+#' @keywords internal
+pop_handle_root_skip <- function(node, node_name, parent_sanitized, gh,
+                                 gates, sample_uuid, strip_comp_prefix,
+                                 verbose, deferred) {
+    if (!(parent_sanitized[1] == "root" &&
+        (node_name[1] == "root" || node_name[1] == "Ungated"))) {
+        return(FALSE)
+    }
+    if (!is.null(node$children)) {
+        for (child in node$children) {
+            add_population_node(
+                gh = gh,
+                node = child,
+                gates = gates,
+                sample_uuid = sample_uuid,
+                parent = "root",
+                strip_comp_prefix = strip_comp_prefix,
+                verbose = verbose,
+                deferred = deferred
+            )
+        }
+    }
+    TRUE
+}
+
+#' Resolve the definition UUID of a population node
+#'
+#' @param node Population node
+#' @return UUID character scalar, or NULL when absent
+#' @keywords internal
+pop_definition_uuid <- function(node) {
+    if (is.list(node$definition_uuid) && length(node$definition_uuid) > 0) {
+        node$definition_uuid[[1]]
+    } else if (is.character(node$definition_uuid)) {
+        node$definition_uuid
+    } else {
+        NULL
+    }
+}
+
+#' Warn that no gate was found for a population
+#'
+#' Includes the available population paths for debugging.
+#'
+#' @param node_name Sanitized node name
+#' @param sample_uuid UUID of the sample being processed
+#' @param parent Parent path as passed in
+#' @param definition_uuid Definition UUID looked up
+#' @param gh GatingHierarchy object
+#' @return NULL invisibly
+#' @keywords internal
+pop_warn_missing_gate <- function(node_name, sample_uuid, parent,
+                                  definition_uuid, gh) {
+    # Get available population paths for debugging
+    all_pop_paths <- tryCatch(flowWorkspace::gs_get_pop_paths(gh),
+        error = function(e) NULL
+    )
+    pop_paths_str <- if (!is.null(all_pop_paths)) {
+        paste("\n  Available populations:", paste(all_pop_paths,
+            collapse = "\n  "
+        ))
+    } else {
+        ""
+    }
+
+    warning(
+        "No gate found for population: ", node_name, " (sample: ",
+        sample_uuid, ")\n",
+        "  Parent: ", paste(parent, collapse = " : "),
+        "  Definition UUID: ", definition_uuid,
+        pop_paths_str
+    )
+}
+
+#' Resolve the gate object for a population-sample combination
+#'
+#' Extracts the definition UUID, looks up the gate keyed by
+#' paste0(definition_uuid, "_", sample_uuid), and warns (without
+#' returning a sentinel) when the gate is missing and the node is not
+#' a logical gate. Returns NULL for a missing definition UUID or a
+#' missing gate; the caller must check node$logical_gate_info to
+#' decide whether NULL means "skip" or "proceed as logical gate".
+#'
+#' @param node Population node
+#' @param node_name Sanitized node name
+#' @param sample_uuid UUID of the sample being processed
+#' @param parent Parent path as passed in
+#' @param gates Named list of gate objects
+#' @param gh GatingHierarchy object
+#' @return The gate object, or NULL when unresolved
+#' @keywords internal
+pop_resolve_gate <- function(node, node_name, sample_uuid, parent, gates,
+                             gh) {
+    # Get gate for this population-sample combination
+    definition_uuid <- pop_definition_uuid(node)
+    if (is.null(definition_uuid)) {
+        warning("No definition UUID found for population: ", node_name)
+        return(NULL)
+    }
+
+    gate_obj <- gates[[paste0(definition_uuid, "_", sample_uuid)]]
+    if (is.null(gate_obj) && is.null(node$logical_gate_info)) {
+        pop_warn_missing_gate(node_name, sample_uuid, parent,
+            definition_uuid, gh)
+    }
+    gate_obj
+}
+
+#' Find the hierarchy path of one logical-gate component
+#'
+#' @param comp_name Component population name
+#' @param all_paths Available population paths in gh
+#' @param node_name Sanitized node name
+#' @param verbose Whether to emit diagnostic messages
+#' @param deferred Deferred-gates environment (or NULL)
+#' @return The matching path, or NA_character_ when unresolved (warning
+#'   only when not deferring)
+#' @keywords internal
+pop_find_component_path <- function(comp_name, all_paths, node_name,
+                                    verbose, deferred) {
+    # Search for exact match in population names
+    matching_paths <- grep(paste0("/", comp_name, "$"), all_paths,
+        value = TRUE
+    )
+
+    if (length(matching_paths) == 0) {
+        if (is.null(deferred)) {
+            warning(
+                "Could not find population '", comp_name,
+                "' for logical gate '", node_name, "'\n",
+                "  Available populations: ", paste(all_paths,
+                    collapse = ", "
+                )
+            )
+        }
+        return(NA_character_)
+    }
+
+    # Use the first matching path
+    path <- matching_paths[1]
+    if (verbose) message("    Found: ", comp_name, " -> ", path)
+    path
+}
+
+#' Defer or warn about unresolved logical-gate components
+#'
+#' @param component_names Component population names
+#' @param component_refs Resolved component refs (some NA)
+#' @param node Population node (deferred into the retry queue)
+#' @param node_name Sanitized node name
+#' @param parent Current parent path in gh (deferred with the node)
+#' @param deferred Deferred-gates environment (or NULL)
+#' @return NULL invisibly
+#' @keywords internal
+pop_defer_unresolved_components <- function(component_names,
+                                            component_refs, node, node_name,
+                                            parent, deferred) {
+    if (!is.null(deferred)) {
+        deferred$gates <- c(
+            deferred$gates,
+            list(list(node = node, parent = parent))
+        )
+    } else {
+        missing_components <- setdiff(
+            component_names,
+            names(component_refs)
+        )
+        warning(
+            "Could not resolve all component paths for logical gate: ",
+            node_name, "\n",
+            "  Missing components: ", paste(missing_components,
+                collapse = ", "
+            ), "\n",
+            "  Resolved: ", paste(names(component_refs),
+                collapse = ", "
+            )
+        )
+    }
+}
+
+#' Resolve component population paths for a logical gate
+#'
+#' @param component_names Component population names
+#' @param node Population node (deferred into the retry queue)
+#' @param node_name Sanitized node name
+#' @param parent Current parent path in gh (deferred with the node)
+#' @param gh GatingHierarchy object
+#' @param verbose Whether to emit diagnostic messages
+#' @param deferred Deferred-gates environment (or NULL)
+#' @return Character vector of resolved paths, or NULL when the
+#'   components could not all be resolved (deferred or warned)
+#' @keywords internal
+pop_resolve_component_refs <- function(component_names, node, node_name,
+                                       parent, gh, verbose, deferred) {
+    # Get all existing populations in the gating hierarchy
+    all_paths <- flowWorkspace::gs_get_pop_paths(gh)
+    if (.pkgenv$verbose) {
+        message("  Available paths: ", paste(all_paths, collapse = ", "))
+    }
+
+    # For each component, find its path in the hierarchy
+    component_refs <- vapply(component_names, function(comp_name) {
+        pop_find_component_path(
+            comp_name, all_paths, node_name, verbose, deferred
+        )
+    }, character(1))
+
+    # Remove unresolved components
+    component_refs <- component_refs[!is.na(component_refs)]
+
+    if (length(component_refs) < length(component_names)) {
+        pop_defer_unresolved_components(
+            component_names, component_refs, node, node_name, parent,
+            deferred
+        )
+        return(NULL)
+    }
+
+    component_refs
+}
+
+#' Build a boolean expression for a logical gate
+#'
+#' @param operator One of "and", "or", "not"
+#' @param clean_refs Component paths with the leading slash removed
+#' @param node_name Sanitized node name
+#' @return The boolean expression string, or NULL for an unknown
+#'   operator (after warning)
+#' @keywords internal
+pop_build_bool_expr <- function(operator, clean_refs, node_name) {
+    # Build boolean expression - NO SPACES!
+    if (operator == "and") {
+        paste(clean_refs, collapse = "&") # No spaces
+    } else if (operator == "or") {
+        paste(clean_refs, collapse = "|") # No spaces
+    } else if (operator == "not") {
+        paste0("!", clean_refs[1]) # No spaces
+    } else {
+        warning(
+            "Unknown logical operator '", operator, "' for gate: ",
+            node_name,
+            ". Expected 'and', 'or', or 'not'"
+        )
+        NULL
+    }
+}
+
+#' Add a booleanFilter population to a GatingHierarchy
+#'
+#' @param bool_expr Boolean expression string (no spaces)
+#' @param node_name Sanitized node name
+#' @param parent Parent path in gh
+#' @param gh GatingHierarchy object
+#' @param component_refs Resolved component paths (for error messages)
+#' @param verbose Whether to emit diagnostic messages
+#' @return NULL invisibly; modifies gh as a side effect
+#' @keywords internal
+pop_add_boolean_filter <- function(bool_expr, node_name, parent, gh,
+                                   component_refs, verbose) {
+    if (verbose) message("  Boolean expression: ", bool_expr)
+    tryCatch(
+        {
+            # Use the programmatic approach from the documentation
+            # Create as symbol and substitute into booleanFilter call
+            call_expr <- substitute(
+                booleanFilter(v),
+                list(v = as.symbol(bool_expr))
+            )
+            bool_filter <- eval(call_expr)
+
+            if (.pkgenv$verbose) {
+                message(
+                    "  Created filter: ",
+                    class(bool_filter)
+                )
+            }
+
+            flowWorkspace::gs_pop_add(
+                gh,
+                bool_filter,
+                parent = parent,
+                name = node_name
+            )
+
+            if (.pkgenv$verbose) {
+                message(
+                    "  Successfully added logical gate: ",
+                    node_name
+                )
+            } # nocov
+
+            # Recompute immediately to verify it works
+            # flowWorkspace::recompute(gh)
+            # message("  Recomputed successfully")
+        },
+        error = function(e) {
+            warning(
+                "Failed to add logical gate '", node_name, "': ",
+                e$message, "\n",
+                "  Parent: ", paste(parent, collapse = " : "), "\n",
+                "  Components: ", paste(component_refs, collapse = ", "),
+                "\n",
+                "  Expression: ", bool_expr
+            )
+        }
+    )
+}
+
+#' Add a logical (boolean) gate population node
+#'
+#' Resolves the component population paths, builds the boolean
+#' expression, adds the booleanFilter to gh, and recurses into the
+#' node's children. Unresolvable components are deferred (when a
+#' deferred environment is supplied) or warned about immediately.
+#'
+#' @param node Population node carrying logical_gate_info
+#' @param node_name Sanitized node name
+#' @param gh GatingHierarchy object
+#' @param gates Named list of gate objects
+#' @param parent Current parent path in gh
+#' @param sample_uuid UUID of the sample being processed
+#' @param strip_comp_prefix Whether to strip the "Comp-" prefix
+#' @param verbose Whether to emit diagnostic messages
+#' @param deferred Deferred-gates environment (or NULL)
+#' @return NULL invisibly; modifies gh and deferred as side effects
+#' @keywords internal
+pop_add_logical_gate <- function(node, node_name, gh, gates, parent,
+                                 sample_uuid, strip_comp_prefix, verbose,
+                                 deferred) {
+    operator <- node$logical_gate_info$operator
+    component_names <- node$logical_gate_info$combined_populations
+
+    if (.pkgenv$verbose) {
+        message(
+            "Building logical gate: ", node_name,
+            " (", operator, ")"
+        )
+    }
+    if (.pkgenv$verbose) {
+        message(
+            "  Components: ",
+            paste(component_names, collapse = ", ")
+        )
+    }
+
+    component_refs <- pop_resolve_component_refs(
+        component_names, node, node_name, parent, gh, verbose, deferred
+    )
+    if (is.null(component_refs)) {
+        return()
+    }
+
+    # Clean paths - remove leading slash as per booleanFilter examples
+    clean_refs <- gsub("^/", "", component_refs)
+
+    bool_expr <- pop_build_bool_expr(operator, clean_refs, node_name)
+    if (is.null(bool_expr)) {
+        return()
+    }
+
+    pop_add_boolean_filter(bool_expr, node_name, parent, gh,
+        component_refs, verbose)
+
+    # Recursively add children
+    pop_recurse_children(node$children, gh, gates, sample_uuid, parent,
+        node_name, strip_comp_prefix, verbose, deferred)
+}
+
+#' Warn about a failed gate add, tolerating already-existing nodes
+#'
+#' @param e The error object from gs_pop_add
+#' @param node_name Sanitized node name vector
+#' @param parent Parent path in gh
+#' @param gate_obj_adjusted The adjusted gate object (for type info)
+#' @param verbose Whether to emit diagnostic messages
+#' @return NULL invisibly
+#' @keywords internal
+pop_warn_failed_add <- function(e, node_name, parent, gate_obj_adjusted,
+                                verbose) {
+    # Ignore "already exists" errors - this can happen
+    #   with quadGates
+    # when the population was already added in a
+    #   previous step
+    if (grepl("already exists", e$message, ignore.case = TRUE)) {
+        if (verbose) {
+            message(
+                "  Population already exists,",
+                " skipping: ",
+                paste(node_name, collapse = "/")
+            )
+        } # nocov
+    } else {
+        warning(
+            "Failed to add population '",
+            paste(node_name, collapse = "/"),
+            "': ", e$message, "\n",
+            "  Parent: ", paste(parent, collapse = " : "), "\n",
+            "  Gate type: ", class(gate_obj_adjusted)[1]
+        )
+    }
+}
+
+#' Report the marker-name consistency check details
+#'
+#' @param node_name Sanitized node name vector
+#' @param gate_params Gate parameter names
+#' @param flowframe_params FlowFrame parameter names
+#' @return NULL invisibly
+#' @keywords internal
+pop_report_marker_check <- function(node_name, gate_params,
+                                    flowframe_params) {
+    message(
+        "Verifying marker name consistency for gate: ",
+        node_name[1]
+    )
+    message("  Gate params: ", paste(gate_params, collapse = ", "))
+    message(
+        "  FlowFrame params: ",
+        paste(flowframe_params, collapse = ", ")
+    )
+}
+
+#' Add the gate object to the GatingHierarchy
+#'
+#' Handles quadGate name reordering, marker-name verification, gate
+#' transformation adjustment, and the gs_pop_add call (tolerating
+#' already-existing nodes). Skipped entirely for tsne-prefixed
+#' populations.
+#'
+#' @param node_name Sanitized node name vector
+#' @param gate_obj The gate object from the gates list
+#' @param gh GatingHierarchy object
+#' @param parent Current parent path in gh
+#' @param strip_comp_prefix Whether to strip the "Comp-" prefix
+#' @param verbose Whether to emit diagnostic messages
+#' @return The adjusted gate object invisibly; modifies gh as a side effect
+#' @keywords internal
+pop_add_gate_object <- function(node_name, gate_obj, gh, parent,
+                                strip_comp_prefix, verbose) {
+    # for now we ignore tsne gates
+    if (startsWith(node_name[1], "tsne")) {
+        return(invisible(gate_obj))
+    }
+    # name for quadrant should be of length 4
+    if (.pkgenv$verbose) {
+        message(
+            "parent: ", parent, " ",
+            node_name[1], "\n"
+        )
+    }
+    # browser() # nocov
+    # this seems to be working for the current case but should
+    if (inherits(gate_obj, "quadGate")) {
+        node_name <- node_name[c(3, 4, 2, 1)]
+    }
+
+    gate_obj_adjusted <- pop_prepare_gate(node_name, gate_obj, gh,
+        strip_comp_prefix
+    )
+    pop_insert_gate(node_name, gate_obj_adjusted, parent, gh, verbose)
+    invisible(gate_obj_adjusted)
+}
+
+#' Verify and adjust a gate before insertion
+#'
+#' Reports marker-name consistency between the gate and the
+#' GatingHierarchy, then adjusts the gate transformations so gate
+#' parameter names match the hierarchy.
+#'
+#' @param node_name Sanitized node name vector
+#' @param gate_obj The gate object from the gates list
+#' @param gh GatingHierarchy object
+#' @param strip_comp_prefix Whether to strip the "Comp-" prefix
+#' @return The adjusted gate object
+#' @keywords internal
+pop_prepare_gate <- function(node_name, gate_obj, gh, strip_comp_prefix) {
+    # Get flowFrame parameter names from the GatingHierarchy
+    flowframe_params <- markernames(gh)
+    gate_params <- flowCore::parameters(gate_obj)
+
+    if (.pkgenv$verbose) {
+        pop_report_marker_check(node_name, gate_params, flowframe_params)
+    }
+
+    # Verify marker name consistency
+    verification <- verify_gate_marker_names(
+        gate_obj = gate_obj,
+        flowframe_params = flowframe_params,
+        gate_source = paste(node_name, collapse = "/")
+    )
+
+    if (!verification$valid && .pkgenv$verbose) {
+        for (warn in verification$warnings) {
+            message("  Note: ", warn)
+        }
+    }
+
+    # Adjust gate transformations if needed
+    gate_obj_adjusted <- adjust_gate_transformations(gh, gate_obj,
+        strip_comp_prefix = strip_comp_prefix
+    )
+
+    # Verify marker names again after adjustment
+    if (.pkgenv$verbose) {
+        gate_params_adjusted <- flowCore::parameters(gate_obj_adjusted)
+        message(
+            "  Gate params after adjustment: ",
+            paste(gate_params_adjusted, collapse = ", ")
+        )
+    }
+    gate_obj_adjusted
+}
+
+#' Insert an adjusted gate into the GatingHierarchy
+#'
+#' Tolerates "already exists" errors, which happen when a quadGate
+#' population was already added in a previous step.
+#'
+#' @param node_name Sanitized node name vector
+#' @param gate_obj_adjusted The adjusted gate object
+#' @param parent Parent path in gh
+#' @param gh GatingHierarchy object
+#' @param verbose Whether to emit diagnostic messages
+#' @return NULL invisibly
+#' @keywords internal
+pop_insert_gate <- function(node_name, gate_obj_adjusted, parent, gh,
+                            verbose) {
+    tryCatch(
+        {
+            flowWorkspace::gs_pop_add(
+                gh,
+                gate = gate_obj_adjusted,
+                parent = parent,
+                name = node_name
+            )
+            if (verbose) {
+                message(
+                    "  Successfully added gate: ",
+                    paste(node_name, collapse = "/")
+                )
+            }
+        },
+        error = function(e) {
+            pop_warn_failed_add(
+                e, node_name, parent, gate_obj_adjusted, verbose
+            )
+        }
+    )
+}
+
+#' Recurse into a regular gate node's children
+#'
+#' child$parent is a full path built from sanitized names with '/' as
+#' the flowWorkspace separator. The leading "Ungated/" or "root"
+#' prefix is stripped so we get the parent path relative to the root
+#' of the GatingSet.
+#'
+#' @param node Population node
+#' @param gh GatingHierarchy object
+#' @param gates Named list of gate objects
+#' @param sample_uuid UUID of the sample being processed
+#' @param strip_comp_prefix Whether to strip the "Comp-" prefix
+#' @param verbose Whether to emit diagnostic messages
+#' @param deferred Deferred-gates environment (or NULL)
+#' @return NULL invisibly; recurses as a side effect
+#' @keywords internal
+pop_recurse_regular_children <- function(node, gh, gates, sample_uuid,
+                                         strip_comp_prefix, verbose,
+                                         deferred) {
+    if (is.null(node$children)) {
+        return()
+    }
+    for (child in node$children) {
+        child_parent <- sub(
+            "^(root|Ungated)/", "",
+            child$parent
+        )
+        # The result is already sanitized; call
+        #   sanitize_population_name only to
+        # handle any stray name-level '/' that might remain.
+        child_parent <- sanitize_path_with_separator(child_parent)
+        add_population_node(
+            gh = gh,
+            node = child,
+            gates = gates,
+            sample_uuid = sample_uuid,
+            parent = child_parent,
+            strip_comp_prefix = strip_comp_prefix,
+            verbose = verbose,
+            deferred = deferred
+        )
+    }
+}
+
+#' Add a regular (non-boolean) gate population node
+#'
+#' Verifies marker-name consistency, adjusts gate transformations, adds
+#' the gate to gh, and recurses into the node's children. Failures are
+#' reported with a warning carrying the parent path and sample UUID.
+#'
+#' @param node Population node
+#' @param node_name Sanitized node name vector
+#' @param gate_obj The gate object from the gates list
+#' @param gh GatingHierarchy object
+#' @param gates Named list of gate objects (passed to recursion)
+#' @param parent Current parent path in gh
+#' @param sample_uuid UUID of the sample being processed
+#' @param strip_comp_prefix Whether to strip the "Comp-" prefix
+#' @param verbose Whether to emit diagnostic messages
+#' @param deferred Deferred-gates environment (or NULL)
+#' @return NULL invisibly; modifies gh as a side effect
+#' @keywords internal
+pop_add_regular_gate <- function(node, node_name, gate_obj, gh, gates,
+                                 parent, sample_uuid, strip_comp_prefix,
+                                 verbose, deferred) {
+    # And gate:
+    # those are the populations where this definition should be applied to
+    node$pop_def$children$populations
+    # Add population node
+    #
+    tryCatch(
+        {
+            pop_add_gate_object(
+                node_name, gate_obj, gh, parent, strip_comp_prefix, verbose
+            )
+            pop_recurse_regular_children(
+                node, gh, gates, sample_uuid, strip_comp_prefix, verbose,
+                deferred
+            )
+        },
+        error = function(e) {
+            warning(
+                "Failed to process gate for population '",
+                paste(node_name, collapse = "/"), "': ", e$message,
+                "\n",
+                "  Parent: ", paste(parent, collapse = " : "), "\n",
+                "  Sample UUID: ", sample_uuid
+            )
+        }
+    )
+}
+
+#'
+#' Sanitize the parent path for flowWorkspace
+#'
+#' The incoming parent may be a sanitized path (with '/' as path
+#' separator) or the literal string 'root'.
+#'
+#' @param parent Parent path as passed in
+#' @return Sanitized parent path
+#' @keywords internal
+pop_sanitize_parent <- function(parent) {
+    if (identical(parent, "root")) {
+        parent
+    } else {
+        sanitize_path_with_separator(parent)
+    }
+}
+
+#' Report the sanitized parent path
+#'
+#' @param parent_sanitized Sanitized parent path
+#' @return NULL invisibly
+#' @keywords internal
+pop_report_parent <- function(parent_sanitized) {
+    message(
+        "parent: ",
+        paste(parent_sanitized, collapse = " : "),
+        "\n"
+    )
+}
+
+#' Resolve and dispatch a population's gate
+#'
+#' Resolves the gate object for the sample, decides between the
+#' logical and regular add paths, and reports whether the node was
+#' handled (either added or safely skipped).
+#'
+#' @param node The tree node to add
+#' @param node_name Sanitized node name
+#' @param sample_uuid Sample identifier
+#' @param parent Parent path in the hierarchy
+#' @param gates Gates list from the workspace
+#' @param gh A GatingHierarchy object
+#' @param strip_comp_prefix Whether to strip compensation prefixes
+#' @param verbose Whether to print progress messages
+#' @param deferred List collecting unresolvable logical gates
+#' @return TRUE when the node was handled (added or skipped)
+#' @keywords internal
+pop_dispatch_gate <- function(node, node_name, sample_uuid, parent, gates,
+                              gh, strip_comp_prefix, verbose, deferred) {
+    gate_obj <- pop_resolve_gate(
+        node, node_name, sample_uuid, parent, gates, gh
+    )
+    is_logica_gate <- !is.null(node$logical_gate_info)
+    if (.pkgenv$verbose) {
+        message(
+            node_name,
+            " (sample: ", sample_uuid, ")\n"
+        )
+    } # nocov
+    if (is.null(gate_obj) && !is_logica_gate) {
+        return(TRUE)
+    }
+    if (is_logica_gate) {
+        pop_add_logical_gate(
+            node, node_name, gh, gates, parent,
+            sample_uuid, strip_comp_prefix, verbose, deferred
+        )
+    } else {
+        pop_add_regular_gate(
+            node, node_name, gate_obj, gh, gates, parent,
+            sample_uuid, strip_comp_prefix, verbose, deferred
+        )
+    }
+    TRUE
+}
+
 #' Add Population Node Recursively to a GatingHierarchy
 #'
 #' Recursively walks a gating tree node and adds each
@@ -704,441 +1510,25 @@ add_population_node <- function(
     # if(stringr::str_starts(node$name, "TNF")) {
     # browser() # nocov
     # }
-    # Extract node name correctly (it's a list in FlowJo v11)
-    node_name <- if (is.list(node$name) &&
-        length(node$name) > 0) {
-        node$name %>% unlist()
-    } else if (is.character(node$name)) {
-        node$name
-    } else {
-        "Unnamed"
-    }
-    # flowWorkspace uses '/' as the path separator, so population names
-    #   containing
-    # '/' get rewritten inconsistently. Sanitize once here so parent/child
-    #   paths
-    # built later match the node names actually created in the GatingSet.
-    node_name <- sanitize_population_name(node_name)
+    node_name <- pop_node_name(node)
     if (.pkgenv$verbose) message(node$type)
     # browser() # nocov
     # Skip root node (already exists).  The incoming parent may be a sanitized
     # path (with '/' as path separator) or the literal string 'root'.
-    parent_sanitized <- if (identical(
-        parent,
-        "root"
+    parent_sanitized <- pop_sanitize_parent(parent)
+    if (.pkgenv$verbose) {
+        pop_report_parent(parent_sanitized)
+    }
+    if (pop_handle_root_skip(
+        node, node_name, parent_sanitized, gh, gates,
+        sample_uuid, strip_comp_prefix, verbose, deferred
     )) {
-        parent
-    } else {
-        sanitize_path_with_separator(parent)
-    }
-    if (.pkgenv$verbose) {
-        message(
-            "parent: ",
-            paste(parent_sanitized,
-                collapse = " : "
-            ), "\n"
-        )
-    }
-    if (parent_sanitized[1] == "root" &&
-        (node_name[1] == "root" ||
-            node_name[1] == "Ungated")) {
-        if (!is.null(node$children)) {
-            for (child in node$children) {
-                add_population_node(
-                    gh = gh,
-                    node = child,
-                    gates = gates,
-                    sample_uuid = sample_uuid,
-                    parent = "root",
-                    strip_comp_prefix = strip_comp_prefix,
-                    verbose = verbose,
-                    deferred = deferred
-                )
-            }
-        }
         return()
     }
 
-    # Get gate for this population-sample combination
-    # Extract definition_uuid correctly (it's also a list)
-    definition_uuid <- if (is.list(node$definition_uuid) && 
-        length(node$definition_uuid) > 0) {
-        node$definition_uuid[[1]]
-    } else if (is.character(node$definition_uuid)) {
-        node$definition_uuid
-    } else {
-        NULL
-    }
-
-    if (is.null(definition_uuid)) {
-        warning("No definition UUID found for population: ", node_name)
-        return()
-    }
-
-    gate_key <- paste0(
-        definition_uuid, "_",
-        sample_uuid
+    pop_dispatch_gate(
+        node, node_name, sample_uuid, parent, gates,
+        gh, strip_comp_prefix, verbose, deferred
     )
-    gate_obj <- gates[[gate_key]]
-    is_logica_gate <- !is.null(node$logical_gate_info)
-    if (.pkgenv$verbose) {
-        message(
-            node_name,
-            " (sample: ", sample_uuid, ")\n"
-        )
-    }
-    # browser() # nocov
-    if (is.null(gate_obj) && !is_logica_gate) {
-        # Get available population paths for debugging
-        all_pop_paths <- tryCatch(flowWorkspace::gs_get_pop_paths(gh),
-            error = function(e) NULL
-        )
-        pop_paths_str <- if (!is.null(all_pop_paths)) {
-            paste("\n  Available populations:", paste(all_pop_paths,
-                collapse = "\n  "
-            ))
-        } else {
-            ""
-        }
-
-        warning(
-            "No gate found for population: ", node_name, " (sample: ",
-            sample_uuid, ")\n",
-            "  Parent: ", paste(parent, collapse = " : "),
-            "  Definition UUID: ", definition_uuid,
-            pop_paths_str
-        )
-        return()
-    }
-    if (is_logica_gate) {
-        # Create boolean filter for logical gate
-        # browser() # nocov
-        # Create boolean filter for logical gate
-        operator <- node$logical_gate_info$operator
-        component_names <- node$logical_gate_info$combined_populations
-
-        if (.pkgenv$verbose) {
-            message(
-                "Building logical gate: ", node_name,
-                " (", operator, ")"
-            )
-        }
-        if (.pkgenv$verbose) {
-            message(
-                "  Components: ",
-                paste(component_names, collapse = ", ")
-            )
-        }
-
-        # Get all existing populations in the gating hierarchy
-        all_paths <- flowWorkspace::gs_get_pop_paths(gh)
-        if (.pkgenv$verbose) {
-            message("  Available paths: ", paste(all_paths,
-                collapse = ", "
-            ))
-        }
-
-        # For each component, find its path in the hierarchy
-        component_refs <- vapply(component_names, function(comp_name) {
-            # Search for exact match in population names
-            matching_paths <- grep(paste0("/", comp_name, "$"), all_paths,
-                value = TRUE
-            )
-
-            if (length(matching_paths) == 0) {
-                if (is.null(deferred)) {
-                    warning(
-                        "Could not find population '", comp_name,
-                        "' for logical gate '", node_name, "'\n",
-                        "  Available populations: ", paste(all_paths,
-                            collapse = ", "
-                        )
-                    )
-                }
-                return(NA_character_)
-            }
-
-            # Use the first matching path
-            path <- matching_paths[1]
-            if (.pkgenv$verbose) message("    Found: ", comp_name, " -> ", path)
-            return(path)
-        }, character(1))
-
-        # Remove unresolved components
-        component_refs <- component_refs[!is.na(component_refs)]
-
-        if (length(component_refs) < length(component_names)) {
-            if (!is.null(deferred)) {
-                deferred$gates <- c(
-                    deferred$gates,
-                    list(list(node = node, parent = parent))
-                )
-            } else {
-                missing_components <- setdiff(
-                    component_names,
-                    names(component_refs)
-                )
-                warning(
-                    "Could not resolve all component paths for logical gate: ",
-                    node_name, "\n",
-                    "  Missing components: ", paste(missing_components,
-                        collapse = ", "
-                    ), "\n",
-                    "  Resolved: ", paste(names(component_refs),
-                        collapse = ", "
-                    )
-                )
-            }
-            return()
-        }
-
-        # Clean paths - remove leading slash as per booleanFilter examples
-        clean_refs <- gsub("^/", "", component_refs)
-
-        # Build boolean expression - NO SPACES!
-        if (operator == "and") {
-            bool_expr <- paste(clean_refs, collapse = "&") # No spaces
-        } else if (operator == "or") {
-            bool_expr <- paste(clean_refs, collapse = "|") # No spaces
-        } else if (operator == "not") {
-            bool_expr <- paste0("!", clean_refs[1]) # No spaces
-        } else {
-            warning(
-                "Unknown logical operator '", operator, "' for gate: ",
-                node_name,
-                ". Expected 'and', 'or', or 'not'"
-            )
-            return()
-        }
-
-        if (.pkgenv$verbose) message("  Boolean expression: ", bool_expr)
-        tryCatch(
-            {
-                # Use the programmatic approach from the documentation
-                # Create as symbol and substitute into booleanFilter call
-                call_expr <- substitute(
-                    booleanFilter(v),
-                    list(v = as.symbol(bool_expr))
-                )
-                bool_filter <- eval(call_expr)
-
-                if (.pkgenv$verbose) {
-                    message(
-                        "  Created filter: ",
-                        class(bool_filter)
-                    )
-                }
-
-                flowWorkspace::gs_pop_add(
-                    gh,
-                    bool_filter,
-                    parent = parent,
-                    name = node_name
-                )
-
-                if (.pkgenv$verbose) {
-                    message(
-                        "  Successfully added logical gate: ",
-                        node_name
-                    )
-                } # nocov
-
-                # Recompute immediately to verify it works
-                # flowWorkspace::recompute(gh)
-                # message("  Recomputed successfully")
-            },
-            error = function(e) {
-                warning(
-                    "Failed to add logical gate '", node_name, "': ",
-                    e$message, "\n",
-                    "  Parent: ", paste(parent, collapse = " : "), "\n",
-                    "  Components: ", paste(component_refs,
-                        collapse = ", "
-                    ), "\n",
-                    "  Expression: ", bool_expr
-                )
-            }
-        )
-
-        # Recursively add children
-        if (!is.null(node$children)) {
-            for (child in node$children) {
-                # Use the path stored in the tree when available; otherwise
-                #   build it
-                # consistently from sanitized names.
-                child_parent <- if (!is.null(child$parent) &&
-                    is.character(child$parent)) {
-                    sanitize_population_name(child$parent)
-                } else {
-                    paste0(parent, "/", node_name)
-                }
-                add_population_node(
-                    gh = gh,
-                    node = child,
-                    gates = gates,
-                    sample_uuid = sample_uuid,
-                    parent = child_parent,
-                    strip_comp_prefix = strip_comp_prefix,
-                    verbose = verbose,
-                    deferred = deferred
-                )
-            }
-        }
-    } else {
-        # And gate:
-        # those are the populations where this definition should be applied to
-        node$pop_def$children$populations
-        # Add population node
-        #
-        tryCatch(
-            {
-                # for now we ignore tsne gates
-                if (!startsWith(node_name[1], "tsne")) {
-                    # name for quadrant should be of length 4
-                    if (.pkgenv$verbose) {
-                        message(
-                            "parent: ", parent, " ",
-                            node_name[1], "\n"
-                        )
-                    }
-                    # browser() # nocov
-                    # this seems to be working for the current case but should
-                    if (inherits(gate_obj, "quadGate")) {
-                        node_name <- node_name[c(3, 4, 2, 1)]
-                    }
-                    # quad gate is tried to be added multiple times.
-                    # Get flowFrame parameter names from the GatingHierarchy
-                    flowframe_params <- markernames(gh)
-                    gate_params <- flowCore::parameters(gate_obj)
-
-                    if (.pkgenv$verbose) {
-                        message(
-                            "Verifying marker name consistency for gate: ",
-                            node_name[1]
-                        )
-                        message("  Gate params: ", paste(gate_params,
-                            collapse = ", "
-                        ))
-                        message(
-                            "  FlowFrame params: ",
-                            paste(flowframe_params, collapse = ", ")
-                        )
-                    }
-
-                    # Verify marker name consistency
-                    verification <- verify_gate_marker_names(
-                        gate_obj = gate_obj,
-                        flowframe_params = flowframe_params,
-                        gate_source = paste(node_name, collapse = "/")
-                    )
-
-                    if (!verification$valid && .pkgenv$verbose) {
-                        for (warn in verification$warnings) {
-                            message("  Note: ", warn)
-                        }
-                    }
-
-                    # Adjust gate transformations if needed
-                    gate_obj_adjusted <- adjust_gate_transformations(gh,
-                        gate_obj,
-                        strip_comp_prefix = strip_comp_prefix
-                    )
-
-                    # Verify marker names again after adjustment
-                    if (.pkgenv$verbose) {
-                        gate_params_adjusted <-
-                            flowCore::parameters(gate_obj_adjusted)
-                        message(
-                            "  Gate params after adjustment: ",
-                            paste(gate_params_adjusted, collapse = ", ")
-                        )
-                    }
-
-                    tryCatch(
-                        {
-                            flowWorkspace::gs_pop_add(
-                                gh,
-                                gate = gate_obj_adjusted,
-                                parent = parent,
-                                name = node_name
-                            )
-                            if (.pkgenv$verbose) {
-                                message(
-                                    "  Successfully added gate: ",
-                                    paste(node_name, collapse = "/")
-                                )
-                            }
-                        },
-                        error = function(e) {
-                            # Ignore "already exists" errors - this can happen
-                            #   with quadGates
-                            # when the population was already added in a
-                            #   previous step
-                            if (grepl("already exists", e$message,
-                                ignore.case = TRUE
-                            )) {
-                                if (.pkgenv$verbose) {
-                                    message(
-                                        "  Population already exists,",
-                                        " skipping: ",
-                                        paste(node_name, collapse = "/")
-                                    )
-                                } # nocov
-                            } else {
-                                warning(
-                                    "Failed to add population '",
-                                    paste(node_name, collapse = "/"),
-                                    "': ", e$message, "\n",
-                                    "  Parent: ", paste(parent,
-                                        collapse = " : "
-                                    ), "\n",
-                                    "  Gate type: ", class(gate_obj_adjusted)[1]
-                                )
-                            }
-                        }
-                    )
-                }
-
-                # Recursively add children
-                if (!is.null(node$children)) {
-                    for (child in node$children) {
-                        # child$parent is a full path built from sanitized
-                        #   names with '/' as the
-                        # flowWorkspace separator. Strip the leading
-                        #   "Ungated/" or "root" prefix
-                        # so we get the parent path relative to the root of
-                        #   the GatingSet.
-                        child_parent <- sub(
-                            "^(root|Ungated)/", "",
-                            child$parent
-                        )
-                        # The result is already sanitized; call
-                        #   sanitize_population_name only to
-                        # handle any stray name-level '/' that might remain.
-                        child_parent <-
-                            sanitize_path_with_separator(child_parent)
-                        add_population_node(
-                            gh = gh,
-                            node = child,
-                            gates = gates,
-                            sample_uuid = sample_uuid,
-                            parent = child_parent,
-                            strip_comp_prefix = strip_comp_prefix,
-                            verbose = verbose,
-                            deferred = deferred
-                        )
-                    }
-                }
-            },
-            error = function(e) {
-                warning(
-                    "Failed to process gate for population '",
-                    paste(node_name, collapse = "/"), "': ", e$message,
-                    "\n",
-                    "  Parent: ", paste(parent, collapse = " : "), "\n",
-                    "  Sample UUID: ", sample_uuid
-                )
-            }
-        )
-    }
+    invisible(NULL)
 }

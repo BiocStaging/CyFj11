@@ -172,15 +172,115 @@ fj11_to_gatingset <- function(
   ...
 ) {
     backend <- match.arg(backend)
-    # Extract workspace components
-    # The workspace already has the components extracted at the top level
+
+    prep <- fj11_prepare_data(fj11_workspace, group_name, subset, path,
+        cytoset, stop_on_multiple, backend_dir, backend, ...)
+    sample_uuids <- prep$sample_uuids
+    cytoset <- prep$cytoset
+
+    gsList <- fj11_build_gatingset(
+        fj11_workspace, sample_uuids, cytoset, include_gates, compensation,
+        transform, execute, channel.ignore.case, extend_val, extend_to,
+        correct_faulty_gate, use_transformed_coords, keywords,
+        additional.keys, additional.sampleID, keyword.ignore.case,
+        strip_comp_prefix
+    )
+    if (.pkgenv$verbose) {
+        fj11_report_summary(gsList, execute)
+    }
+    return(gsList)
+}
+
+
+
+#' Prepare data for GatingSet conversion
+#'
+#' Runs Steps 1-4 of the conversion pipeline: selecting the sample
+#' group, filtering samples, resolving FCS file paths, and loading
+#' the cytoset. Returns NULL paths when a cytoset is supplied.
+#'
+#' @param fj11_workspace Workspace list from read_flowjo11_workspace
+#' @param group_name NULL, numeric index, or character group name
+#' @param subset Sample filter passed to filter_samples
+#' @param path Root directory for FCS files (NULL when cytoset given)
+#' @param cytoset A pre-built cytoset, or NULL
+#' @param stop_on_multiple Whether to stop on multiple path matches
+#' @param backend_dir Backend directory for the cytoset
+#' @param backend Backend type
+#' @param ... Extra arguments passed to load_cytoset_from_fcs
+#' @return List with \code{sample_uuids} and \code{cytoset}
+#' @keywords internal
+fj11_prepare_data <- function(fj11_workspace, group_name, subset, path,
+                              cytoset, stop_on_multiple, backend_dir,
+                              backend, ...) {
     groups <- fj11_workspace$groups
     dataSources <- fj11_workspace$dataSources
-    populationDefinitions <- fj11_workspace$populationDefinitions
-    populations <- fj11_workspace$populations
-    platforms <- fj11_workspace$platforms
 
     # Step 1: Select group ----
+    group_sel <- fj11_select_group(groups, group_name)
+    selected_group <- group_sel$selected_group
+
+    # Step 2: Get samples in group ----
+    sample_uuids <- selected_group$results$dataSources
+
+    # Filter samples based on subset argument
+    sample_uuids <- filter_samples(
+        sample_uuids, subset, dataSources,
+        keywords
+    )
+
+    if (.pkgenv$verbose) {
+        message(
+            "Processing", length(sample_uuids),
+            "samples\n\n"
+        )
+    } # nocov
+
+    # Step 3: Resolve FCS file paths ----
+    sample_file_map <- fj11_resolve_paths(
+        dataSources, sample_uuids, path, cytoset, stop_on_multiple
+    )
+
+    # Step 4: Load data into cytoset ----
+    if (is.null(cytoset)) {
+        cytoset <- fj11_load_cytoset(
+            sample_file_map, sample_uuids, backend_dir, backend, ...
+        )
+    }
+
+    list(sample_uuids = sample_uuids, cytoset = cytoset)
+}
+
+
+#' Prepare data for GatingSet conversion
+#'
+#' Runs Steps 1-4 of the conversion pipeline: selecting the sample
+#' group, filtering samples, resolving FCS file paths, and loading
+#' the cytoset. Returns NULL paths when a cytoset is supplied.
+#'
+#' @param fj11_workspace Workspace list from read_flowjo11_workspace
+#' @param group_name NULL, numeric index, or character group name
+#' @param subset Sample filter passed to filter_samples
+#' @param path Root directory for FCS files (NULL when cytoset given)
+#' @param cytoset A pre-built cytoset, or NULL
+#' @param stop_on_multiple Whether to stop on multiple path matches
+#' @param backend_dir Backend directory for the cytoset
+#' @param backend Backend type
+#' @param ... Extra arguments passed to load_cytoset_from_fcs
+#' @return List with \code{sample_uuids} and \code{cytoset}
+
+#' Select a sample group from the workspace
+#'
+#' Resolves the group index from the \code{group_name} argument
+#' (NULL prompts interactively, numeric indexes, character matches by
+#' name) and returns the group index and the selected group record.
+#'
+#' @param groups Groups list from the workspace
+#' @param group_name NULL, numeric index, or character name
+#' @return List with \code{group_idx}, \code{selected_group_uuid}, and
+#'   \code{selected_group}
+#' @keywords internal
+fj11_select_group <- function(groups, group_name) {
     group_info <- get_group_info(groups)
 
     if (is.null(group_name)) {
@@ -209,134 +309,292 @@ fj11_to_gatingset <- function(
         message("Contains", length(selected_group$results$dataSources),
             "samples\n")
     }
-    # Step 2: Get samples in group ----
-    sample_uuids <- selected_group$results$dataSources
 
-    # Filter samples based on subset argument
-    sample_uuids <- filter_samples(
-        sample_uuids, subset, dataSources,
-        keywords
+    list(
+        group_idx = group_idx,
+        selected_group_uuid = selected_group_uuid,
+        selected_group = selected_group
+    )
+}
+
+#' Stop when FCS path resolution failed
+#'
+#' Strict mode stops on any non-FOUND status; permissive mode only on
+#' truly missing files (NOT_FOUND / NO_URI), allowing MULTIPLE matches.
+#'
+#' @param path_resolution The path resolution data frame
+#' @param stop_on_multiple Whether to stop on multiple matches
+#' @return NULL invisibly; stops on failure
+#' @keywords internal
+fj11_check_path_resolution <- function(path_resolution, stop_on_multiple) {
+    # Only stop on missing files when stop_on_multiple=FALSE
+    # When stop_on_multiple=TRUE, stop on both missing and multiple matches
+    if (stop_on_multiple) {
+        # Strict mode: stop on any failure (missing or multiple)
+        failed <- path_resolution[path_resolution$status != "FOUND", ]
+        if (nrow(failed) > 0) {
+            stop(
+                "Could not resolve ", nrow(failed),
+                " FCS file(s). See path_resolution for details."
+            )
+        }
+    } else {
+        # Permissive mode: only stop on truly missing files, allow
+        #   multiple matches
+        failed <- path_resolution[
+            path_resolution$status == "NOT_FOUND" |
+                path_resolution$status == "NO_URI",
+        ]
+        if (nrow(failed) > 0) {
+            stop(
+                "Could not resolve ", nrow(failed),
+                " FCS file(s). Missing files detected. ",
+                "See path_resolution for details."
+            )
+        }
+    }
+}
+
+#' Build the sample-to-file map from a path resolution
+#'
+#' Strict mode maps only FOUND samples; permissive mode also includes
+#' MULTIPLE samples using their first resolved path.
+#'
+#' @param path_resolution The path resolution data frame
+#' @param stop_on_multiple Whether to stop on multiple matches
+#' @return Named character vector mapping sample UUIDs to file paths
+#' @keywords internal
+fj11_build_file_map <- function(path_resolution, stop_on_multiple) {
+    if (stop_on_multiple) {
+        # Strict mode: only include FOUND samples
+        return(get_sample_file_map(path_resolution))
+    }
+    # Permissive mode: include both FOUND and MULTIPLE samples
+    # For FOUND samples, use resolved_path directly
+    found_rows <- path_resolution$status == "FOUND"
+    sample_file_map <- setNames(
+        path_resolution$resolved_path[found_rows],
+        path_resolution$sample_id[found_rows]
     )
 
-    if (.pkgenv$verbose) {
+    # For MULTIPLE samples, extract the first path from the
+    #   resolved_path field
+    multiple_rows <- path_resolution$status == "MULTIPLE"
+    if (any(multiple_rows)) {
+        # Split the resolved_path by " | " and take the first path
+        first_paths <- vapply(
+            strsplit(
+                path_resolution$resolved_path[multiple_rows],
+                " \\| "
+            ),
+            function(p) p[1], character(1)
+        )
+        names(first_paths) <- path_resolution$sample_id[multiple_rows]
+        sample_file_map <- c(sample_file_map, first_paths)
+    }
+    sample_file_map
+}
+
+
+#' Resolve FCS file paths for the selected samples
+#'
+#' Runs resolve_all_fcs_paths, filters to the selected samples, checks
+#' for resolution failures, and builds the sample file map. Returns
+#' NULL when \code{cytoset} is supplied directly.
+#'
+#' @param dataSources Data sources from the workspace
+#' @param sample_uuids Selected sample UUIDs
+#' @param path Root directory for FCS files (or NULL when cytoset given)
+#' @param cytoset A pre-built cytoset, or NULL
+#' @param stop_on_multiple Whether to stop on multiple matches
+#' @return Named character vector mapping sample UUIDs to file paths,
+#'   or NULL when a cytoset was supplied
+#' @keywords internal
+fj11_resolve_paths <- function(dataSources, sample_uuids, path, cytoset,
+                               stop_on_multiple) {
+    if (!is.null(cytoset)) {
+        return(NULL)
+    }
+    if (is.null(path)) {
+        stop("Either 'path' or 'cytoset' must be provided")
+    }
+
+    if (.pkgenv$verbose) message("Resolving FCS file paths...\n")
+    path_resolution <- resolve_all_fcs_paths(
+        dataSources = dataSources,
+        root_dir = path,
+        stop_on_multiple = stop_on_multiple,
+        stop_on_missing = TRUE
+    )
+
+    # Filter to selected samples
+    path_resolution <- path_resolution[
+        path_resolution$sample_id %in% sample_uuids,
+    ]
+
+    fj11_check_path_resolution(path_resolution, stop_on_multiple)
+    fj11_build_file_map(path_resolution, stop_on_multiple)
+}
+
+
+#' Load FCS files into a cytoset
+#'
+#' @param sample_file_map Named vector mapping sample UUIDs to paths
+#' @param sample_uuids Selected sample UUIDs
+#' @param backend_dir Backend directory for the cytoset
+#' @param backend Backend type ("h5" or "tile")
+#' @param ... Extra arguments passed to load_cytoset_from_fcs
+#' @return A cytoset object
+#' @keywords internal
+fj11_load_cytoset <- function(sample_file_map, sample_uuids, backend_dir,
+                              backend, ...) {
+    if (.pkgenv$verbose) message("\nLoading FCS files into cytoset...\n")
+    fcs_files <- sample_file_map[unlist(sample_uuids)]
+
+    # Create cytoset from FCS files
+    flowWorkspace::load_cytoset_from_fcs(
+        files = fcs_files,
+        transformation = FALSE,
+        backend_dir = backend_dir,
+        backend = backend,
+        ...
+    )
+}
+
+#' Print the GatingSet creation summary banner
+#'
+#' @param gsList The created list of GatingSet objects
+#' @param execute Whether gating was executed
+#' @return NULL invisibly
+#' @keywords internal
+fj11_report_summary <- function(gsList, execute) {
+    message("\n")
+    message("========================================\n")
+    message("  GatingSet List Created Successfully\n")
+    message("========================================\n")
+    message("Samples:     ", length(gsList), "\n")
+
+    # Safely get population count
+    if (!is.null(gsList) && length(gsList) > 0 && !is.null(gsList[[1]])) {
         message(
-            "Processing", length(sample_uuids),
-            "samples\n\n"
+            "Populations: ",
+            length(flowWorkspace::gs_get_pop_paths(gsList[[1]])), "\n"
         )
+    } else {
+        message("Populations: 0 (GatingSet list is empty)\n")
     }
 
-    # Step 3: Resolve FCS file paths ----
-    if (is.null(cytoset)) {
-        if (is.null(path)) {
-            stop("Either 'path' or 'cytoset' must be provided")
-        }
+    message("Execute:     ", execute, "\n")
+    message("======================================\n\n")
 
-        if (.pkgenv$verbose) message("Resolving FCS file paths...\n")
-        path_resolution <- resolve_all_fcs_paths(
-            dataSources = dataSources,
-            root_dir = path,
-            stop_on_multiple = stop_on_multiple,
-            stop_on_missing = TRUE
-        )
+    # Debug information before returning
+    message("DEBUG: About to return GatingSet\n")
+    message("DEBUG: gsList is null:", is.null(gsList), "\n")
+}
 
-        # Filter to selected samples
-        path_resolution <- path_resolution[
-            path_resolution$sample_id %in% sample_uuids,
-        ]
 
-        # Check for resolution failures
-        # Only stop on missing files when stop_on_multiple=FALSE
-        # When stop_on_multiple=TRUE, stop on both missing and multiple matches
-        if (stop_on_multiple) {
-            # Strict mode: stop on any failure (missing or multiple)
-            failed <- path_resolution[path_resolution$status != "FOUND", ]
-            if (nrow(failed) > 0) {
-                stop(
-                    "Could not resolve ", nrow(failed),
-                    " FCS file(s). See path_resolution for details."
-                )
-            }
-        } else {
-            # Permissive mode: only stop on truly missing files, allow
-            #   multiple matches
-            failed <- path_resolution[
-                path_resolution$status == "NOT_FOUND" |
-                    path_resolution$status == "NO_URI",
-            ]
-            if (nrow(failed) > 0) {
-                stop(
-                    "Could not resolve ", nrow(failed),
-                    " FCS file(s). Missing files detected. ",
-                    "See path_resolution for details."
-                )
-            }
-        }
-
-        # Create sample file map
-        if (stop_on_multiple) {
-            # Strict mode: only include FOUND samples
-            sample_file_map <- get_sample_file_map(path_resolution)
-        } else {
-            # Permissive mode: include both FOUND and MULTIPLE samples
-            # For FOUND samples, use resolved_path directly
-            found_rows <- path_resolution$status == "FOUND"
-            sample_file_map <- setNames(
-                path_resolution$resolved_path[found_rows],
-                path_resolution$sample_id[found_rows]
-            )
-
-            # For MULTIPLE samples, extract the first path from the
-            #   resolved_path field
-            multiple_rows <- path_resolution$status == "MULTIPLE"
-            if (any(multiple_rows)) {
-                # Split the resolved_path by " | " and take the first path
-                first_paths <- vapply(
-                    strsplit(
-                        path_resolution$resolved_path[multiple_rows],
-                        " \\| "
-                    ),
-                    function(p) p[1], character(1)
-                )
-                names(first_paths) <- path_resolution$sample_id[multiple_rows]
-                sample_file_map <- c(sample_file_map, first_paths)
-            }
-        }
-    }
-
-    # Step 4: Load data into cytoset ----
-    if (is.null(cytoset)) {
-        if (.pkgenv$verbose) message("\nLoading FCS files into cytoset...\n")
-        fcs_files <- sample_file_map[unlist(sample_uuids)]
-
-        # Create cytoset from FCS files
-        cytoset <- flowWorkspace::load_cytoset_from_fcs(
-            files = fcs_files,
-            transformation = FALSE,
-            backend_dir = backend_dir,
-            backend = backend,
-            ...
-        )
-    }
+#' Extract workspace content and build the GatingSet
+#'
+#' Covers the extraction pipeline: building per-sample gating trees
+#' (Step 5), extracting transformations (Step 8), gates (Step 6) and
+#' compensation (Step 7), creating the GatingSet list (Step 9), and
+#' optionally executing gating (Step 10).
+#'
+#' @param populations Populations list from the workspace
+#' @param populationDefinitions Population definitions list
+#' @param sample_uuids Selected sample UUIDs
+#' @param cytoset The loaded cytoset
+#' @param dataSources Data sources from the workspace
+#' @param platforms Platforms list from the workspace
+#' @param include_gates Whether to extract and apply gates
+#' @param compensation Custom compensation matrix or NULL
+#' @param transform Whether to apply transformations
+#' @param execute Whether to execute gating
+#' @param channel.ignore.case Passed to extract_all_gates
+#' @param extend_val Passed to extract_all_gates
+#' @param extend_to Passed to extract_all_gates
+#' @param correct_faulty_gate Passed to extract_all_gates
+#' @param use_transformed_coords Passed to extract_all_gates
+#' @param keywords Keywords to attach (passed to
+#'   create_gatingset_from_cytoset)
+#' @param additional.keys Passed to create_gatingset_from_cytoset
+#' @param additional.sampleID Passed to
+#'   create_gatingset_from_cytoset
+#' @param keyword.ignore.case Passed to
+#'   create_gatingset_from_cytoset
+#' @param strip_comp_prefix Passed to create_gatingset_from_cytoset
+#' @return The created list of GatingSet objects
+#' @keywords internal
+fj11_build_gatingset <- function(fj11_workspace, sample_uuids, cytoset,
+                                 include_gates, compensation, transform,
+                                 execute, channel.ignore.case, extend_val,
+                                 extend_to, correct_faulty_gate,
+                                 use_transformed_coords, keywords,
+                                 additional.keys, additional.sampleID,
+                                 keyword.ignore.case, strip_comp_prefix) {
+    # Extract workspace components
+    groups <- fj11_workspace$groups
+    dataSources <- fj11_workspace$dataSources
+    populationDefinitions <- fj11_workspace$populationDefinitions
+    populations <- fj11_workspace$populations
+    platforms <- fj11_workspace$platforms
 
     # Step 5: Build gating hierarchy ----
     if (.pkgenv$verbose) message("\nBuilding gating hierarchy...\n")
 
-    # Get root population (usually the ungated data)
-    root_pop_uuid <- find_root_population(
-        populations,
-        populationDefinitions, sample_uuids[1]
+    gating_trees <- fj11_build_trees(
+        populations, populationDefinitions, sample_uuids
     )
-    # browser()
-    # Build hierarchy tree for each sample
-    # browser()
-    gating_trees <- lapply(sample_uuids, function(sample_uuid) {
-        build_gating_tree(
-            sample_uuid = sample_uuid,
-            populations = populations,
-            populationDefinitions = populationDefinitions,
-            root_uuid = root_pop_uuid
-        )
-    })
+
+    # Steps 6-8: extract transformations, gates, compensation
+    comps <- fj11_extract_components(
+        fj11_workspace, sample_uuids, include_gates, compensation,
+        channel.ignore.case, extend_val, extend_to,
+        correct_faulty_gate, use_transformed_coords
+    )
+    # Step 9: Create per-sample GatingSet list ----
+    if (.pkgenv$verbose) message("\nCreating GatingSet list...\n")
+    gsList <- fj11_create_gatingsets(
+        cytoset, gating_trees, include_gates, comps$gates_list,
+        comps$comp_list, transform, comps$trans_list, sample_uuids,
+        dataSources, keywords, additional.keys,
+        additional.sampleID, keyword.ignore.case,
+        strip_comp_prefix
+    )
+
+    fj11_execute_gating(gsList, execute, include_gates)
+    gsList
+}
+
+
+#' Extract transformations, gates, and compensation
+#'
+#' Runs Steps 6-8 of the conversion pipeline: extracting
+#' transformations, gates (when \code{include_gates}), and
+#' compensation matrices.
+#'
+#' @param fj11_workspace Workspace list from read_flowjo11_workspace
+#' @param sample_uuids Selected sample UUIDs
+#' @param include_gates Whether gates should be extracted
+#' @param compensation Custom compensation matrix or NULL
+#' @param channel.ignore.case Case-insensitive channel matching
+#' @param extend_val Threshold for extending gate coordinates
+#' @param extend_to Value to extend gates to
+#' @param correct_faulty_gate Correct faulty gates with this max value
+#' @param use_transformed_coords Keep gate coordinates in transformed
+#'   space
+#' @return List with \code{trans_list}, \code{gates_list}, and
+#'   \code{comp_list}
+#' @keywords internal
+fj11_extract_components <- function(fj11_workspace, sample_uuids,
+                                    include_gates, compensation,
+                                    channel.ignore.case, extend_val,
+                                    extend_to, correct_faulty_gate,
+                                    use_transformed_coords) {
+    populationDefinitions <- fj11_workspace$populationDefinitions
+    dataSources <- fj11_workspace$dataSources
+    platforms <- fj11_workspace$platforms
+
     # Step 8: Extract transformations ----
     if (.pkgenv$verbose) message("\nExtracting transformations...\n")
     trans_list <- extract_transformations(
@@ -345,24 +603,19 @@ fj11_to_gatingset <- function(
     )
 
     # Step 6: Extract gates ----
-    if (include_gates) {
+    gates_list <- if (include_gates) {
         if (.pkgenv$verbose) message("\nExtracting gates...\n")
-
-        # save(file = "extract_all_gates.Rdata", list = ls())
-        # load("extract_all_gates.Rdata")
-        gates_list <- extract_all_gates(
-            populationDefinitions = populationDefinitions,
-            sample_uuids = sample_uuids,
-            channel.ignore.case = channel.ignore.case,
-            extend_val = extend_val,
-            extend_to = extend_to,
-            correct_faulty_gate = correct_faulty_gate,
-            use_transformed_coords = use_transformed_coords
+        fj11_extract_gates(
+            populationDefinitions, sample_uuids,
+            channel.ignore.case, extend_val, extend_to,
+            correct_faulty_gate, use_transformed_coords
         )
     }
-    # browser()
+
     # Step 7: Extract compensation ----
-    if (.pkgenv$verbose) message("\nExtracting compensation matrices...\n")
+    if (.pkgenv$verbose) {
+        message("\nExtracting compensation matrices...\n")
+    }
     comp_list <- extract_compensation(
         dataSources = dataSources,
         sample_uuids = sample_uuids,
@@ -370,10 +623,123 @@ fj11_to_gatingset <- function(
         platforms = platforms
     )
 
-    # browser()
-    # Step 9: Create per-sample GatingSet list ----
-    if (.pkgenv$verbose) message("\nCreating GatingSet list...\n")
-    gsList <- create_gatingset_from_cytoset(
+    list(
+        trans_list = trans_list,
+        gates_list = gates_list,
+        comp_list = comp_list
+    )
+}
+
+#' Extract gates for the selected samples
+#'
+#' Thin wrapper around extract_all_gates forwarding the
+#' extraction-tuning arguments.
+#'
+#' @param populationDefinitions Population definitions list
+#' @param sample_uuids Selected sample UUIDs
+#' @param channel.ignore.case Case-insensitive channel matching
+#' @param extend_val Threshold for extending gate coordinates
+#' @param extend_to Value to extend gates to
+#' @param correct_faulty_gate Correct faulty gates with this max value
+#' @param use_transformed_coords Keep gate coordinates in transformed
+#'   space
+#' @return Gates list from extract_all_gates
+#' @keywords internal
+fj11_extract_gates <- function(populationDefinitions, sample_uuids,
+                               channel.ignore.case, extend_val,
+                               extend_to, correct_faulty_gate,
+                               use_transformed_coords) {
+    extract_all_gates(
+        populationDefinitions = populationDefinitions,
+        sample_uuids = sample_uuids,
+        channel.ignore.case = channel.ignore.case,
+        extend_val = extend_val,
+        extend_to = extend_to,
+        correct_faulty_gate = correct_faulty_gate,
+        use_transformed_coords = use_transformed_coords
+    )
+}
+
+#' Execute gating on the GatingSet list
+#'
+#' Runs recompute on each GatingSet when executing, or reports the
+#' skip when not.
+#'
+#' @param gsList The created list of GatingSet objects
+#' @param execute Whether to execute gating
+#' @param include_gates Whether gates were applied
+#' @return NULL invisibly
+#' @keywords internal
+fj11_execute_gating <- function(gsList, execute, include_gates) {
+    if (execute && include_gates) {
+        if (.pkgenv$verbose) message("\nExecuting gates...\n")
+        lapply(gsList, flowWorkspace::recompute)
+        if (.pkgenv$verbose) message("Gating complete\n")
+    } else {
+        if (.pkgenv$verbose) {
+            message(
+                "Gating not executed ",
+                "(set execute=TRUE to compute cell counts)\n"
+            )
+        } # nocov
+    }
+    invisible(NULL)
+}
+
+
+#' Build per-sample gating trees
+#'
+#' Finds the root population and builds a gating tree for each
+#' selected sample.
+#'
+#' @param populations Populations list from the workspace
+#' @param populationDefinitions Population definitions list
+#' @param sample_uuids Selected sample UUIDs
+#' @return Named list of gating trees from build_gating_tree
+#' @keywords internal
+fj11_build_trees <- function(populations, populationDefinitions,
+                             sample_uuids) {
+    root_pop_uuid <- find_root_population(
+        populations, populationDefinitions, sample_uuids[1]
+    )
+    lapply(sample_uuids, function(sample_uuid) {
+        build_gating_tree(
+            sample_uuid = sample_uuid,
+            populations = populations,
+            populationDefinitions = populationDefinitions,
+            root_uuid = root_pop_uuid
+        )
+    })
+}
+#' Create the per-sample GatingSet list
+#'
+#' Thin wrapper around create_gatingset_from_cytoset.
+#'
+#' @param cytoset The loaded cytoset
+#' @param gating_trees Per-sample gating trees
+#' @param include_gates Whether gates were extracted
+#' @param gates_list Extracted gates (or NULL)
+#' @param comp_list Extracted compensations
+#' @param transform Whether transformations apply
+#' @param trans_list Extracted transformations (or NULL)
+#' @param sample_uuids Selected sample UUIDs
+#' @param dataSources Data sources from the workspace
+#' @param keywords Keywords to attach as pData
+#' @param additional.keys Keys for the sample GUID
+#' @param additional.sampleID Include FlowJo sample ID in GUID
+#' @param keyword.ignore.case Case-insensitive keyword matching
+#' @param strip_comp_prefix Strip compensation prefix from parameters
+#' @return The created list of GatingSet objects
+#' @keywords internal
+fj11_create_gatingsets <- function(cytoset, gating_trees,
+                                   include_gates, gates_list,
+                                   comp_list, transform, trans_list,
+                                   sample_uuids, dataSources, keywords,
+                                   additional.keys,
+                                   additional.sampleID,
+                                   keyword.ignore.case,
+                                   strip_comp_prefix) {
+    create_gatingset_from_cytoset(
         cytoset = cytoset,
         gating_trees = gating_trees,
         gates = if (include_gates) gates_list else NULL,
@@ -387,48 +753,4 @@ fj11_to_gatingset <- function(
         keyword.ignore.case = keyword.ignore.case,
         strip_comp_prefix = strip_comp_prefix
     )
-
-    # browser()
-    # Step 10: Execute gating ----
-    if (execute && include_gates) {
-        if (.pkgenv$verbose) message("\nExecuting gates...\n")
-
-        lapply(gsList, flowWorkspace::recompute)
-
-        if (.pkgenv$verbose) message("Gating complete\n")
-    } else {
-        if (.pkgenv$verbose) {
-            message(
-                "Gating not executed ",
-                "(set execute=TRUE to compute cell counts)\n"
-            )
-        } # nocov
-    }
-
-    # # Step 11: Compute boolean gates ----
-    if (.pkgenv$verbose) {
-        message("\n")
-        message("========================================\n")
-        message("  GatingSet List Created Successfully\n")
-        message("========================================\n")
-        message("Samples:     ", length(gsList), "\n")
-
-        # Safely get population count
-        if (!is.null(gsList) && length(gsList) > 0 && !is.null(gsList[[1]])) {
-            message(
-                "Populations: ",
-                length(flowWorkspace::gs_get_pop_paths(gsList[[1]])), "\n"
-            )
-        } else {
-            message("Populations: 0 (GatingSet list is empty)\n")
-        }
-
-        message("Execute:     ", execute, "\n")
-        message("======================================\n\n")
-
-        # Debug information before returning
-        message("DEBUG: About to return GatingSet\n")
-        message("DEBUG: gsList is null:", is.null(gsList), "\n")
-    }
-    return(gsList)
 }

@@ -19,6 +19,300 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+#' Validate extract_flowjo_stats inputs
+#'
+#' @param wsp_files Character vector of workspace paths
+#' @return NULL invisibly; stops on invalid input
+#' @keywords internal
+stats_validate_inputs <- function(wsp_files) {
+    if (!is.character(wsp_files) || length(wsp_files) == 0) {
+        stop("'wsp_files' must be a non-empty character vector.")
+    }
+
+    missing_files <- wsp_files[!file.exists(wsp_files)]
+    if (length(missing_files) > 0) {
+        stop(
+            "The following files do not exist:\n",
+            paste(missing_files, collapse = "\n")
+        )
+    }
+}
+
+#' Build the mapping template from the long table
+#'
+#' Mode 1 of extract_flowjo_stats: no CSV provided, so derive the
+#' unique statistic signatures, auto-generate better_name/description
+#' columns, optionally write the template CSV, and return the long and
+#' mapping tables.
+#'
+#' @param long_table The long-format statistics table
+#' @param preserve_slashes Whether to preserve "/" in names
+#' @param write_csv Whether to write the template CSV
+#' @param output_csv Path for the template CSV
+#' @return List with \code{long} and \code{mapping}
+#' @keywords internal
+stats_build_mapping_template <- function(long_table, preserve_slashes,
+                                         write_csv, output_csv) {
+    mapping <- long_table %>%
+        distinct(population_path, population, id, stat_name,
+            stat_ancestor) %>%
+        mutate(
+            better_name = make_better_names(population, stat_name,
+                stat_ancestor,
+                preserve_slashes = preserve_slashes
+            ),
+            description = case_when(
+                stat_name == "PopulationCount" ~
+                    paste0(
+                        "Event count for population '", population_path,
+                        "'"
+                    ),
+                is.na(stat_ancestor) ~
+                    paste0(
+                        stat_name, " for population '", population_path,
+                        "'"
+                    ),
+                TRUE ~
+                    paste0(
+                        stat_name, " for population '", population_path,
+                        "' relative to '", stat_ancestor, "'"
+                    )
+            )
+        ) %>%
+        select(
+            population_path, population, id, stat_name, stat_ancestor,
+            better_name, description
+        ) %>%
+        arrange(population_path, stat_name, stat_ancestor)
+
+    if (write_csv) {
+        write_csv(mapping, output_csv)
+        message(
+            "Mapping template written to: ",
+            normalizePath(output_csv, mustWork = FALSE)
+        )
+    }
+
+    list(long = long_table, mapping = mapping)
+}
+
+#' Validate the CSV mapping file
+#'
+#' Checks existence and required columns.
+#'
+#' @param csv_file Path to the mapping CSV
+#' @return The parsed mapping tibble
+#' @keywords internal
+stats_read_mapping <- function(csv_file) {
+    if (!file.exists(csv_file)) {
+        stop("csv_file does not exist: ", csv_file)
+    }
+
+    mapping <- read_csv(csv_file, show_col_types = FALSE)
+
+    required_cols <- c(
+        "population_path", "stat_name",
+        "stat_ancestor"
+    )
+    missing_cols <- required_cols[!required_cols %in% names(mapping)]
+    if (length(missing_cols) > 0) {
+        stop(
+            "csv_file is missing required columns: ",
+            paste(missing_cols, collapse = ", ")
+        )
+    }
+    mapping
+}
+
+#' Check mapping signatures against the data
+#'
+#' Fails when the workspace contains signatures missing from the CSV
+#' and warns about extra CSV mappings not present in the data.
+#'
+#' @param long_table The long-format statistics table
+#' @param mapping The mapping tibble
+#' @return NULL invisibly
+#' @keywords internal
+stats_check_signatures <- function(long_table, mapping) {
+    # Signatures present in data vs. CSV
+    data_sigs <- long_table %>%
+        distinct(population_path, stat_name, stat_ancestor)
+
+    csv_sigs <- mapping %>%
+        distinct(population_path, stat_name, stat_ancestor)
+
+    # Fail if the workspace contains stats not in the CSV
+    missing_in_csv <- long_table %>%
+        anti_join(csv_sigs, by = c(
+            "population_path",
+            "stat_name", "stat_ancestor"
+        )) %>%
+        distinct(
+            file, population_path, stat_name,
+            stat_ancestor
+        )
+
+    if (nrow(missing_in_csv) > 0) {
+        stats_stop_missing(missing_in_csv)
+    }
+
+    # Warn about extra mappings in CSV that are not in the data
+    extra_in_csv <- csv_sigs %>%
+        anti_join(data_sigs, by = c(
+            "population_path",
+            "stat_name", "stat_ancestor"
+        ))
+
+    if (nrow(extra_in_csv) > 0) {
+        warning(
+            "csv_file contains mappings not present in the workspaces ",
+            "(these will be ignored):\n",
+            paste(capture.output(format(as.data.frame(extra_in_csv))),
+                collapse = "\n"
+            )
+        )
+    }
+}
+
+#' Check the mapping against the extracted data
+#'
+#' Fails when the workspace contains signatures missing from the CSV
+#' (with a per-file summary), warns about extra CSV mappings, stops on
+#' empty better_name values, and stops on duplicate better_name values.
+#'
+#' @param long_table The long-format statistics table
+#' @param mapping The mapping tibble
+#' @return NULL invisibly; stops/warns on problems
+#' @keywords internal
+stats_check_mapping <- function(long_table, mapping) {
+    stats_check_signatures(long_table, mapping)
+
+    # Check for missing better_name values
+    missing_names <- mapping %>%
+        filter(is.na(better_name) | better_name == "")
+
+    if (nrow(missing_names) > 0) {
+        stop(
+            "The following rows in csv_file have empty better_name values:\n",
+            paste(capture.output(format(as.data.frame(missing_names))),
+                collapse = "\n"
+            )
+        )
+    }
+
+    # Check for duplicate better_name values and require manual resolution
+    dup_count <- mapping %>%
+        count(better_name) %>%
+        filter(n > 1)
+
+    if (nrow(dup_count) > 0) {
+        stop(
+            "Duplicate better_name values found; please resolve manually:\n",
+            paste(dup_count$better_name, collapse = "\n")
+        )
+    }
+}
+
+#' Stop with the missing-signature report
+#'
+#' @param missing_in_csv Tibble of signatures missing from the CSV
+#' @return NULL; always stops
+#' @keywords internal
+stats_stop_missing <- function(missing_in_csv) {
+    affected_files <- sort(unique(missing_in_csv$file))
+    summary_by_file <- missing_in_csv %>%
+        count(file, name = "n_missing") %>%
+        arrange(file)
+
+    stop(
+        "The following workspace signatures are missing from csv_file.\n",
+        "This usually means the CSV was generated without all wsp_files.\n",
+        "Affected file(s): ", paste(affected_files, collapse = ", "),
+        "\n\n",
+        "Missing by file:\n",
+        paste(capture.output(format(as.data.frame(summary_by_file))),
+            collapse = "\n"
+        ),
+        "\n\nMissing signatures:\n",
+        paste(capture.output(format(as.data.frame(missing_in_csv))),
+            collapse = "\n"
+        ),
+        call. = FALSE
+    )
+}
+
+#' Pivot the long table into the wide output table
+#'
+#' Joins the mapping's better_name onto the long table (falling back
+#' to a path|stat synthetic name) and pivots one column per statistic.
+#'
+#' @param long_table The long-format statistics table
+#' @param mapping The mapping tibble
+#' @return A wide tibble with one row per sample
+#' @keywords internal
+stats_build_wide_table <- function(long_table, mapping) {
+    long_table %>%
+        left_join(
+            mapping %>% select(
+                population_path, stat_name, stat_ancestor,
+                better_name
+            ),
+            by = c("population_path", "stat_name", "stat_ancestor")
+        ) %>%
+        mutate(
+            better_name = if_else(is.na(better_name),
+                paste0(population_path, " | ", stat_name),
+                better_name
+            )
+        ) %>%
+        select(
+            file, sample_name, sample_id, sample_count,
+            better_name, value_num
+        ) %>%
+        pivot_wider(
+            id_cols = c(file, sample_name, sample_id, sample_count),
+            names_from = better_name,
+            values_from = value_num
+        )
+}
+
+#' Prepare the CSV mapping for validation
+#'
+#' Auto-generates \code{better_name} when the column is missing and
+#' normalizes signature columns for matching against the data.
+#'
+#' @param mapping The mapping tibble read from the CSV
+#' @param preserve_slashes Whether to preserve "/" in names
+#' @return The normalized mapping tibble
+#' @keywords internal
+stats_prepare_mapping <- function(mapping, preserve_slashes) {
+    # Auto-generate better_name if the column is missing from the CSV
+    if (!"better_name" %in% names(mapping)) {
+        mapping <- mapping %>%
+            mutate(
+                population = coalesce(
+                    population,
+                    get_leaf_population(population_path)
+                ),
+                better_name = make_better_names(population, stat_name,
+                    stat_ancestor,
+                    preserve_slashes = preserve_slashes
+                )
+            )
+    }
+
+    # Normalize mapping signatures
+    mapping %>%
+        mutate(
+            stat_ancestor = if_else(
+                is.na(stat_ancestor) | stat_ancestor == "",
+                NA_character_,
+                as.character(stat_ancestor)
+            ),
+            better_name = as.character(better_name)
+        )
+}
+
 #' @title Extract Statistics from FlowJo Workspace (.wsp) XML Files
 #' @name extract-flowjo-stats
 #' @keywords internal
@@ -112,19 +406,7 @@ extract_flowjo_stats <- function(
   value_as_numeric = TRUE,
   preserve_slashes = FALSE
 ) {
-    # ---- Input validation ----
-    if (!is.character(wsp_files) ||
-        length(wsp_files) == 0) {
-        stop("'wsp_files' must be a non-empty character vector.")
-    }
-
-    missing_files <- wsp_files[!file.exists(wsp_files)]
-    if (length(missing_files) > 0) {
-        stop(
-            "The following files do not exist:\n",
-            paste(missing_files, collapse = "\n")
-        )
-    }
+    stats_validate_inputs(wsp_files)
 
     # ---- Extract long-format table ----
     long_table <- bind_rows(lapply(
@@ -147,204 +429,21 @@ extract_flowjo_stats <- function(
 
     # ---- Mode 1: no CSV -> generate mapping template ----
     if (is.null(csv_file)) {
-        mapping <- long_table %>%
-            distinct(population_path, population, id, stat_name,
-                stat_ancestor) %>%
-            mutate(
-                better_name = make_better_names(population, stat_name,
-                    stat_ancestor,
-                    preserve_slashes = preserve_slashes
-                ),
-                description = case_when(
-                    stat_name == "PopulationCount" ~
-                        paste0(
-                            "Event count for population '", population_path,
-                            "'"
-                        ),
-                    is.na(stat_ancestor) ~
-                        paste0(
-                            stat_name, " for population '", population_path,
-                            "'"
-                        ),
-                    TRUE ~
-                        paste0(
-                            stat_name, " for population '", population_path,
-                            "' relative to '", stat_ancestor, "'"
-                        )
-                )
-            ) %>%
-            select(
-                population_path, population, id, stat_name, stat_ancestor,
-                better_name, description
-            ) %>%
-            arrange(population_path, stat_name, stat_ancestor)
-
-        if (write_csv) {
-            write_csv(mapping, output_csv)
-            message(
-                "Mapping template written to: ",
-                normalizePath(output_csv, mustWork = FALSE)
-            )
-        }
-
-        return(list(long = long_table, mapping = mapping))
+        return(stats_build_mapping_template(
+            long_table, preserve_slashes, write_csv, output_csv
+        ))
     }
 
     # ---- Mode 2: CSV provided -> validate and build wide table ----
-    if (!file.exists(csv_file)) {
-        stop("csv_file does not exist: ", csv_file)
-    }
-
-    mapping <- read_csv(csv_file, show_col_types = FALSE)
-
-    required_cols <- c(
-        "population_path", "stat_name",
-        "stat_ancestor"
+    mapping <- stats_prepare_mapping(
+        stats_read_mapping(csv_file), preserve_slashes
     )
-    missing_cols <- required_cols[!required_cols %in% names(mapping)]
-    if (length(missing_cols) > 0) {
-        stop(
-            "csv_file is missing required columns: ",
-            paste(missing_cols, collapse = ", ")
-        )
-    }
 
-    # Auto-generate better_name if the column is missing from the CSV
-    if (!"better_name" %in% names(mapping)) {
-        mapping <- mapping %>%
-            mutate(
-                population = coalesce(
-                    population,
-                    get_leaf_population(population_path)
-                ),
-                better_name = make_better_names(population, stat_name,
-                    stat_ancestor,
-                    preserve_slashes = preserve_slashes
-                )
-            )
-    }
-
-    # Normalize mapping signatures
-    mapping <- mapping %>%
-        mutate(
-            stat_ancestor = if_else(is.na(stat_ancestor) | stat_ancestor == "",
-                NA_character_,
-                as.character(stat_ancestor)
-            ),
-            better_name = as.character(better_name)
-        )
-
-    # Signatures present in data vs. CSV
-    data_sigs <- long_table %>%
-        distinct(population_path, stat_name, stat_ancestor)
-
-    csv_sigs <- mapping %>%
-        distinct(population_path, stat_name, stat_ancestor)
-
-    # Fail if the workspace contains stats not in the CSV
-    missing_in_csv <- long_table %>%
-        anti_join(csv_sigs, by = c(
-            "population_path",
-            "stat_name", "stat_ancestor"
-        )) %>%
-        distinct(
-            file, population_path, stat_name,
-            stat_ancestor
-        )
-
-    if (nrow(missing_in_csv) > 0) {
-        affected_files <- sort(unique(missing_in_csv$file))
-        summary_by_file <- missing_in_csv %>%
-            count(file, name = "n_missing") %>%
-            arrange(file)
-
-        stop(
-            "The following workspace signatures are missing from csv_file.\n",
-            "This usually means the CSV was generated without all wsp_files.\n",
-            "Affected file(s): ", paste(affected_files, collapse = ", "),
-            "\n\n",
-            "Missing by file:\n",
-            paste(capture.output(format(as.data.frame(summary_by_file))),
-                collapse = "\n"
-            ),
-            "\n\nMissing signatures:\n",
-            paste(capture.output(format(as.data.frame(missing_in_csv))),
-                collapse = "\n"
-            ),
-            call. = FALSE
-        )
-    }
-
-    # Warn about extra mappings in CSV that are not in the data
-    extra_in_csv <- csv_sigs %>%
-        anti_join(data_sigs, by = c(
-            "population_path",
-            "stat_name", "stat_ancestor"
-        ))
-
-    if (nrow(extra_in_csv) > 0) {
-        warning(
-            "csv_file contains mappings not present in the workspaces ",
-            "(these will be ignored):\n",
-            paste(capture.output(format(as.data.frame(extra_in_csv))),
-                collapse = "\n"
-            )
-        )
-    }
-
-    # Check for missing better_name values
-    missing_names <- mapping %>%
-        filter(is.na(better_name) | better_name == "")
-
-    if (nrow(missing_names) > 0) {
-        stop(
-            "The following rows in csv_file have empty better_name values:\n",
-            paste(capture.output(format(as.data.frame(missing_names))),
-                collapse = "\n"
-            )
-        )
-    }
-
-    # Check for duplicate better_name values and require manual resolution
-    dup_count <- mapping %>%
-        count(better_name) %>%
-        filter(n > 1)
-
-    if (nrow(dup_count) > 0) {
-        stop(
-            "Duplicate better_name values found; please resolve manually:\n",
-            paste(dup_count$better_name, collapse = "\n")
-        )
-    }
+    stats_check_mapping(long_table, mapping)
 
     # Join long table with mapping and pivot wide
-    wide_table <- long_table %>%
-        left_join(
-            mapping %>% select(
-                population_path, stat_name, stat_ancestor,
-                better_name
-            ),
-            by = c("population_path", "stat_name", "stat_ancestor")
-        ) %>%
-        mutate(
-            better_name = if_else(is.na(better_name),
-                paste0(population_path, " | ", stat_name),
-                better_name
-            )
-        ) %>%
-        select(
-            file, sample_name, sample_id, sample_count,
-            better_name, value_num
-        ) %>%
-        pivot_wider(
-            id_cols = c(file, sample_name, sample_id, sample_count),
-            names_from = better_name,
-            values_from = value_num
-        )
-
-    return(wide_table)
+    stats_build_wide_table(long_table, mapping)
 }
-
 
 #' Check Workspace-to-CSV Coverage
 #'
