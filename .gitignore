@@ -23,6 +23,7 @@ inst/dev
 *.zip
 
 # Derived manuscript outputs (source is .md)
+manuscript
 manuscript/~$*.docx
 manuscript/Appendix_A.docx
 manuscript/Appendix_B.docx
