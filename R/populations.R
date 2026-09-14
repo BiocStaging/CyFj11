@@ -87,6 +87,70 @@ sanitize_path_with_separator <- function(path) {
 #  names
 #'   when matching to GatingSet parameters? Default TRUE.
 #' @param verbose Logical. Print verbose messages? Default FALSE.
+#' Retry deferred logical-gate additions until no progress is possible
+#'
+#' Each round re-dispatches the deferred gates to add_population_node with a
+#' fresh deferred environment; a round that adds nothing new ends the loop
+#' (handles chained logic gates).
+#'
+#' @param gh One GatingHierarchy
+#' @param deferred Environment holding deferred$gates from the first pass
+#' @param gates List of gate objects
+#' @param sample_uuid Sample being processed
+#' @param strip_comp_prefix Passed to add_population_node
+#' @param verbose Passed to add_population_node
+#' @return The final deferred environment
+#' @noRd
+pop_retry_deferred <- function(gh, deferred, gates, sample_uuid,
+    strip_comp_prefix, verbose) {
+    repeat {
+        if (length(deferred$gates) == 0) break
+        n_before <- length(deferred$gates)
+        new_deferred <- new.env(parent = emptyenv())
+        new_deferred$gates <- list()
+
+        for (lg in deferred$gates) {
+            add_population_node(gh, lg$node, gates, sample_uuid,
+                parent = lg$parent,
+                strip_comp_prefix = strip_comp_prefix,
+                verbose = verbose, deferred = new_deferred
+            )
+        }
+
+        deferred <- new_deferred
+        if (length(deferred$gates) == n_before) {
+            break # no progress -- give up
+        }
+    }
+
+    deferred
+}
+
+#' Warn about permanently unresolvable logical gates
+#'
+#' Lists the component populations that never made it into the hierarchy.
+#'
+#' @param deferred Final deferred environment
+#' @param gh One GatingHierarchy
+#' @noRd
+pop_warn_unresolved <- function(deferred, gh) {
+    for (lg in deferred$gates) {
+        node_name <- if (is.list(lg$node$name)) {
+            unlist(lg$node$name)
+        } else lg$node$name
+        component_names <- lg$node$logical_gate_info$combined_populations
+        all_paths <- tryCatch(flowWorkspace::gs_get_pop_paths(gh),
+            error = function(e) character(0)
+        )
+        missing <- setdiff(component_names, sub(".*/", "", all_paths))
+        warning(
+            "Could not resolve all component paths for logical gate: ",
+            node_name, "\n",
+            "  Missing components: ", paste(missing, collapse = ", ")
+        )
+    }
+}
+
 #' @keywords internal
 #' @importFrom flowWorkspace gs_pop_add
 add_populations_to_gatingset <- function(
@@ -108,42 +172,11 @@ add_populations_to_gatingset <- function(
 
         # Retry loop: keep trying until no more progress (handles chained
         #   logic gates)
-        repeat {
-            if (length(deferred$gates) == 0) break
-            n_before <- length(deferred$gates)
-            new_deferred <- new.env(parent = emptyenv())
-            new_deferred$gates <- list()
-
-            for (lg in deferred$gates) {
-                add_population_node(gh, lg$node, gates, sample_uuid,
-                    parent = lg$parent,
-                    strip_comp_prefix = strip_comp_prefix,
-                    verbose = verbose, deferred = new_deferred
-                )
-            }
-
-            deferred <- new_deferred
-            if (length(deferred$gates) == n_before) {
-                break # no progress -- give up
-            }
-        }
+        deferred <- pop_retry_deferred(gh, deferred, gates, sample_uuid,
+            strip_comp_prefix, verbose)
 
         # Warn only about permanently unresolvable logical gates
-        for (lg in deferred$gates) {
-            node_name <- if (is.list(lg$node$name)) {
-                unlist(lg$node$name)
-            } else lg$node$name
-            component_names <- lg$node$logical_gate_info$combined_populations
-            all_paths <- tryCatch(flowWorkspace::gs_get_pop_paths(gh),
-                error = function(e) character(0)
-            )
-            missing <- setdiff(component_names, sub(".*/", "", all_paths))
-            warning(
-                "Could not resolve all component paths for logical gate: ",
-                node_name, "\n",
-                "  Missing components: ", paste(missing, collapse = ", ")
-            )
-        }
+        pop_warn_unresolved(deferred, gh)
     }
 }
 
@@ -215,28 +248,111 @@ add_populations_to_gatingset <- function(
 #'   \code{\link{add_population_node}} which calls this function before
 #'   passing a gate to \code{\link[flowWorkspace]{gs_pop_add}}.
 #'
+#' Collect GatingHierarchy parameter names for gate matching
+#'
+#' Linear transforms are filtered out before applying permanent transforms,
+#' so gh_get_transformations() only returns channels with non-linear
+#' transforms. All flowFrame column names are always included so that
+#' linear/scatter parameters (e.g. FSC-A) are available for matching.
+#'
+#' @param gh A GatingHierarchy object (single sample)
+#' @return Character vector of parameter names
+#' @noRd
+pop_gh_param_names <- function(gh) {
+    gh_trans <- flowWorkspace::gh_get_transformations(gh)
+    unique(c(
+        names(gh_trans),
+        colnames(flowWorkspace::gh_pop_get_data(gh, "root"))
+    ))
+}
+
+#' Verbose trace for a gate parameter needing coordinate adjustment
+#'
+#' @param gate_param Gate parameter name
+#' @param gh_param Mapped GatingHierarchy parameter name
+#' @param gh_trans_type Transformation type registered in the hierarchy
+#' @noRd
+pop_report_adjustment <- function(gate_param, gh_param, gh_trans_type) {
+    message(
+        "Parameter '", gate_param, "' -> '", gh_param,
+        "' needs adjustment:"
+    )
+    message("  Gate coords in: raw data space")
+    message(
+        "  Hierarchy expects: ", gh_trans_type,
+        " transformed space"
+    )
+}
+
+#' Detect raw-to-transformed coordinate adjustment (legacy, never executed)
+#'
+#' With the current pipeline the cytoframe is kept in raw space and gate
+#' coordinates are already converted to raw space by display_to_raw(), so
+#' there is no need to forward-transform gate coordinates before gating.
+#' The caller keeps this disabled with if (FALSE); the helper is retained so
+#' the logic stays readable.
+#'
+#' @param gh A GatingHierarchy object
+#' @param gate_params Gate parameter names
+#' @param mapped_params Gate-to-hierarchy parameter mapping
+#' @return list(needs_adjustment, trans_to_apply)
+#' @noRd
+pop_detect_adjustment <- function(gh, gate_params, mapped_params) {
+    needs_adjustment <- FALSE
+    trans_to_apply <- list()
+
+    gh_trans <- flowWorkspace::gh_get_transformations(gh)
+    for (i in seq_along(gate_params)) {
+        gate_param <- gate_params[i]
+        gh_param <- mapped_params[[gate_param]]
+
+        # Skip if no mapping found
+        if (is.null(gh_param)) {
+            warning(
+                "Could not map gate parameter '", gate_param,
+                "' to GatingSet parameters"
+            )
+            next
+        }
+
+        # Get transformation from hierarchy using mapped name
+        gh_trans_func <- gh_trans[[gh_param]]
+
+        # Skip if no transformation in hierarchy
+        if (is.null(gh_trans_func)) {
+            next
+        }
+
+        # Get transformation type from hierarchy
+        gh_trans_type <- attr(gh_trans_func, "type")
+
+        # If hierarchy has a transformation (not "none"), we need to apply
+        #   it to gate coords
+        if (!is.null(gh_trans_type)) {
+            # Gate coordinates are in raw space, need to convert to
+            #   transformed space
+            needs_adjustment <- TRUE
+            trans_to_apply[[gh_param]] <- gh_trans_func
+
+            if (.pkgenv$verbose) {
+                pop_report_adjustment(gate_param, gh_param, gh_trans_type)
+            }
+        }
+    }
+
+    list(needs_adjustment = needs_adjustment,
+        trans_to_apply = trans_to_apply)
+}
+
 #' @keywords internal
 adjust_gate_transformations <- function(
     gh, gate_obj,
     strip_comp_prefix = TRUE
 ) {
-    # Get transformations from gating hierarchy
-    gh_trans <- flowWorkspace::gh_get_transformations(gh)
-    gh_param_names <- names(gh_trans)
-
     # Get parameters from the gate
     gate_params <- flowCore::parameters(gate_obj)
 
-    # Linear transforms are filtered out before applying permanent transforms,
-    # so gh_get_transformations() only returns channels with non-linear
-    #   transforms.
-    # Always include all flowFrame column names so that linear/scatter
-    #   parameters
-    # (e.g. FSC-A) are available for matching gate parameters.
-    gh_param_names <- unique(c(
-        gh_param_names,
-        colnames(flowWorkspace::gh_pop_get_data(gh, "root"))
-    ))
+    gh_param_names <- pop_gh_param_names(gh)
 
     # Map gate parameter names to GatingSet parameter names
     # Gate params may have "Comp-" prefix or different sanitization
@@ -252,53 +368,7 @@ adjust_gate_transformations <- function(
     trans_to_apply <- list()
 
     if (FALSE) { # nocov start
-        # Disabled: gate coordinates are converted to raw data space by
-        #   display_to_raw().
-        for (i in seq_along(gate_params)) {
-            gate_param <- gate_params[i]
-            gh_param <- mapped_params[[gate_param]]
-
-            # Skip if no mapping found
-            if (is.null(gh_param)) {
-                warning(
-                    "Could not map gate parameter '", gate_param,
-                    "' to GatingSet parameters"
-                )
-                next
-            }
-
-            # Get transformation from hierarchy using mapped name
-            gh_trans_func <- gh_trans[[gh_param]]
-
-            # Skip if no transformation in hierarchy
-            if (is.null(gh_trans_func)) {
-                next
-            }
-
-            # Get transformation type from hierarchy
-            gh_trans_type <- attr(gh_trans_func, "type")
-
-            # If hierarchy has a transformation (not "none"), we need to apply
-            #   it to gate coords
-            if (!is.null(gh_trans_type)) {
-                # Gate coordinates are in raw space, need to convert to
-                #   transformed space
-                needs_adjustment <- TRUE
-                trans_to_apply[[gh_param]] <- gh_trans_func
-
-                if (.pkgenv$verbose) {
-                    message(
-                        "Parameter '", gate_param, "' -> '", gh_param,
-                        "' needs adjustment:"
-                    )
-                    message("  Gate coords in: raw data space")
-                    message(
-                        "  Hierarchy expects: ", gh_trans_type,
-                        " transformed space"
-                    )
-                }
-            }
-        }
+        adjustment <- pop_detect_adjustment(gh, gate_params, mapped_params)
     } # nocov end
 
     # If no mapping found at all, return original gate
@@ -319,9 +389,7 @@ adjust_gate_transformations <- function(
     }
 
     # Apply transformations to convert from raw space to transformed space
-    gate_obj_adjusted <- apply_transforms_to_gate(gate_obj, trans_to_apply)
-
-    return(gate_obj_adjusted)
+    apply_transforms_to_gate(gate_obj, trans_to_apply)
 }
 
 
@@ -366,6 +434,26 @@ map_gate_params_to_gh <- function(
 #' @param gate_obj flowCore gate object
 #' @param mapped_params Named list mapping old param names to new param names
 #' @return Gate object with updated parameter names
+#' Rename one named-vector's labels through a parameter mapping
+#'
+#' @param old_names Labels to rename
+#' @param valid_mapping Non-NULL old-to-new name mapping
+#' @return Renamed character vector (same values)
+#' @noRd
+pop_map_names <- function(old_names, valid_mapping) {
+    vapply(old_names, function(n) {
+        if (n %in% names(valid_mapping)) valid_mapping[[n]] else n
+    }, character(1))
+}
+
+#' Update gate parameter names to match flowFrame
+#'
+#' After compensation, flowFrame parameter names may have "Comp-" prefix.
+#' This function updates gate parameter names to match.
+#'
+#' @param gate_obj flowCore gate object
+#' @param mapped_params Named list mapping old param names to new param names
+#' @return Gate object with updated parameter names
 #' @keywords internal
 update_gate_param_names <- function(gate_obj, mapped_params) {
     # Filter out NULL mappings
@@ -378,18 +466,13 @@ update_gate_param_names <- function(gate_obj, mapped_params) {
     # Handle different gate types
     if (inherits(gate_obj, "rectangleGate")) {
         # Update min/max names
-        old_names <- names(gate_obj@min)
-        new_names <- vapply(old_names, function(n) {
-            if (n %in% names(valid_mapping)) valid_mapping[[n]] else n
-        }, character(1))
+        new_names <- pop_map_names(names(gate_obj@min), valid_mapping)
         names(gate_obj@min) <- new_names
         names(gate_obj@max) <- new_names
     } else if (inherits(gate_obj, "quadGate")) {
         # Update boundary names - critical for quadGate!
         old_names <- names(gate_obj@boundary)
-        new_names <- vapply(old_names, function(n) {
-            if (n %in% names(valid_mapping)) valid_mapping[[n]] else n
-        }, character(1))
+        new_names <- pop_map_names(old_names, valid_mapping)
         names(gate_obj@boundary) <- new_names
 
         if (.pkgenv$verbose) {
@@ -402,17 +485,12 @@ update_gate_param_names <- function(gate_obj, mapped_params) {
         }
     } else if (inherits(gate_obj, "polygonGate")) {
         # Update boundary column names
-        old_names <- colnames(gate_obj@boundaries)
-        new_names <- vapply(old_names, function(n) {
-            if (n %in% names(valid_mapping)) valid_mapping[[n]] else n
-        }, character(1))
+        new_names <- pop_map_names(colnames(gate_obj@boundaries),
+            valid_mapping)
         colnames(gate_obj@boundaries) <- new_names
     } else if (inherits(gate_obj, "ellipsoidGate")) {
         # Update mean and covariance names
-        old_names <- names(gate_obj@mean)
-        new_names <- vapply(old_names, function(n) {
-            if (n %in% names(valid_mapping)) valid_mapping[[n]] else n
-        }, character(1))
+        new_names <- pop_map_names(names(gate_obj@mean), valid_mapping)
         names(gate_obj@mean) <- new_names
         colnames(gate_obj@cov) <- new_names
         rownames(gate_obj@cov) <- new_names
@@ -487,6 +565,134 @@ update_gate_param_names <- function(gate_obj, mapped_params) {
 #'   \code{\link[flowWorkspace]{gh_get_transformations}} for retrieving
 #'   the transformation functions registered in a \code{GatingHierarchy}.
 #'
+#' Transform rectangleGate min/max values
+#'
+#' @param gate_obj A rectangleGate object
+#' @param trans_list Named list of transformation functions
+#' @noRd
+pop_transform_rect <- function(gate_obj, trans_list) {
+    for (param in names(trans_list)) {
+        trans_func <- trans_list[[param]]
+
+        # Apply transformation to min and max values
+        if (param %in% names(gate_obj@min)) {
+            old_val <- gate_obj@min[param]
+            gate_obj@min[param] <- trans_func(old_val)
+            if (.pkgenv$verbose) {
+                message(
+                    "  Transformed ", param, " min: ", old_val,
+                    " -> ", gate_obj@min[param]
+                )
+            }
+        }
+
+        if (param %in% names(gate_obj@max)) {
+            old_val <- gate_obj@max[param]
+            gate_obj@max[param] <- trans_func(old_val)
+            if (.pkgenv$verbose) {
+                message(
+                    "  Transformed ", param, " max: ", old_val,
+                    " -> ", gate_obj@max[param]
+                )
+            }
+        }
+    }
+
+    gate_obj
+}
+
+#' Transform quadGate boundary (divider positions)
+#'
+#' @param gate_obj A quadGate object
+#' @param trans_list Named list of transformation functions
+#' @noRd
+pop_transform_quad <- function(gate_obj, trans_list) {
+    # Note: slot is "boundary" (singular), not "boundaries"
+    boundary <- gate_obj@boundary
+
+    for (param in names(trans_list)) {
+        if (param %in% names(boundary)) {
+            trans_func <- trans_list[[param]]
+            old_val <- boundary[param]
+            boundary[param] <- trans_func(old_val)
+
+            if (.pkgenv$verbose) {
+                message(
+                    "  Transformed ", param, " quad divider: ",
+                    old_val, " -> ", boundary[param]
+                )
+            }
+        }
+    }
+
+    gate_obj@boundary <- boundary
+    gate_obj
+}
+
+#' Transform polygonGate boundary columns
+#'
+#' @param gate_obj A polygonGate object
+#' @param trans_list Named list of transformation functions
+#' @noRd
+pop_transform_poly <- function(gate_obj, trans_list) {
+    boundaries <- gate_obj@boundaries
+
+    for (param in names(trans_list)) {
+        if (param %in% colnames(boundaries)) {
+            trans_func <- trans_list[[param]]
+            old_vals <- boundaries[, param]
+            boundaries[, param] <- trans_func(old_vals)
+
+            if (.pkgenv$verbose) {
+                message("  Transformed ", param, " polygon boundaries")
+                message(
+                    "    Range: ", min(old_vals), "-", max(old_vals),
+                    " -> ", min(boundaries[, param]), "-",
+                    max(boundaries[, param])
+                )
+            }
+        }
+    }
+
+    gate_obj@boundaries <- boundaries
+    gate_obj
+}
+
+#' Transform ellipsoidGate mean values (covariance left unchanged)
+#'
+#' Transforming an ellipsoid properly requires transforming the covariance
+#' matrix; this is complex and may not preserve the ellipsoid shape, so a
+#' warning is emitted and @cov is left as-is.
+#'
+#' @param gate_obj An ellipsoidGate object
+#' @param trans_list Named list of transformation functions
+#' @noRd
+pop_transform_ellip <- function(gate_obj, trans_list) {
+    for (param in names(trans_list)) {
+        param_idx <- which(names(gate_obj@mean) == param)
+
+        if (length(param_idx) > 0) {
+            trans_func <- trans_list[[param]]
+            old_val <- gate_obj@mean[param_idx]
+            gate_obj@mean[param_idx] <- trans_func(old_val)
+
+            if (.pkgenv$verbose) {
+                message(
+                    "  Transformed ", param, " ellipse mean: ",
+                    old_val, " -> ", gate_obj@mean[param_idx]
+                )
+            }
+
+            warning(
+                "Ellipsoid gate transformation may not preserve",
+                " exact shape"
+            )
+        }
+    }
+
+    gate_obj
+}
+
 #' @keywords internal
 apply_transforms_to_gate <- function(gate_obj, trans_list) {
     if (length(trans_list) == 0) {
@@ -495,103 +701,14 @@ apply_transforms_to_gate <- function(gate_obj, trans_list) {
 
     # Handle rectangleGate
     if (inherits(gate_obj, "rectangleGate")) {
-        for (param in names(trans_list)) {
-            trans_func <- trans_list[[param]]
-
-            # Apply transformation to min and max values
-            if (param %in% names(gate_obj@min)) {
-                old_val <- gate_obj@min[param]
-                gate_obj@min[param] <- trans_func(old_val)
-                if (.pkgenv$verbose) {
-                    message(
-                        "  Transformed ", param, " min: ", old_val,
-                        " -> ", gate_obj@min[param]
-                    )
-                }
-            }
-
-            if (param %in% names(gate_obj@max)) {
-                old_val <- gate_obj@max[param]
-                gate_obj@max[param] <- trans_func(old_val)
-                if (.pkgenv$verbose) {
-                    message(
-                        "  Transformed ", param, " max: ", old_val,
-                        " -> ", gate_obj@max[param]
-                    )
-                }
-            }
-        }
+        gate_obj <- pop_transform_rect(gate_obj, trans_list)
     } else if (inherits(gate_obj, "quadGate")) {
         # browser() # nocov
-        # Quadrant gates have boundary (divider positions) that need
-        #   transformation
-        # Note: slot is "boundary" (singular), not "boundaries"
-        boundary <- gate_obj@boundary
-
-        for (param in names(trans_list)) {
-            if (param %in% names(boundary)) {
-                trans_func <- trans_list[[param]]
-                old_val <- boundary[param]
-                boundary[param] <- trans_func(old_val)
-
-                if (.pkgenv$verbose) {
-                    message(
-                        "  Transformed ", param, " quad divider: ",
-                        old_val, " -> ", boundary[param]
-                    )
-                }
-            }
-        }
-
-        gate_obj@boundary <- boundary
+        gate_obj <- pop_transform_quad(gate_obj, trans_list)
     } else if (inherits(gate_obj, "polygonGate")) {
-        boundaries <- gate_obj@boundaries
-
-        for (param in names(trans_list)) {
-            if (param %in% colnames(boundaries)) {
-                trans_func <- trans_list[[param]]
-                old_vals <- boundaries[, param]
-                boundaries[, param] <- trans_func(old_vals)
-
-                if (.pkgenv$verbose) {
-                    message("  Transformed ", param, " polygon boundaries")
-                    message(
-                        "    Range: ", min(old_vals), "-", max(old_vals),
-                        " -> ", min(boundaries[, param]), "-",
-                        max(boundaries[, param])
-                    )
-                }
-            }
-        }
-
-        gate_obj@boundaries <- boundaries
+        gate_obj <- pop_transform_poly(gate_obj, trans_list)
     } else if (inherits(gate_obj, "ellipsoidGate")) {
-        # For ellipsoid gates, need to transform mean and possibly adjust
-        #   covariance
-        for (param in names(trans_list)) {
-            param_idx <- which(names(gate_obj@mean) == param)
-
-            if (length(param_idx) > 0) {
-                trans_func <- trans_list[[param]]
-                old_val <- gate_obj@mean[param_idx]
-                gate_obj@mean[param_idx] <- trans_func(old_val)
-
-                if (.pkgenv$verbose) {
-                    message(
-                        "  Transformed ", param, " ellipse mean: ",
-                        old_val, " -> ", gate_obj@mean[param_idx]
-                    )
-                }
-
-                # Note: transforming an ellipsoid properly requires
-                #   transforming the covariance matrix
-                # This is complex and may not preserve the ellipsoid shape
-                warning(
-                    "Ellipsoid gate transformation may not preserve",
-                    " exact shape"
-                )
-            }
-        }
+        gate_obj <- pop_transform_ellip(gate_obj, trans_list)
     }
 
     return(gate_obj)
