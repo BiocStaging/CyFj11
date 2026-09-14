@@ -60,7 +60,9 @@ process_zip_archive <- function(zip_path) {
     zip_info <- list.files(work_dir, recursive = TRUE, full.names = TRUE)
     if (.pkgenv$verbose) { # nocov
         message("Archive contains ", length(zip_info), " files:")
-        if (length(zip_info)) message(paste(zip_info, collapse = "\n"))
+        if (length(zip_info)) {
+            message(paste0(zip_info, collapse = "\n"))
+        }
         }
     # Find target files (manifest and JSON)
     manifest_files <- grep("manifest\\.txt$", zip_info, value = TRUE)

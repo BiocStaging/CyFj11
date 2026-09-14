@@ -226,7 +226,9 @@ tree_identify_logical_gates <- function(populations, populationDefinitions) {
         } # nocov
         if (.pkgenv$verbose) { # nocov
             summary_df <- create_logical_gate_summary(logical_gates_info)
-            message(paste(capture.output(format(summary_df)), collapse = "\n"))
+            message(paste0(capture.output(format(summary_df)),
+                collapse = "\n"
+            ))
         }
     } else {
         if (.pkgenv$verbose) message("No logical gates found") # nocov
@@ -272,7 +274,7 @@ tree_postprocess <- function(tree, logical_gates_info) {
             message("\nLogical gates in final tree:")
         } # nocov
         if (.pkgenv$verbose) {
-            message(paste(capture.output(format(summary_after)),
+            message(paste0(capture.output(format(summary_after)),
                 collapse = "\n"
             ))
         } # nocov
@@ -733,10 +735,10 @@ identify_logical_gates <- function(populations, populationDefinitions) {
             # Add gateDefinition if missing
             if (is.null(pop_def$definition$gateDefinition)) {
                 if (.pkgenv$verbose) {
-                    message(paste(
-                        "  - Adding gateDefinition",
+                    message(
+                        "  - Adding gateDefinition ",
                         "to populationDefinitions"
-                    ))
+                    )
                 } # nocov
                 populationDefinitions[[pop_def$uuid]]$definition$
                     gateDefinition <- list(
