@@ -562,6 +562,46 @@ get_immediate_population <- function(node) {
     return(NA_character_)
 }
 
+#' Build one row of population counts for a sample
+#' @noRd
+wsp_population_count_rows <- function(pop, file, sample_name, sample_id,
+                                      sample_count) {
+    attrs <- xml_attrs(pop)
+    tibble(
+        file = basename(file),
+        sample_name = sample_name,
+        sample_id = sample_id,
+        sample_count = sample_count,
+        population_path = get_population_path(pop),
+        population = attrs["name"] %||% NA_character_,
+        id = attrs["id"] %||% NA_character_,
+        field_type = "PopulationCount",
+        stat_name = "PopulationCount",
+        stat_ancestor = NA_character_,
+        value_raw = attrs["count"]
+    )
+}
+
+#' Build one row of statistic values for a sample
+#' @noRd
+wsp_statistic_rows <- function(stat, file, sample_name, sample_id,
+                               sample_count) {
+    attrs <- xml_attrs(stat)
+    tibble(
+        file = basename(file),
+        sample_name = sample_name,
+        sample_id = sample_id,
+        sample_count = sample_count,
+        population_path = get_population_path(stat),
+        population = get_immediate_population(stat),
+        id = attrs["id"] %||% NA_character_,
+        field_type = "Statistic",
+        stat_name = attrs["name"] %||% NA_character_,
+        stat_ancestor = attrs["ancestor"] %||% NA_character_,
+        value_raw = attrs["value"]
+    )
+}
+
 #' Extract all counts and statistics from one .wsp file into a long tibble
 #' @noRd
 extract_wsp_data_long <- function(file) {
@@ -577,19 +617,8 @@ extract_wsp_data_long <- function(file) {
         populations <- xml_find_all(sample, ".//Population")
 
         pop_counts <- bind_rows(lapply(populations, function(pop) {
-            attrs <- xml_attrs(pop)
-            tibble(
-                file = basename(file),
-                sample_name = sample_name,
-                sample_id = sample_id,
-                sample_count = sample_count,
-                population_path = get_population_path(pop),
-                population = attrs["name"] %||% NA_character_,
-                id = attrs["id"] %||% NA_character_,
-                field_type = "PopulationCount",
-                stat_name = "PopulationCount",
-                stat_ancestor = NA_character_,
-                value_raw = attrs["count"]
+            wsp_population_count_rows(
+                pop, file, sample_name, sample_id, sample_count
             )
         }))
 
@@ -597,19 +626,8 @@ extract_wsp_data_long <- function(file) {
         stats <- xml_find_all(sample, ".//Statistic")
 
         stat_rows <- bind_rows(lapply(stats, function(stat) {
-            attrs <- xml_attrs(stat)
-            tibble(
-                file = basename(file),
-                sample_name = sample_name,
-                sample_id = sample_id,
-                sample_count = sample_count,
-                population_path = get_population_path(stat),
-                population = get_immediate_population(stat),
-                id = attrs["id"] %||% NA_character_,
-                field_type = "Statistic",
-                stat_name = attrs["name"] %||% NA_character_,
-                stat_ancestor = attrs["ancestor"] %||% NA_character_,
-                value_raw = attrs["value"]
+            wsp_statistic_rows(
+                stat, file, sample_name, sample_id, sample_count
             )
         }))
 
