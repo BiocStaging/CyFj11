@@ -457,7 +457,8 @@ create_log_transform <- function(spec) {
 #'
 #' Forward: raw -> display, inverse: display -> raw.
 #'
-#' @param params list(decade, offset, scale, shift) from trans_log_extract_params
+#' @param params list(decade, offset, scale, shift) from
+#'   trans_log_extract_params
 #' @return scales transform object
 #' @noRd
 trans_make_log_obj <- function(params) {

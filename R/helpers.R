@@ -441,31 +441,3 @@ verify_gate_marker_names <- function(
         warnings = warnings_vec
     )
 }
-
-#' Restore Marker Names After Automated Routine Changes
-#'
-#' When an automated routine (like compensation) changes marker names,
-#' this function helps restore the original names for consistency.
-#'
-#' @param gate_obj A flowCore gate object
-#' @param name_mapping Named list mapping current names to original names
-#' @return Gate object with restored parameter names
-#' @keywords internal
-# restore_gate_marker_names <- function(gate_obj, name_mapping) {
-#   # Get current gate parameters
-#   gate_params <- flowCore::parameters(gate_obj)
-#
-#   # Create reverse mapping (target -> source)
-#   reverse_mapping <- setNames(names(name_mapping), unlist(name_mapping))
-#
-#   # Map gate parameters back to original names
-#   original_params <- character(length(gate_params))
-#   for (i in seq_along(gate_params)) {
-#     original_params[i] <- reverse_mapping[gate_params[i]] %||% gate_params[i]
-#   }
-#
-#   # Set the original parameter names on the gate
-#   flowCore::parameters(gate_obj) <- original_params
-#
-#   gate_obj
-# }

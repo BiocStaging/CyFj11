@@ -990,7 +990,7 @@ extract_populations_from_gatingset_v10 <- function(
 #' @return Updated populations list
 #' @noRd
 fj10_add_pop_record <- function(populations, gh, sample_id, sample_name,
-                                 pop_path) {
+    pop_path) {
     pop_id <- paste0("pop_", sample_id, "_", gsub("/", "_", pop_path))
 
     # Find corresponding gate if not root
@@ -1598,7 +1598,7 @@ fj10_ellipse_raw_geometry <- function(cov_mat, center_x, center_y,
 #' @return List of foci and edge point coordinates
 #' @noRd
 fj10_ellipse_points <- function(center_x, center_y, rotation_angle_rad,
-                                 semi_major, semi_minor, c) {
+    semi_major, semi_minor, c) {
     # Calculate the two foci positions (along major axis)
     focus1_x <- center_x + c * cos(rotation_angle_rad)
     focus1_y <- center_y + c * sin(rotation_angle_rad)
@@ -3297,7 +3297,7 @@ fj10_sample_section <- function(gating_set, sample, sample_id, gates,
 #' @return Character vector of XML lines for the SampleNode block
 #' @noRd
 fj10_sample_node_xml <- function(gating_set, sample, sample_gh, sample_id,
-                                  gates, populations, force_XSC_linear) {
+    gates, populations, force_XSC_linear) {
     # ---- SampleNode opening tag + Graph
     #   -----------------------------------
     heat_map_param <- heat_map_param_for_sample(sample)
@@ -3339,7 +3339,7 @@ fj10_sample_keywords_xml <- function(sample) {
 #' @return Character vector of XML lines (empty when no hierarchy)
 #' @noRd
 fj10_sample_subpops_xml <- function(sample_gh, gates, populations,
-                                     sample_id, heat_map_param) {
+    sample_id, heat_map_param) {
     if (!(requireNamespace("flowWorkspace", quietly = TRUE) &&
         !is.null(sample_gh))) {
         return(character(0))
@@ -3614,7 +3614,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates,
 #' @return Character vector of XML lines
 #' @noRd
 fj10_all_sample_sections <- function(gating_set, samples, gates, populations,
-                                      ws_matrix_id, force_XSC_linear) {
+    ws_matrix_id, force_XSC_linear) {
     # Add samples (each containing DataSet, Transformations, Keywords, and
     #   SampleNode)
     unlist(lapply(seq_along(samples), function(sample_id) {
@@ -4117,8 +4117,8 @@ generate_sample_subpopulations_xml <- function(
 #' @return Character vector of XML lines
 #' @noRd
 fj10_regular_pop_xml <- function(gating_hierarchy, gates, populations,
-                                  child_path, matching_pop,
-                                  pop_display_name, indent, heat_map_param) {
+    child_path, matching_pop,
+    pop_display_name, indent, heat_map_param) {
     xml_lines <- c(
         sprintf(
             paste0(
@@ -4181,7 +4181,7 @@ fj10_pop_count <- function(gating_hierarchy, child_path, matching_pop) {
 #' @return Character vector of XML lines
 #' @noRd
 fj10_subpop_children_xml <- function(gating_hierarchy, gates, populations,
-                                      child_path, indent, heat_map_param) {
+    child_path, indent, heat_map_param) {
     grandchildren <- tryCatch(
         flowWorkspace::gs_pop_get_children(gating_hierarchy, child_path,
             path = "auto"

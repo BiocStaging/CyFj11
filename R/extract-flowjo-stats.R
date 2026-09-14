@@ -565,7 +565,7 @@ get_immediate_population <- function(node) {
 #' Build one row of population counts for a sample
 #' @noRd
 wsp_population_count_rows <- function(pop, file, sample_name, sample_id,
-                                      sample_count) {
+    sample_count) {
     attrs <- xml_attrs(pop)
     tibble(
         file = basename(file),
@@ -585,7 +585,7 @@ wsp_population_count_rows <- function(pop, file, sample_name, sample_id,
 #' Build one row of statistic values for a sample
 #' @noRd
 wsp_statistic_rows <- function(stat, file, sample_name, sample_id,
-                               sample_count) {
+    sample_count) {
     attrs <- xml_attrs(stat)
     tibble(
         file = basename(file),
