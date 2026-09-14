@@ -77,15 +77,9 @@ filter_samples <- function(sample_uuids, subset, dataSources, keywords) {
         return(sample_uuids[subset_parsed])
     } else if (is.character(subset_parsed)) {
         # Filenames - match to sample UUIDs
-        matched <- vapply(subset_parsed, function(fname) {
-            idx <- which(vapply(dataSources, function(ds) {
-                isTRUE(basename(ds$definition$uri) == fname) ||
-                    isTRUE(ds$definition$customKeywords$`File Name` == fname)
-            }, logical(1)))
-            if (length(idx) > 0) names(dataSources)[idx[1]] else NA_character_
-        }, character(1))
-        matched <- matched[!is.na(matched)]
-        return(intersect(sample_uuids, matched))
+        return(filter_sample_filenames(
+            subset_parsed, sample_uuids, dataSources
+        ))
     } else if (is.list(subset_parsed) && "name" %in% names(subset_parsed)) {
         # List with name element
         return(filter_samples(
@@ -96,6 +90,25 @@ filter_samples <- function(sample_uuids, subset, dataSources, keywords) {
 
     # Default: return all
     return(sample_uuids)
+}
+
+#' Match filename subsets to sample UUIDs
+#'
+#' @param subset_parsed Character vector of filenames
+#' @param sample_uuids Sample UUIDs to intersect with
+#' @param dataSources Data sources searched by basename and File Name keyword
+#' @return Sample UUIDs matching any of the filenames
+#' @noRd
+filter_sample_filenames <- function(subset_parsed, sample_uuids, dataSources) {
+    matched <- vapply(subset_parsed, function(fname) {
+        idx <- which(vapply(dataSources, function(ds) {
+            isTRUE(basename(ds$definition$uri) == fname) ||
+                isTRUE(ds$definition$customKeywords$`File Name` == fname)
+        }, logical(1)))
+        if (length(idx) > 0) names(dataSources)[idx[1]] else NA_character_
+    }, character(1))
+    matched <- matched[!is.na(matched)]
+    intersect(sample_uuids, matched)
 }
 
 
@@ -134,61 +147,22 @@ find_root_population <- function(
     }
 
     root_popdef_uuid <- names(root_popdefs)[1]
-    root_popdef <- root_popdefs[[root_popdef_uuid]]
 
     # In FlowJo v11, we need to find populations that reference this
     #   population definition
-    # and belong to our sample
-    sample_pop_uuid <- NULL
-
-    # Iterate through all populations to find one that:
-    # 1. References our root population definition
-    # 2. Belongs to our sample (through parent relationships)
+    # and belong to our sample.  First by direct reference, then any
+    #   population with
+    # parentPopulation = NULL (which indicates a root population).
     # TODO: there is only compoundPopulations but no populationReference, this
     #   needs to be verified
-    for (pop_uuid in names(populations)) {
-        pop <- populations[[pop_uuid]]
-        if (!is.null(pop)) {
-            # Check if this population references our root population definition
-            if (!is.null(pop$populationReference) &&
-                pop$populationReference == root_popdef_uuid) {
-                # Check if this population belongs to our sample
-                parents <- pop$parents
-                if (!is.null(parents)) {
-                    ds_uuid <- parents[["_dataSource"]]
-                    if (is.null(ds_uuid)) {
-                        ds_uuid <- parents[["dataSource"]]
-                    }
-                    if (!is.null(ds_uuid) && ds_uuid[[1]] == sample_uuid) {
-                        sample_pop_uuid <- pop_uuid
-                        break
-                    }
-                }
-            }
-        }
-    }
+    sample_pop_uuid <- find_root_by_reference(
+        populations, root_popdef_uuid, sample_uuid
+    )
 
     if (is.null(sample_pop_uuid)) {
-        # If we couldn't find by direct reference, try to find by
-        #   parentPopulation = NULL
-        # which indicates a root population
-        for (pop_uuid in names(populations)) {
-            pop <- populations[[pop_uuid]]
-            if (!is.null(pop) && is.null(pop$parentPopulation)) {
-                # Check if this population belongs to our sample
-                parents <- pop$parents
-                if (!is.null(parents)) {
-                    ds_uuid <- parents[["_dataSource"]]
-                    if (is.null(ds_uuid)) {
-                        ds_uuid <- parents[["dataSource"]]
-                    }
-                    if (!is.null(ds_uuid) && ds_uuid[[1]] == sample_uuid) {
-                        sample_pop_uuid <- pop_uuid
-                        break
-                    }
-                }
-            }
-        }
+        sample_pop_uuid <- find_root_by_parentless(
+            populations, sample_uuid
+        )
     }
 
     if (is.null(sample_pop_uuid)) {
@@ -196,6 +170,70 @@ find_root_population <- function(
     }
 
     sample_pop_uuid
+}
+
+#' Data source UUID attached to a population, or NULL
+#'
+#' @param pop Population entry from the workspace
+#' @return Data source UUID string or NULL
+#' @noRd
+root_pop_ds_uuid <- function(pop) {
+    parents <- pop$parents
+    if (is.null(parents)) {
+        return(NULL)
+    }
+    ds_uuid <- parents[["_dataSource"]]
+    if (is.null(ds_uuid)) {
+        ds_uuid <- parents[["dataSource"]]
+    }
+    ds_uuid
+}
+
+#' Find the root population referencing the root definition
+#'
+#' @param populations Populations list from the workspace
+#' @param root_popdef_uuid UUID of the root population definition
+#' @param sample_uuid Sample the population must belong to
+#' @return Population UUID or NULL
+#' @noRd
+find_root_by_reference <- function(populations, root_popdef_uuid,
+    sample_uuid) {
+    for (pop_uuid in names(populations)) {
+        pop <- populations[[pop_uuid]]
+        if (is.null(pop)) {
+            next
+        }
+        # Check if this population references our root population definition
+        # and belongs to our sample (through parent relationships)
+        if (!is.null(pop$populationReference) &&
+            pop$populationReference == root_popdef_uuid) {
+            ds_uuid <- root_pop_ds_uuid(pop)
+            if (!is.null(ds_uuid) && ds_uuid[[1]] == sample_uuid) {
+                return(pop_uuid)
+            }
+        }
+    }
+    NULL
+}
+
+#' Find a root population by absent parentPopulation
+#'
+#' @param populations Populations list from the workspace
+#' @param sample_uuid Sample the population must belong to
+#' @return Population UUID or NULL
+#' @noRd
+find_root_by_parentless <- function(populations, sample_uuid) {
+    for (pop_uuid in names(populations)) {
+        pop <- populations[[pop_uuid]]
+        if (is.null(pop) || !is.null(pop$parentPopulation)) {
+            next
+        }
+        ds_uuid <- root_pop_ds_uuid(pop)
+        if (!is.null(ds_uuid) && ds_uuid[[1]] == sample_uuid) {
+            return(pop_uuid)
+        }
+    }
+    NULL
 }
 
 
@@ -620,82 +658,216 @@ build_gating_tree <- function(
     return(tree)
 }
 # Main function to identify logical gates from populations and definitions
+#' Find a population definition by UUID
+#'
+#' @param populationDefinitions Population definitions list
+#' @param uuid Definition UUID to find
+#' @return Definition entry or NULL
+#' @noRd
+logical_find_pop_def <- function(populationDefinitions, uuid) {
+    for (i in seq_along(populationDefinitions)) {
+        if (!is.null(populationDefinitions[[i]]$uuid) &&
+            populationDefinitions[[i]]$uuid == uuid) {
+            return(populationDefinitions[[i]])
+        }
+    }
+    NULL
+}
+
+#' Find a population by UUID
+#'
+#' @param populations Populations list from the workspace
+#' @param uuid Population UUID to find
+#' @return Population entry or NULL
+#' @noRd
+logical_find_pop <- function(populations, uuid) {
+    for (i in seq_along(populations)) {
+        if (!is.null(populations[[i]]$uuid) &&
+            populations[[i]]$uuid == uuid) {
+            return(populations[[i]])
+        }
+    }
+    NULL
+}
+
+#' Find what populations are combined by a logical gate
+#'
+#' The populations combined by the logical gate are in parents$populations.
+#'
+#' @param pop Population entry of the logical gate
+#' @param populations Populations list from the workspace
+#' @param populationDefinitions Population definitions list
+#' @return Named list entries with population_uuid, definition_uuid, name
+#' @noRd
+logical_find_combined <- function(pop, populations, populationDefinitions) {
+    parent_pop_uuids <- unlist(pop$parents$populations)
+
+    if (is.null(parent_pop_uuids) || length(parent_pop_uuids) == 0) {
+        return(NULL)
+    }
+
+    combined_pops <- list()
+
+    for (parent_uuid in parent_pop_uuids) {
+        parent_pop <- logical_find_pop(populations, parent_uuid)
+
+        if (is.null(parent_pop)) {
+            next
+        }
+
+        # Get the definition for this population to get the name
+        pop_def_uuid <- unlist(parent_pop$parents$populationDefinitions)
+
+        if (is.null(pop_def_uuid) || length(pop_def_uuid) == 0) {
+            next
+        }
+
+        parent_def <- logical_find_pop_def(populationDefinitions,
+            pop_def_uuid[1])
+
+        if (!is.null(parent_def) && !is.null(parent_def$definition$name)) {
+            combined_pops <- c(combined_pops, list(list(
+                population_uuid = parent_pop$uuid,
+                definition_uuid = parent_def$uuid,
+                name = sanitize_population_name(
+                    unlist(parent_def$definition$name)
+                )
+            )))
+        }
+    }
+
+    combined_pops
+}
+
+#' One logical-gate result entry, adding gateDefinition when missing
+#'
+#' @param pop Population entry of the logical gate
+#' @param pop_def Population definition of the logical gate
+#' @param populationDefinitions Population definitions list (mutated when the
+#'   definition lacks a gateDefinition)
+#' @param combined Result of logical_find_combined()
+#' @return list(gate = entry, populationDefinitions = definitions)
+#' @noRd
+logical_gate_entry <- function(pop, pop_def, populationDefinitions, combined) {
+    combined_names <- vapply(
+        combined, function(x) unlist(x$name),
+        character(1)
+    )
+
+    # Add gateDefinition if missing
+    if (is.null(pop_def$definition$gateDefinition)) {
+        populationDefinitions[[pop_def$uuid]]$definition$
+            gateDefinition <- list(
+            type = "logical",
+            operator = pop_def$definition$type,
+            components = combined_names,
+            component_uuids = vapply(
+                combined,
+                function(x) unlist(x$population_uuid), character(1)
+            )
+        )
+    }
+
+    entry <- list(
+        population_uuid = pop$uuid,
+        definition_uuid = pop_def$uuid,
+        gate_name = unlist(pop_def$definition$name),
+        gate_type = pop_def$definition$type,
+        combined_populations = combined_names,
+        combined_population_uuids = vapply(
+            combined,
+            function(x) unlist(x$population_uuid), character(1)
+        ),
+        combined_definition_uuids = vapply(
+            combined,
+            function(x) unlist(x$definition_uuid), character(1)
+        ),
+        num_components = length(combined)
+    )
+
+    list(gate = entry, populationDefinitions = populationDefinitions)
+}
+
+#' Is a population a logical gate?
+#'
+#' @param pop Population entry
+#' @param populationDefinitions Population definitions from the workspace
+#' @return TRUE when the population resolves to an and/or/not definition
+#' @noRd
+logical_is_gate_pop <- function(pop, populationDefinitions) {
+    pop_def_uuid <- unlist(pop$parents$populationDefinitions)
+    if (is.null(pop_def_uuid) || length(pop_def_uuid) == 0) {
+        return(FALSE)
+    }
+    pop_def <- logical_find_pop_def(populationDefinitions, pop_def_uuid[1])
+    if (is.null(pop_def)) {
+        return(FALSE)
+    }
+    !is.null(pop_def$definition$type) &&
+        pop_def$definition$type %in% c("and", "or", "not")
+}
+
+#' Process one logical-gate population
+#'
+#' Builds the gate entry, or emits diagnostics when no combined populations
+#' were found, and returns the possibly-updated populationDefinitions.
+#'
+#' @param pop Population entry
+#' @param populations All populations
+#' @param populationDefinitions Population definitions from the workspace
+#' @return list(gate = entry or NULL, populationDefinitions = updated list)
+#' @noRd
+logical_process_pop <- function(pop, populations, populationDefinitions) {
+    pop_def_uuid <- unlist(pop$parents$populationDefinitions)[1]
+    pop_def <- logical_find_pop_def(populationDefinitions, pop_def_uuid)
+    gate_type <- pop_def$definition$type
+    gate_name <- unlist(pop_def$definition$name)
+
+    if (.pkgenv$verbose) {
+        message(sprintf(
+            "Found logical gate: %s (type: %s, uuid: %s)", # nocov
+            gate_name, gate_type, pop$uuid
+        ))
+    }
+
+    # Find combined populations
+    combined <- logical_find_combined(
+        pop, populations, populationDefinitions
+    )
+
+    if (!is.null(combined) && length(combined) > 0) {
+        combined_names <- vapply(
+            combined, function(x) unlist(x$name),
+            character(1)
+        )
+        if (.pkgenv$verbose) {
+            message(sprintf(
+                "  - Combines: %s",
+                paste(combined_names, collapse = ", ")
+            ))
+        } # nocov
+
+        entry <- logical_gate_entry(
+            pop, pop_def, populationDefinitions, combined
+        )
+        populationDefinitions <- entry$populationDefinitions
+
+        list(gate = entry$gate, populationDefinitions = populationDefinitions)
+    } else {
+        message("  - No combined populations found!")
+        message(sprintf(
+            "  - parents$populations: %s",
+            paste(unlist(pop$parents$populations), collapse = ", ")
+        ))
+        list(gate = NULL, populationDefinitions = populationDefinitions)
+    }
+}
+
 identify_logical_gates <- function(populations, populationDefinitions) {
-    # Helper to find population definition by UUID
-    find_pop_def_by_uuid <- function(uuid) {
-        for (i in seq_along(populationDefinitions)) {
-            if (!is.null(populationDefinitions[[i]]$uuid) &&
-                populationDefinitions[[i]]$uuid == uuid) {
-                return(populationDefinitions[[i]])
-            }
-        }
-        return(NULL)
-    }
-
-    # Helper to find population by UUID
-    find_pop_by_uuid <- function(uuid) {
-        for (i in seq_along(populations)) {
-            if (!is.null(populations[[i]]$uuid) &&
-                populations[[i]]$uuid == uuid) {
-                return(populations[[i]])
-            }
-        }
-        return(NULL)
-    }
-
-    # Find what populations are combined by a logical gate
-    find_combined_populations <- function(pop) {
-        # The populations combined by the logical gate are in
-        #   parents$populations
-        parent_pop_uuids <- unlist(pop$parents$populations)
-
-        if (is.null(parent_pop_uuids) || length(parent_pop_uuids) == 0) {
-            return(NULL)
-        }
-
-        # For each parent population UUID, get its name
-        combined_pops <- list()
-
-        for (parent_uuid in parent_pop_uuids) {
-            parent_pop <- find_pop_by_uuid(parent_uuid)
-
-            if (!is.null(parent_pop)) {
-                # Get the definition for this population to get the name
-                pop_def_uuid <- unlist(parent_pop$parents$populationDefinitions)
-
-                if (!is.null(pop_def_uuid) && length(pop_def_uuid) > 0) {
-                    parent_def <- find_pop_def_by_uuid(pop_def_uuid[1])
-
-                    if (!is.null(parent_def) &&
-                        !is.null(parent_def$definition$name)) {
-                        combined_pops <- c(combined_pops, list(list(
-                            population_uuid = parent_pop$uuid,
-                            definition_uuid = parent_def$uuid,
-                            name = sanitize_population_name(
-                                unlist(parent_def$definition$name)
-                            )
-                        )))
-                    }
-                }
-            }
-        }
-
-        return(combined_pops)
-    }
-
     # Process each population to find logical gates
     # First, identify which populations are logical gates
     logical_gate_indices <- which(vapply(populations, function(pop) {
-        pop_def_uuid <- unlist(pop$parents$populationDefinitions)
-        if (is.null(pop_def_uuid) || length(pop_def_uuid) == 0) {
-            return(FALSE)
-        }
-        pop_def <- find_pop_def_by_uuid(pop_def_uuid[1])
-        if (is.null(pop_def)) {
-            return(FALSE)
-        }
-        !is.null(pop_def$definition$type) &&
-            pop_def$definition$type %in% c("and", "or", "not")
+        logical_is_gate_pop(pop, populationDefinitions)
     }, logical(1)))
 
     # Process logical gates and collect results.  Use an explicit loop so the
@@ -704,76 +876,13 @@ identify_logical_gates <- function(populations, populationDefinitions) {
     # the <<- needed otherwise).
     results_list <- list()
     for (i in logical_gate_indices) {
-        pop <- populations[[i]]
-        pop_def_uuid <- unlist(pop$parents$populationDefinitions)[1]
-        pop_def <- find_pop_def_by_uuid(pop_def_uuid)
-        gate_type <- pop_def$definition$type
-        gate_name <- unlist(pop_def$definition$name)
+        out <- logical_process_pop(
+            populations[[i]], populations, populationDefinitions
+        )
+        populationDefinitions <- out$populationDefinitions
 
-        if (.pkgenv$verbose) {
-            message(sprintf(
-                "Found logical gate: %s (type: %s, uuid: %s)", # nocov
-                gate_name, gate_type, pop$uuid
-            ))
-        }
-
-        # Find combined populations
-        combined <- find_combined_populations(pop)
-
-        if (!is.null(combined) && length(combined) > 0) {
-            combined_names <- vapply(
-                combined, function(x) unlist(x$name),
-                character(1)
-            )
-            if (.pkgenv$verbose) {
-                message(sprintf(
-                    "  - Combines: %s",
-                    paste(combined_names, collapse = ", ")
-                ))
-            } # nocov
-
-            # Add gateDefinition if missing
-            if (is.null(pop_def$definition$gateDefinition)) {
-                if (.pkgenv$verbose) {
-                    message(
-                        "  - Adding gateDefinition ",
-                        "to populationDefinitions"
-                    )
-                } # nocov
-                populationDefinitions[[pop_def$uuid]]$definition$
-                    gateDefinition <- list(
-                    type = "logical",
-                    operator = gate_type,
-                    components = combined_names,
-                    component_uuids = vapply(
-                        combined,
-                        function(x) unlist(x$population_uuid), character(1)
-                    )
-                )
-            }
-
-            results_list[[length(results_list) + 1]] <- list(
-                population_uuid = pop$uuid,
-                definition_uuid = pop_def$uuid,
-                gate_name = gate_name,
-                gate_type = gate_type,
-                combined_populations = combined_names,
-                combined_population_uuids = vapply(
-                    combined,
-                    function(x) unlist(x$population_uuid), character(1)
-                ),
-                combined_definition_uuids = vapply(
-                    combined,
-                    function(x) unlist(x$definition_uuid), character(1)
-                ),
-                num_components = length(combined)
-            )
-        } else {
-            message("  - No combined populations found!")
-            message(sprintf(
-                "  - parents$populations: %s",
-                paste(unlist(pop$parents$populations), collapse = ", ")
-            ))
+        if (!is.null(out$gate)) {
+            results_list[[length(results_list) + 1]] <- out$gate
         }
     }
 
@@ -787,6 +896,39 @@ identify_logical_gates <- function(populations, populationDefinitions) {
     ))
 }
 
+#' Indices of first-occurrence children by UUID
+#'
+#' Non-list children and children without a UUID are always kept.
+#'
+#' @param children Children list of a tree node
+#' @return Logical vector marking children to keep
+#' @noRd
+tree_dedupe_keep_indices <- function(children) {
+    # Use Filter to keep only first occurrence of each UUID
+    # For non-list children or children with unique UUIDs, keep them
+    seen_uuids <- character()
+    keep_indices <- logical(length(children))
+
+    for (i in seq_along(children)) {
+        child <- children[[i]]
+        if (!is.list(child)) {
+            # Keep non-list children
+            keep_indices[i] <- TRUE
+        } else {
+            child_uuid <- child$uuid
+            if (is.null(child_uuid) || !(child_uuid %in% seen_uuids)) {
+                # First time seeing this UUID - keep it
+                if (!is.null(child_uuid)) {
+                    seen_uuids <- c(seen_uuids, child_uuid)
+                }
+                keep_indices[i] <- TRUE
+            }
+        }
+    }
+
+    keep_indices
+}
+
 # Remove duplicate children at each level based on UUID
 deduplicate_tree <- function(tree) {
     deduplicate_node <- function(node) {
@@ -796,30 +938,10 @@ deduplicate_tree <- function(tree) {
 
         # Process children if they exist
         if (!is.null(node$children) && length(node$children) > 0) {
-            # Use Filter to keep only first occurrence of each UUID
-            # For non-list children or children with unique UUIDs, keep them
-            seen_uuids <- character()
-            keep_indices <- logical(length(node$children))
-
-            for (i in seq_along(node$children)) {
-                child <- node$children[[i]]
-                if (!is.list(child)) {
-                    # Keep non-list children
-                    keep_indices[i] <- TRUE
-                } else {
-                    child_uuid <- child$uuid
-                    if (is.null(child_uuid) || !(child_uuid %in% seen_uuids)) {
-                        # First time seeing this UUID - keep it
-                        if (!is.null(child_uuid)) {
-                            seen_uuids <- c(seen_uuids, child_uuid)
-                        }
-                        keep_indices[i] <- TRUE
-                    }
-                }
-            }
-
             # Filter to unique children, then recursively deduplicate
-            unique_children <- node$children[keep_indices]
+            unique_children <- node$children[tree_dedupe_keep_indices(
+                node$children
+            )]
             unique_children <- lapply(unique_children, function(child) {
                 if (is.list(child)) {
                     deduplicate_node(child)
@@ -885,95 +1007,119 @@ create_logical_gate_summary <- function(logical_gates) {
 }
 
 
-# Summarize logical gates in tree
-summarize_logical_gates <- function(tree) {
-    collect_logical_gates <- function(node, path = "") {
-        gates_list <- list()
+#' Build the logical-gate summary dataframe
+#'
+#' @param gates Collected logical gate info entries
+#' @return Dataframe or NULL when gates is empty
+#' @noRd
+logical_summary_df <- function(gates) {
+    if (length(gates) == 0) {
+        return(NULL)
+    }
 
-        if (!is.list(node)) {
-            return(gates_list)
-        }
-
-        # Build current_path handling vector cases
-        current_path <- if (!is.null(node$name)) {
-            node_names <- unlist(node$name)
-            # Handle when path is empty string(s) or has values
-            if (all(path == "")) {
-                node_names
-            } else {
-                # Create all combinations of paths and names
-                as.vector(outer(path, node_names, paste, sep = "/"))
-            }
-        } else {
-            path
-        }
-
-
-        if (!is.null(node$type) && node$type %in% c("and", "or", "not")) {
-            gate_info <- list(
-                path = current_path,
-                name = unlist(node$name),
-                type = node$type,
-                uuid = node$uuid
+    df <- data.frame(
+        path = vapply(gates, function(g) {
+            paste(unlist(g$path),
+                collapse = "/"
             )
+        }, character(1)),
+        name = vapply(gates, function(g) {
+            paste(unlist(g$name),
+                collapse = "/"
+            )
+        }, character(1)),
+        type = vapply(gates, function(g) unlist(g$type), character(1)),
+        num_components = vapply(
+            gates,
+            function(g) length(g$combined_populations), integer(1)
+        ),
+        stringsAsFactors = FALSE
+    )
 
-            if (!is.null(node$logical_gate_info)) {
-                gate_info$combined_populations <-
-                    node$logical_gate_info$combined_populations
-                gate_info$num_components <-
-                    length(node$logical_gate_info$combined_populations)
-            } else {
-                gate_info$num_components <- 0
-            }
-
-            gates_list <- list(gate_info)
+    df$combined_populations <- vapply(gates, function(g) {
+        if (!is.null(g$combined_populations) &&
+            length(g$combined_populations) > 0) {
+            paste(unlist(g$combined_populations), collapse = " | ")
+        } else {
+            NA_character_
         }
+    }, character(1))
 
-        if (!is.null(node$children) && is.list(node$children)) {
-            child_gates <- lapply(node$children, function(child) {
-                collect_logical_gates(child, current_path)
-            })
-            gates_list <- c(gates_list, unlist(child_gates, recursive = FALSE))
-        }
+    df
+}
 
+#' Build the traversal path for a tree node
+#'
+#' Handles vector names by producing all combinations of paths and names.
+#'
+#' @param node Tree node
+#' @param path Parent path vector
+#' @return Path vector for this node
+#' @noRd
+logical_node_path <- function(node, path) {
+    if (is.null(node$name)) {
+        return(path)
+    }
+
+    node_names <- unlist(node$name)
+    # Handle when path is empty string(s) or has values
+    if (all(path == "")) {
+        node_names
+    } else {
+        # Create all combinations of paths and names
+        as.vector(outer(path, node_names, paste, sep = "/"))
+    }
+}
+
+#' Walk a tree node collecting logical gate info
+#'
+#' @param node Tree node
+#' @param path Current path vector
+#' @return List of gate info entries
+#' @noRd
+logical_collect_gates <- function(node, path = "") {
+    gates_list <- list()
+
+    if (!is.list(node)) {
         return(gates_list)
     }
 
-    gates <- collect_logical_gates(tree)
+    current_path <- logical_node_path(node, path)
 
-    if (length(gates) > 0) {
-        df <- data.frame(
-            path = vapply(gates, function(g) {
-                paste(unlist(g$path),
-                    collapse = "/"
-                )
-            }, character(1)),
-            name = vapply(gates, function(g) {
-                paste(unlist(g$name),
-                    collapse = "/"
-                )
-            }, character(1)),
-            type = vapply(gates, function(g) unlist(g$type), character(1)),
-            num_components = vapply(
-                gates,
-                function(g) length(g$combined_populations), integer(1)
-            ),
-            stringsAsFactors = FALSE
+    if (!is.null(node$type) && node$type %in% c("and", "or", "not")) {
+        gate_info <- list(
+            path = current_path,
+            name = unlist(node$name),
+            type = node$type,
+            uuid = node$uuid
         )
 
-        df$combined_populations <- vapply(gates, function(g) {
-            if (!is.null(g$combined_populations) &&
-                length(g$combined_populations) > 0) {
-                paste(unlist(g$combined_populations), collapse = " | ")
-            } else {
-                NA_character_
-            }
-        }, character(1))
+        if (!is.null(node$logical_gate_info)) {
+            gate_info$combined_populations <-
+                node$logical_gate_info$combined_populations
+            gate_info$num_components <-
+                length(node$logical_gate_info$combined_populations)
+        } else {
+            gate_info$num_components <- 0
+        }
 
-        return(df)
-    } else {
-        return(NULL)
+        gates_list <- list(gate_info)
     }
+
+    if (!is.null(node$children) && is.list(node$children)) {
+        child_gates <- lapply(node$children, function(child) {
+            logical_collect_gates(child, current_path)
+        })
+        gates_list <- c(gates_list, unlist(child_gates, recursive = FALSE))
+    }
+
+    gates_list
+}
+
+# Summarize logical gates in tree
+summarize_logical_gates <- function(tree) {
+    gates <- logical_collect_gates(tree)
+    logical_summary_df(gates)
 }
 
 # Move logical gates up to the nearest non-logical ancestor
@@ -989,6 +1135,141 @@ summarize_logical_gates <- function(tree) {
 # parent is a non-logical gate (or root).  Non-logical children are processed
 # recursively so that logical gates nested under logical gates are also moved
 # up to the correct level.
+#' Split a processed child's grandchildren into logical gates and the rest
+#'
+#' Marks the logical grandchildren with moved_from/parent and returns both
+#' groups.
+#'
+#' @param processed_child Child node after process_node()
+#' @param current_target Target ancestor name for moved gates
+#' @return list(logical, regular) grandchild lists
+#' @noRd
+logical_collect_grandchildren <- function(processed_child, current_target) {
+    child_logical_gates <- list()
+    child_regular_children <- list()
+
+    if (!is.null(processed_child$children)) {
+        for (grandchild in processed_child$children) {
+            if (is.list(grandchild) &&
+                !is.null(grandchild$type) &&
+                grandchild$type %in% c("and", "or", "not")) {
+                grandchild$moved_from <-
+                    unlist(processed_child$name)
+                grandchild$parent <- current_target
+                child_logical_gates <- c(
+                    child_logical_gates,
+                    list(grandchild)
+                )
+            } else {
+                child_regular_children <- c(
+                    child_regular_children,
+                    list(grandchild)
+                )
+            }
+        }
+    }
+
+    list(logical = child_logical_gates, regular = child_regular_children)
+}
+
+#' Prepare a logical child for moving to the target ancestor level
+#'
+#' Processes the child (so nested logical gates can bubble up), removes any
+#' remaining logical children, and tags moved_from/parent.
+#'
+#' @param child Logical child node
+#' @param current_target Target ancestor name
+#' @param process_node Recursive node processor from move_logical_gates_up()
+#' @return The processed child node
+#' @noRd
+logical_prep_logical_child <- function(child, current_target, process_node) {
+    processed_child <- process_node(child, current_target)
+
+    # Any logical grandchildren of a logical gate belong at the target
+    # ancestor level, not under this gate.
+    if (!is.null(processed_child$children)) {
+        processed_child$children <- Filter(
+            function(g) {
+                !(is.list(g) && !is.null(g$type) &&
+                    g$type %in% c("and", "or", "not"))
+            },
+            processed_child$children
+        )
+        if (length(processed_child$children) == 0) {
+            processed_child$children <- NULL
+        }
+    }
+
+    processed_child$moved_from <- unlist(processed_child$parent)
+    processed_child$parent <- current_target
+
+    processed_child
+}
+
+#' Prepare a non-logical child, pulling its logical grandchildren up
+#'
+#' @param child Non-logical child node
+#' @param current_target Target ancestor name
+#' @param process_node Recursive node processor from move_logical_gates_up()
+#' @return list(child = processed child without logical grandchildren,
+#'   moved = logical grandchildren)
+#' @noRd
+logical_prep_regular_child <- function(child, current_target, process_node) {
+    # Non-logical child: recurse, then pull its logical grandchildren up.
+    processed_child <- process_node(child, current_target)
+
+    grandchildren <- logical_collect_grandchildren(processed_child,
+        current_target)
+
+    processed_child$children <- grandchildren$regular
+    if (length(processed_child$children) == 0) {
+        processed_child$children <- NULL
+    }
+
+    list(child = processed_child, moved = grandchildren$logical)
+}
+
+#' Handle one list child while moving logical gates up
+#'
+#' @param child Child node (a list)
+#' @param current_target Target ancestor name
+#' @param node_is_logical Is the parent node itself a logical gate?
+#' @param process_node Recursive node processor from move_logical_gates_up()
+#' @return list(child = child to keep at this level or NULL,
+#'   moved = gates bubbling up)
+#' @noRd
+logical_handle_child <- function(child, current_target, node_is_logical,
+    process_node) {
+    is_logical_gate <- !is.null(child$type) &&
+        child$type %in% c("and", "or", "not")
+
+    if (!is_logical_gate) {
+        prep <- logical_prep_regular_child(child, current_target,
+            process_node)
+        return(list(child = prep$child, moved = prep$moved))
+    }
+
+    processed_child <- logical_prep_logical_child(child, current_target,
+        process_node)
+
+    if (.pkgenv$verbose) { # nocov
+        message(sprintf(
+            "Moving logical gate '%s' from '%s' to '%s'",
+            unlist(processed_child$name),
+            processed_child$moved_from,
+            processed_child$parent
+        ))
+    }
+
+    if (!node_is_logical) {
+        # Keep the logical gate at this non-logical level.
+        list(child = processed_child, moved = list())
+    } else {
+        # Bubble it up further.
+        list(child = NULL, moved = list(processed_child))
+    }
+}
+
 move_logical_gates_up <- function(tree) {
     # Recursive function to process each node.
     # target_ancestor_name is the name of the nearest non-logical ancestor that
@@ -1016,105 +1297,12 @@ move_logical_gates_up <- function(tree) {
                 next
             }
 
-            is_logical_gate <- !is.null(child$type) &&
-                child$type %in% c("and", "or", "not")
-
-            if (is_logical_gate) {
-                # Process children first so nested logical gates can bubble up.
-                processed_child <- process_node(child, current_target)
-
-                # Any logical grandchildren of a logical gate belong at the
-                #   target
-                # ancestor level, not under this gate.
-                if (!is.null(processed_child$children)) {
-                    for (grandchild in processed_child$children) {
-                        if (is.list(grandchild) &&
-                            !is.null(grandchild$type) &&
-                            grandchild$type %in% c("and", "or", "not")) {
-                            grandchild$moved_from <-
-                                unlist(processed_child$name)
-                            grandchild$parent <- current_target
-                            gates_to_move_up <- c(
-                                gates_to_move_up,
-                                list(grandchild)
-                            )
-                        }
-                    }
-
-                    processed_child$children <- Filter(
-                        function(g) {
-                            !(is.list(g) && !is.null(g$type) &&
-                                g$type %in% c("and", "or", "not"))
-                        },
-                        processed_child$children
-                    )
-                    if (length(processed_child$children) == 0) {
-                        processed_child$children <- NULL
-                    }
-                }
-
-                processed_child$moved_from <- unlist(processed_child$parent)
-                processed_child$parent <- current_target
-
-                if (.pkgenv$verbose) { # nocov
-                    message(sprintf(
-                        "Moving logical gate '%s' from '%s' to '%s'",
-                        unlist(processed_child$name),
-                        processed_child$moved_from,
-                        processed_child$parent
-                    ))
-                }
-
-                if (!node_is_logical) {
-                    # Keep the logical gate at this non-logical level.
-                    children_to_keep <- c(
-                        children_to_keep,
-                        list(processed_child)
-                    )
-                } else {
-                    # Bubble it up further.
-                    gates_to_move_up <- c(
-                        gates_to_move_up,
-                        list(processed_child)
-                    )
-                }
-            } else {
-                # Non-logical child: recurse, then pull its logical
-                #   grandchildren up.
-                processed_child <- process_node(child, current_target)
-
-                child_logical_gates <- list()
-                child_regular_children <- list()
-
-                if (!is.null(processed_child$children)) {
-                    for (grandchild in processed_child$children) {
-                        if (is.list(grandchild) &&
-                            !is.null(grandchild$type) &&
-                            grandchild$type %in% c("and", "or", "not")) {
-                            grandchild$moved_from <-
-                                unlist(processed_child$name)
-                            grandchild$parent <- current_target
-                            child_logical_gates <- c(
-                                child_logical_gates,
-                                list(grandchild)
-                            )
-                        } else {
-                            child_regular_children <- c(
-                                child_regular_children,
-                                list(grandchild)
-                            )
-                        }
-                    }
-                }
-
-                processed_child$children <- child_regular_children
-                if (length(processed_child$children) == 0) {
-                    processed_child$children <- NULL
-                }
-
-                children_to_keep <- c(children_to_keep, list(processed_child))
-                gates_to_move_up <- c(gates_to_move_up, child_logical_gates)
+            prep <- logical_handle_child(child, current_target,
+                node_is_logical, process_node)
+            if (!is.null(prep$child)) {
+                children_to_keep <- c(children_to_keep, list(prep$child))
             }
+            gates_to_move_up <- c(gates_to_move_up, prep$moved)
         }
 
         node$children <- c(children_to_keep, gates_to_move_up)
@@ -1147,22 +1335,155 @@ get_uuids <- function(tree, uuids = c()) {
 #' when adding populations? Default TRUE. Set to FALSE if compensation has
 #  already
 #'   been applied and gate names should match the compensated parameter names.
-create_gatingset_from_cytoset <- function(
-    cytoset,
-    gating_trees,
-    gates,
-    compensations,
-    transformations,
-    sample_uuids,
-    dataSources,
-    keywords,
-    additional.keys,
-    additional.sampleID,
-    keyword.ignore.case,
-    strip_comp_prefix = TRUE
-) {
+#' Apply compensation to one cytoframe
+#'
+#' Maps compensation channel names to cytoframe parameters, compensates, and
+#' renames the compensated channels to their original "Comp-" prefixed names
+#' (FlowJo 10/11 expects compensated channels as "Comp-<channel>").
+#'
+#' @param cf Cytoframe to compensate
+#' @param comp Compensation object for the sample
+#' @return Compensated cytoframe
+#' @noRd
+gs_compensate_frame <- function(cf, comp) {
+    # Store original compensation names (with "Comp-" prefix) before mapping
+    if (methods::is(comp, "compensation")) {
+        comp_prefix_names <- colnames(comp@spillover)
+    } else {
+        comp_prefix_names <- colnames(comp)
+    }
+
+    # Map compensation channel names to cytoframe parameter names
+    # This handles cases where flowCore sanitizes names (e.g., "/" -> "_")
+    comp_mapped <- map_compensation_names(comp, colnames(cf))
+    cf_comp <- compensate(cf, comp_mapped)
+
+    if (!is.null(comp_prefix_names) && length(comp_prefix_names) > 0) {
+        # Get current column names and replace compensated ones with
+        #   Comp- prefix
+        new_names <- as.character(colnames(cf_comp))
+        for (comp_name in comp_prefix_names) {
+            # Strip "Comp-" prefix to find the base name in the cytoframe
+            base_name <- sub("^Comp-", "", comp_name)
+            if (base_name %in% new_names) {
+                new_names[new_names == base_name] <- comp_name
+            }
+        }
+        # Use flowCore::colnames<- to avoid any S4 method issues
+        flowCore::colnames(cf_comp) <- new_names
+        cf_comp
+    } else {
+        cf_comp
+    }
+}
+
+#' Apply sample transformations to a single-sample GatingSet
+#'
+#' Maps transformation channel names to flowFrame parameter names, keeps only
+#' non-NULL, non-linear transforms (flowWorkspace-compatible objects), and
+#' transforms the GatingSet.
+#'
+#' @param gs_single GatingSet holding the single sample
+#' @param sample_transformations Transformations for the sample
+#' @param cf Cytoframe whose colnames parameter names map against
+#' @param i Sample index used in warning messages
+#' @return The transformed GatingSet
+#' @noRd
+gs_transform_single <- function(gs_single, sample_transformations, cf, i) {
+    trans_mapped <- map_transformation_names(
+        sample_transformations,
+        colnames(cf)
+    )
+
+    # Keep only non-NULL, non-linear transforms
+    #   (flowWorkspace-compatible objects)
+    trans_apply <- Filter(function(t) {
+        !is.null(t) &&
+            (is.null(attr(t, "type")) || attr(t, "type") != "linear")
+    }, trans_mapped)
+
+    if (length(trans_apply) > 0) {
+        tryCatch(
+            {
+                transList <- flowWorkspace::transformerList(
+                    from  = names(trans_apply),
+                    trans = trans_apply
+                )
+                gs_single <- flowWorkspace::transform(
+                    gs_single,
+                    transList
+                )
+            },
+            error = function(e) {
+                warning(sprintf(
+                    "Failed to apply transformations for sample %d: %s",
+                    i, e$message
+                ))
+            }
+        )
+    }
+
+    gs_single
+}
+
+#' Build one single-sample GatingSet
+#'
+#' Applies compensation and sample transformations to the sample's cytoframe,
+#' then wraps it in a one-sample GatingSet.
+#'
+#' @param i Sample index (for messages)
+#' @param actual_sample_count Total sample count (for messages)
+#' @param cf Cytoframe for the sample
+#' @param sample_uuid UUID of the sample
+#' @param compensations Named compensation list (by sample UUID)
+#' @param transformations Named transformation list (by sample UUID)
+#' @return One single-sample GatingSet
+#' @noRd
+gs_build_single_hierarchy <- function(i, actual_sample_count, cf,
+    sample_uuid, compensations, transformations) {
+    # Apply compensation (if available)
+    if (!is.null(compensations[[sample_uuid]])) {
+        cf <- gs_compensate_frame(cf, compensations[[sample_uuid]])
+    }
+
+    cs <- cytoset()
+    cs_add_cytoframe(cs, identifier(cf), cf)
+    # Create GatingSet from single sample
+    gs_single <- GatingSet(cs)
+
+    # Apply transformations (sample-specific).  Falls back to the first
+    #   transformation entry when the sample has none of its own.
+    sample_transformations <- transformations[[sample_uuid]]
+    if (is.null(sample_transformations) && length(transformations) > 0) {
+        sample_transformations <- transformations[[1]]
+    }
+
+    # When transform=TRUE, data is transformed to display space and gates
+    #   are
+    # extracted in the same transformed space (via use_transformed_coords).
+    # This keeps gating evaluation, visualization, and gate coordinates
+    # consistent.
+    if (!is.null(sample_transformations) &&
+        length(sample_transformations) > 0) {
+        gs_single <- gs_transform_single(
+            gs_single, sample_transformations, cf, i
+        )
+    }
+
+    gs_single
+}
+
+#' Build the per-sample GatingHierarchy list
+#'
+#' @param cytoset Cyotoset with all samples
+#' @param sample_uuids Sample UUIDs aligned with cytoset
+#' @param compensations Named compensation list (by sample UUID)
+#' @param transformations Named transformation list (by sample UUID)
+#' @return List of single-sample GatingSet objects
+#' @noRd
+gs_build_hierarchy_list <- function(cytoset, sample_uuids, compensations,
+    transformations) {
     actual_sample_count <- length(cytoset)
-    # browser() # nocov
     # Create individual GatingHierarchy objects with transformations
     gsList <- list()
 
@@ -1179,124 +1500,107 @@ create_gatingset_from_cytoset <- function(
         # Extract single cytoframe
         cf <- cytoset[[i]]
 
-        # Apply compensation (if available)
-        if (!is.null(compensations[[sample_uuid]])) {
-            # Store original compensation names (with "Comp-" prefix) before
-            #   mapping
-            comp_orig <- compensations[[sample_uuid]]
-            if (methods::is(comp_orig, "compensation")) {
-                comp_prefix_names <- colnames(comp_orig@spillover)
-            } else {
-                comp_prefix_names <- colnames(comp_orig)
-            }
-
-            # Map compensation channel names to cytoframe parameter names
-            # This handles cases where flowCore sanitizes names (e.g., "/" ->
-            #   "_")
-            comp_mapped <- map_compensation_names(
-                compensations[[sample_uuid]],
-                colnames(cf)
-            )
-            cf_comp <- compensate(cf, comp_mapped)
-
-            # After compensation, rename the compensated channels to have
-            #   "Comp-" prefix.
-            # FlowJo 10/11 expects compensated channels to be named
-            #   "Comp-<channel>"
-            # (e.g., "Comp-FITC-A" instead of "FITC-A").
-            if (!is.null(comp_prefix_names) && length(comp_prefix_names) > 0) {
-                # Get current column names and replace compensated ones with
-                #   Comp- prefix
-                new_names <- as.character(colnames(cf_comp))
-                for (comp_name in comp_prefix_names) {
-                    # Strip "Comp-" prefix to find the base name in the
-                    #   cytoframe
-                    base_name <- sub("^Comp-", "", comp_name)
-                    if (base_name %in% new_names) {
-                        new_names[new_names == base_name] <- comp_name
-                    }
-                }
-                # Use flowCore::colnames<- to avoid any S4 method issues
-                flowCore::colnames(cf_comp) <- new_names
-                cf <- cf_comp
-            } else {
-                cf <- cf_comp
-            }
-        }
-
-        cs <- cytoset()
-        cs_add_cytoframe(cs, identifier(cf), cf)
-        # Create GatingSet from single sample
-        gs_single <- GatingSet(cs)
-
-        # Apply transformations (sample-specific)
-        # sample_transformations <- transformations[[sample_uuid]] %||%
-        #   transformations[[1]]
-        sample_transformations <- transformations[[sample_uuid]]
-        if (is.null(sample_transformations) && length(transformations) > 0) {
-            sample_transformations <- transformations[[1]]
-        }
-
-        # When transform=TRUE, data is transformed to display space and gates
-        #   are
-        # extracted in the same transformed space (via use_transformed_coords).
-        # This keeps gating evaluation, visualization, and gate coordinates
-        # consistent.
-        if (!is.null(sample_transformations) &&
-            length(sample_transformations) > 0) {
-            # Map transformation channel names to flowFrame parameter names
-            # This handles cases where transformation names don't match (e.g.,
-            #   "Comp-APC-Ax700-A" vs "APC-Ax700-A")
-            trans_mapped <- map_transformation_names(
-                sample_transformations,
-                colnames(cf)
-            )
-
-            # Keep only non-NULL, non-linear transforms
-            #   (flowWorkspace-compatible objects)
-            trans_apply <- Filter(function(t) {
-                !is.null(t) &&
-                    (is.null(attr(t, "type")) || attr(t, "type") != "linear")
-            }, trans_mapped)
-
-            if (length(trans_apply) > 0) {
-                tryCatch(
-                    {
-                        transList <- flowWorkspace::transformerList(
-                            from  = names(trans_apply),
-                            trans = trans_apply
-                        )
-                        gs_single <- flowWorkspace::transform(
-                            gs_single,
-                            transList
-                        )
-                    },
-                    error = function(e) {
-                        warning(sprintf(
-                            "Failed to apply transformations for sample %d: %s",
-                            i, e$message
-                        ))
-                    }
-                )
-            }
-        }
-
-        # Extract the GatingHierarchy
-        gsList[[i]] <- gs_single
+        gsList[[i]] <- gs_build_single_hierarchy(
+            i, actual_sample_count, cf, sample_uuid,
+            compensations, transformations
+        )
     }
 
-    # Combine GatingHierarchy objects into a GatingSet
-    if (.pkgenv$verbose) {
-        message(
-            "Combining ", length(gsList),
-            " GatingHierarchy objects into GatingSet..."
+    gsList
+}
+
+#' Attach pData (keywords) to the merged GatingSet
+#'
+#' @param gs Merged GatingSet
+#' @param sample_uuids Sample UUIDs actually present in the GatingSet
+#' @param dataSources Data sources from the workspace
+#' @param keywords Keyword names to expose in pData
+#' @param keyword.ignore.case Case-insensitive keyword matching?
+#' @param actual_sample_count Number of samples in the GatingSet
+#' @return The GatingSet (pData set when dimensions match)
+#' @noRd
+gs_set_pdata <- function(gs, sample_uuids, dataSources, keywords,
+    keyword.ignore.case, actual_sample_count) {
+    actual_sample_uuids <- sample_uuids[seq_len(actual_sample_count)]
+    pdata <- extract_pdata(
+        actual_sample_uuids, dataSources, keywords,
+        keyword.ignore.case
+    )
+
+    if (!is.data.frame(pdata)) {
+        pdata <- as.data.frame(pdata, stringsAsFactors = FALSE)
+    }
+
+    if (nrow(pdata) == actual_sample_count) {
+        tryCatch(
+            {
+                current_rownames <- rownames(flowWorkspace::pData(gs))
+                if (length(current_rownames) == nrow(pdata)) {
+                    rownames(pdata) <- current_rownames
+                    flowWorkspace::pData(gs) <- pdata
+                }
+            },
+            error = function(e) {
+                warning("Failed to set pData: ", e$message)
+            }
+        )
+    }
+
+    gs
+}
+
+#' Add gates and populations to each GatingHierarchy
+#'
+#' @param gsList List of GatingHierarchy objects
+#' @param sample_uuids Sample UUIDs aligned with gsList
+#' @param gating_trees Gating trees for the samples
+#' @param gates Gates list from the workspace
+#' @param strip_comp_prefix Strip "Comp-" prefix from gate parameter names?
+#' @param actual_sample_count Number of samples (as in the caller)
+#' @noRd
+gs_add_gates <- function(gsList, sample_uuids, gating_trees, gates,
+    strip_comp_prefix, actual_sample_count) {
+    for (idx in seq_len(actual_sample_count)) {
+        actual_sample_uuids <- sample_uuids[idx] %>% unlist()
+        actual_gating_trees <- gating_trees[idx]
+
+        add_populations_to_gatingset(
+            gs = gsList[[idx]],
+            gating_trees = actual_gating_trees,
+            gates = gates,
+            sample_uuids = actual_sample_uuids,
+            strip_comp_prefix = strip_comp_prefix,
+            verbose = .pkgenv$verbose
         ) # nocov
     }
-    # this will permanately transformt the data and loose transformation
-    #   information
-    gs <- merge_list_to_gs(gsList)
 
+    gsList
+}
 
+#' Create GatingSet from Components - Transform First Approach
+#' @keywords internal
+#' @importFrom flowWorkspace GatingSet
+#' @importFrom magrittr %>%
+#' @param strip_comp_prefix Logical. Strip "Comp-" prefix from gate parameter
+#  names
+#' when adding populations? Default TRUE. Set to FALSE if compensation has
+#  already
+#'   been applied and gate names should match the compensated parameter names.
+#' Merge the hierarchy list, name samples, and attach pData
+#'
+#' @param gsList List of single-sample GatingSets
+#' @param gs Merged GatingSet
+#' @param sample_uuids Sample UUIDs aligned with gsList
+#' @param dataSources Data sources from the workspace
+#' @param keywords Keyword names to expose in pData
+#' @param additional.keys Additional keywords to build sample names from
+#' @param additional.sampleID Include the UUID in sample names?
+#' @param keyword.ignore.case Case-insensitive keyword matching?
+#' @return list(gsList = named list, gs = merged GatingSet with pData)
+#' @noRd
+gs_merge_and_name <- function(gsList, gs, sample_uuids, dataSources,
+    keywords, additional.keys, additional.sampleID,
+    keyword.ignore.case) {
     # Set sample names
     sample_names <- create_sample_names(
         sample_uuids,
@@ -1313,49 +1617,59 @@ create_gatingset_from_cytoset <- function(
 
     # Add pData (keywords)
     if (length(keywords) > 0) {
-        actual_sample_uuids <- sample_uuids[seq_len(actual_sample_count)]
-        pdata <- extract_pdata(
-            actual_sample_uuids, dataSources, keywords,
-            keyword.ignore.case
+        gs <- gs_set_pdata(
+            gs, sample_uuids, dataSources, keywords,
+            keyword.ignore.case, length(gsList)
         )
-
-        if (!is.data.frame(pdata)) {
-            pdata <- as.data.frame(pdata, stringsAsFactors = FALSE)
-        }
-
-        if (nrow(pdata) == actual_sample_count) {
-            tryCatch(
-                {
-                    current_rownames <- rownames(flowWorkspace::pData(gs))
-                    if (length(current_rownames) == nrow(pdata)) {
-                        rownames(pdata) <- current_rownames
-                        flowWorkspace::pData(gs) <- pdata
-                    }
-                },
-                error = function(e) {
-                    warning("Failed to set pData: ", e$message)
-                }
-            )
-        }
     }
+
+    list(gsList = gsList, gs = gs)
+}
+
+create_gatingset_from_cytoset <- function(
+    cytoset,
+    gating_trees,
+    gates,
+    compensations,
+    transformations,
+    sample_uuids,
+    dataSources,
+    keywords,
+    additional.keys,
+    additional.sampleID,
+    keyword.ignore.case,
+    strip_comp_prefix = TRUE
+) {
+    actual_sample_count <- length(cytoset)
+
+    gsList <- gs_build_hierarchy_list(
+        cytoset, sample_uuids, compensations, transformations
+    )
+
+    # Combine GatingHierarchy objects into a GatingSet
+    if (.pkgenv$verbose) {
+        message(
+            "Combining ", length(gsList),
+            " GatingHierarchy objects into GatingSet..."
+        ) # nocov
+    }
+    # this will permanately transformt the data and loose transformation
+    #   information
+    gs <- merge_list_to_gs(gsList)
+
+    merged <- gs_merge_and_name(
+        gsList, gs, sample_uuids, dataSources, keywords,
+        additional.keys, additional.sampleID, keyword.ignore.case
+    )
 
     # Add gates and populations
     if (!is.null(gates)) {
-        for (idx in seq_len(actual_sample_count)) {
-            actual_sample_uuids <- sample_uuids[idx] %>% unlist()
-            actual_gating_trees <- gating_trees[idx]
-
-            add_populations_to_gatingset(
-                gs = gsList[[idx]],
-                gating_trees = actual_gating_trees,
-                gates = gates,
-                sample_uuids = actual_sample_uuids,
-                strip_comp_prefix = strip_comp_prefix,
-                verbose = .pkgenv$verbose
-            ) # nocov
-        }
+        gs_add_gates(
+            merged$gsList, sample_uuids, gating_trees, gates,
+            strip_comp_prefix, actual_sample_count
+        )
     }
-    return(gsList)
+    merged$gsList
 }
 
 
