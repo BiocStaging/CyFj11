@@ -142,34 +142,34 @@ NULL
 #' @importFrom dplyr filter enquo
 #' @importFrom utils menu
 fj11_to_gatingset <- function(
-  fj11_workspace,
-  group_name = NULL,
-  subset = list(),
-  execute = TRUE,
-  path = NULL,
-  cytoset = NULL,
-  backend_dir = tempdir(),
-  backend = c("h5", "tile"),
-  include_gates = TRUE,
-  compensation = NULL,
-  additional.keys = "$TOT",
-  additional.sampleID = FALSE,
-  keywords = character(),
-  keyword.ignore.case = FALSE,
-  channel.ignore.case = FALSE,
-  extend_val = 0,
-  extend_to = -4000,
-  leaf.bool = TRUE,
-  include_empty_tree = FALSE,
-  correct_faulty_gate = 0,
-  transform = TRUE,
-  use_transformed_coords = transform,
-  max_search_depth = 5,
-  stop_on_multiple = TRUE,
-  mc.cores = 1,
-  strip_comp_prefix = TRUE,
-  sanitize_slashes = TRUE,
-  ...
+    fj11_workspace,
+    group_name = NULL,
+    subset = list(),
+    execute = TRUE,
+    path = NULL,
+    cytoset = NULL,
+    backend_dir = tempdir(),
+    backend = c("h5", "tile"),
+    include_gates = TRUE,
+    compensation = NULL,
+    additional.keys = "$TOT",
+    additional.sampleID = FALSE,
+    keywords = character(),
+    keyword.ignore.case = FALSE,
+    channel.ignore.case = FALSE,
+    extend_val = 0,
+    extend_to = -4000,
+    leaf.bool = TRUE,
+    include_empty_tree = FALSE,
+    correct_faulty_gate = 0,
+    transform = TRUE,
+    use_transformed_coords = transform,
+    max_search_depth = 5,
+    stop_on_multiple = TRUE,
+    mc.cores = 1,
+    strip_comp_prefix = TRUE,
+    sanitize_slashes = TRUE,
+    ...
 ) {
     backend <- match.arg(backend)
 
@@ -211,8 +211,8 @@ fj11_to_gatingset <- function(
 #' @return List with \code{sample_uuids} and \code{cytoset}
 #' @keywords internal
 fj11_prepare_data <- function(fj11_workspace, group_name, subset, path,
-                              cytoset, stop_on_multiple, backend_dir,
-                              backend, ...) {
+                                cytoset, stop_on_multiple, backend_dir,
+                                backend, ...) {
     groups <- fj11_workspace$groups
     dataSources <- fj11_workspace$dataSources
 
@@ -411,7 +411,7 @@ fj11_build_file_map <- function(path_resolution, stop_on_multiple) {
 #'   or NULL when a cytoset was supplied
 #' @keywords internal
 fj11_resolve_paths <- function(dataSources, sample_uuids, path, cytoset,
-                               stop_on_multiple) {
+                                stop_on_multiple) {
     if (!is.null(cytoset)) {
         return(NULL)
     }
@@ -447,7 +447,7 @@ fj11_resolve_paths <- function(dataSources, sample_uuids, path, cytoset,
 #' @return A cytoset object
 #' @keywords internal
 fj11_load_cytoset <- function(sample_file_map, sample_uuids, backend_dir,
-                              backend, ...) {
+                                backend, ...) {
     if (.pkgenv$verbose) message("\nLoading FCS files into cytoset...\n")
     fcs_files <- sample_file_map[unlist(sample_uuids)]
 
@@ -526,12 +526,12 @@ fj11_report_summary <- function(gsList, execute) {
 #' @return The created list of GatingSet objects
 #' @keywords internal
 fj11_build_gatingset <- function(fj11_workspace, sample_uuids, cytoset,
-                                 include_gates, compensation, transform,
-                                 execute, channel.ignore.case, extend_val,
-                                 extend_to, correct_faulty_gate,
-                                 use_transformed_coords, keywords,
-                                 additional.keys, additional.sampleID,
-                                 keyword.ignore.case, strip_comp_prefix) {
+                                include_gates, compensation, transform,
+                                execute, channel.ignore.case, extend_val,
+                                extend_to, correct_faulty_gate,
+                                use_transformed_coords, keywords,
+                                additional.keys, additional.sampleID,
+                                keyword.ignore.case, strip_comp_prefix) {
     # Extract workspace components
     groups <- fj11_workspace$groups
     dataSources <- fj11_workspace$dataSources
@@ -646,9 +646,9 @@ fj11_extract_components <- function(fj11_workspace, sample_uuids,
 #' @return Gates list from extract_all_gates
 #' @keywords internal
 fj11_extract_gates <- function(populationDefinitions, sample_uuids,
-                               channel.ignore.case, extend_val,
-                               extend_to, correct_faulty_gate,
-                               use_transformed_coords) {
+                                channel.ignore.case, extend_val,
+                                extend_to, correct_faulty_gate,
+                                use_transformed_coords) {
     extract_all_gates(
         populationDefinitions = populationDefinitions,
         sample_uuids = sample_uuids,
@@ -698,7 +698,7 @@ fj11_execute_gating <- function(gsList, execute, include_gates) {
 #' @return Named list of gating trees from build_gating_tree
 #' @keywords internal
 fj11_build_trees <- function(populations, populationDefinitions,
-                             sample_uuids) {
+                            sample_uuids) {
     root_pop_uuid <- find_root_population(
         populations, populationDefinitions, sample_uuids[1]
     )
@@ -732,13 +732,13 @@ fj11_build_trees <- function(populations, populationDefinitions,
 #' @return The created list of GatingSet objects
 #' @keywords internal
 fj11_create_gatingsets <- function(cytoset, gating_trees,
-                                   include_gates, gates_list,
-                                   comp_list, transform, trans_list,
-                                   sample_uuids, dataSources, keywords,
-                                   additional.keys,
-                                   additional.sampleID,
-                                   keyword.ignore.case,
-                                   strip_comp_prefix) {
+                                    include_gates, gates_list,
+                                    comp_list, transform, trans_list,
+                                    sample_uuids, dataSources, keywords,
+                                    additional.keys,
+                                    additional.sampleID,
+                                    keyword.ignore.case,
+                                    strip_comp_prefix) {
     create_gatingset_from_cytoset(
         cytoset = cytoset,
         gating_trees = gating_trees,

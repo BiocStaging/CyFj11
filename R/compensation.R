@@ -328,8 +328,8 @@ validate_compensation <- function(comp) {
     if (is.matrix(comp)) {
         if (is.null(rownames(comp)) || is.null(colnames(comp))) {
             stop(
-                     "Compensation matrix must have row and column names",
-                     " (channel names)")
+                    "Compensation matrix must have row and column names",
+                    " (channel names)")
             }
         return(flowCore::compensation(comp))
         }
@@ -339,8 +339,8 @@ validate_compensation <- function(comp) {
         }
 
     stop(
-             "Invalid compensation object. Must be compensation, matrix, or",
-             " data.frame")
+            "Invalid compensation object. Must be compensation, matrix, or",
+            " data.frame")
     }
 
 

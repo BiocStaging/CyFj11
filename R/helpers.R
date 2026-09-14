@@ -141,12 +141,12 @@ load_example_workspace <- function() {
 #  have NULL values.
 #' @keywords internal
 map_param_names <- function(
-  source_names,
-  target_names,
-  target_descriptions = NULL,
-  strip_comp_prefix = FALSE,
-  case_insensitive = FALSE,
-  sanitize_slashes = TRUE
+    source_names,
+    target_names,
+    target_descriptions = NULL,
+    strip_comp_prefix = FALSE,
+    case_insensitive = FALSE,
+    sanitize_slashes = TRUE
 ) {
     if (is.null(source_names) ||
         length(source_names) == 0) {
@@ -313,8 +313,8 @@ apply_param_mapping <- function(source_names, mapping, on_no_match = "keep") {
 #'   }
 #' @keywords internal
 verify_gate_marker_names <- function(
-  gate_obj, flowframe_params,
-  gate_source = ""
+    gate_obj, flowframe_params,
+    gate_source = ""
 ) {
     # Collect warnings in a list, then combine at the end
     warnings_vec <- character()

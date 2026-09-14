@@ -9,7 +9,8 @@ get_sample_file_map(resolution_results, include_status = "FOUND")
 \arguments{
 \item{resolution_results}{Output from resolve_all_fcs_paths()}
 
-\item{include_status}{Include only samples with specific status (default: "FOUND")}
+\item{include_status}{Include only samples with specific status (default:
+"FOUND")}
 }
 \value{
 Named vector where names are sample_ids and values are resolved_paths

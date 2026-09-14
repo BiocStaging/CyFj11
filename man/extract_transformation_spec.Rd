@@ -10,8 +10,11 @@ extract_transformation_spec(sample_uuid, populationDefinitions)
 Extract Transformation Specification
 }
 \details{
-Extracts transformation specifications from parameter specifications in gate definitions.
-Transformations are per marker (channel), not per gate. Supports biexponential (Biex)
-transformations which are mapped to logicle transforms with appropriate parameters.
+Extracts transformation specifications from parameter specifications in gate
+definitions.
+Transformations are per marker (channel), not per gate. Supports biexponential
+(Biex)
+transformations which are mapped to logicle transforms with appropriate
+parameters.
 }
 \keyword{internal}

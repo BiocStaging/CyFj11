@@ -1,11 +1,11 @@
 ---
 title: "Compensation and Round-Trip Workflow with CyFj11"
 output: BiocStyle::html_document
-vignette: >
-  %\VignetteIndexEntry{Compensation and Round-Trip Workflow with CyFj11}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
-  %\VignettePackage{CyFj11}
+vignette: '
+    %\VignetteIndexEntry{Compensation and Round-Trip Workflow with CyFj11}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+    %\VignettePackage{CyFj11}'
 ---
 
 ```{r setup-opts, include = FALSE}

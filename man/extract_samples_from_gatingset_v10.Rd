@@ -9,7 +9,8 @@ extract_samples_from_gatingset_v10(gating_set, target_fcs_dir = NULL)
 \arguments{
 \item{gating_set}{GatingSet object}
 
-\item{target_fcs_dir}{The base directory that the WSP should assume the FCS files are in.}
+\item{target_fcs_dir}{The base directory that the WSP should assume the FCS
+files are in.}
 }
 \value{
 List of sample data

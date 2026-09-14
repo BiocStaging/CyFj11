@@ -16,6 +16,7 @@ x \%||\% y
 Either x if not NULL, or y
 }
 \description{
-Provides a null coalescing operator that returns the second argument if the first is NULL.
+Provides a null coalescing operator that returns the second argument if the
+first is NULL.
 }
 \keyword{internal}

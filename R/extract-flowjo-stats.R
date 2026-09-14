@@ -52,7 +52,7 @@ stats_validate_inputs <- function(wsp_files) {
 #' @return List with \code{long} and \code{mapping}
 #' @keywords internal
 stats_build_mapping_template <- function(long_table, preserve_slashes,
-                                         write_csv, output_csv) {
+                                        write_csv, output_csv) {
     mapping <- long_table %>%
         distinct(population_path, population, id, stat_name,
             stat_ancestor) %>%
@@ -399,12 +399,12 @@ utils::globalVariables(c(
 #'   are preserved instead of being replaced with "_". Default FALSE.
 #' @keywords internal
 extract_flowjo_stats <- function(
-  wsp_files,
-  csv_file = NULL,
-  output_csv = "wsp_stat_mapping.csv",
-  write_csv = TRUE,
-  value_as_numeric = TRUE,
-  preserve_slashes = FALSE
+    wsp_files,
+    csv_file = NULL,
+    output_csv = "wsp_stat_mapping.csv",
+    write_csv = TRUE,
+    value_as_numeric = TRUE,
+    preserve_slashes = FALSE
 ) {
     stats_validate_inputs(wsp_files)
 
@@ -709,8 +709,8 @@ sanitize_name <- function(x, preserve_slashes = FALSE) {
 #' @return Character vector of sanitized names
 #' @noRd
 make_better_names <- function(
-  population, stat_name, stat_ancestor,
-  preserve_slashes = FALSE
+    population, stat_name, stat_ancestor,
+    preserve_slashes = FALSE
 ) {
     pop <- sanitize_name(population, preserve_slashes = preserve_slashes)
     short <- shorten_stat_name(stat_name)

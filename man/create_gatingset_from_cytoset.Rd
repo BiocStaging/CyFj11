@@ -5,18 +5,18 @@
 \title{Create GatingSet from Components - Transform First Approach}
 \usage{
 create_gatingset_from_cytoset(
-  cytoset,
-  gating_trees,
-  gates,
-  compensations,
-  transformations,
-  sample_uuids,
-  dataSources,
-  keywords,
-  additional.keys,
-  additional.sampleID,
-  keyword.ignore.case,
-  strip_comp_prefix = TRUE
+    cytoset,
+    gating_trees,
+    gates,
+    compensations,
+    transformations,
+    sample_uuids,
+    dataSources,
+    keywords,
+    additional.keys,
+    additional.sampleID,
+    keyword.ignore.case,
+    strip_comp_prefix = TRUE
 )
 }
 \arguments{

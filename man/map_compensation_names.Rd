@@ -15,8 +15,10 @@ map_compensation_names(comp_matrix, param_names)
 Compensation matrix with names matching cytoframe parameters
 }
 \description{
-flowCore's compensation() function sanitizes channel names (e.g., "/" -> "_", spaces -> ".").
-This function creates a mapping between sanitized compensation names and original cytoframe
+flowCore's compensation() function sanitizes channel names (e.g., "/" -> "_",
+spaces -> ".").
+This function creates a mapping between sanitized compensation names and
+original cytoframe
 parameter names to ensure proper compensation application.
 }
 \keyword{internal}

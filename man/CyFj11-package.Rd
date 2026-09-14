@@ -6,26 +6,38 @@
 \alias{CyFj11-package}
 \title{CyFj11: Parse FlowJo V11 Workspace Files and Export to FlowJo V10}
 \description{
-Provides functions to parse FlowJo v11 workspace files (.flowjo) and extract gating information, populations, and associated FCS files. Includes utilities for exporting data to FlowJo v10 workspace format. The package enables bidirectional data flow between FlowJo and R/Bioconductor, facilitating reproducible analysis workflows.
+Provides functions to parse FlowJo v11 workspace files (.flowjo) and extract
+gating information, populations, and associated FCS files. Includes utilities
+for exporting data to FlowJo v10 workspace format. The package enables
+bidirectional data flow between FlowJo and R/Bioconductor, facilitating
+reproducible analysis workflows.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/C3BI-pasteur-fr/CyFj11}
-  \item Report bugs at \url{https://github.com/C3BI-pasteur-fr/CyFj11/issues}
+    \item \url{https://github.com/C3BI-pasteur-fr/CyFj11}
+    \item Report bugs at \url{https://github.com/C3BI-pasteur-fr/CyFj11/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Bernd Jagla \email{bernd.jagla@pasteur.fr} (\href{https://orcid.org/0000-0002-7696-0484}{ORCID}) (affiliation: Institut Pasteur, scBiomarkers UTechS & Bioinformatics & Biostatistics Hub)
+\strong{Maintainer}: Bernd Jagla \email{bernd.jagla@pasteur.fr}
+(\href{https://orcid.org/0000-0002-7696-0484}{ORCID}) (affiliation: Institut
+Pasteur, scBiomarkers UTechS & Bioinformatics & Biostatistics Hub)
 
 Authors:
 \itemize{
-  \item Bernd Jagla \email{bernd.jagla@pasteur.fr} (\href{https://orcid.org/0000-0002-7696-0484}{ORCID}) (affiliation: Institut Pasteur, scBiomarkers UTechS & Bioinformatics & Biostatistics Hub)
-  \item Slobodan Culina \email{Slobodan.culina@pasteur.fr} (affiliation: Institut Pasteur, scBiomarkers UTechS)
-  \item Francois Le Guerroue \email{francois.le-guerroue@pasteur.fr} (affiliation: Institut Pasteur, scBiomarkers UTechS)
-  \item Esma Karkeni \email{esma.karkeni@pasteur.fr} (affiliation: Institut Pasteur, scBiomarkers UTechS)
-  \item Milena Hasan \email{milena.hasan@pasteur.fr} (affiliation: Institut Pasteur, scBiomarkers UTechS)
+    \item Bernd Jagla \email{bernd.jagla@pasteur.fr}
+    (\href{https://orcid.org/0000-0002-7696-0484}{ORCID}) (affiliation: Institut
+    Pasteur, scBiomarkers UTechS & Bioinformatics & Biostatistics Hub)
+    \item Slobodan Culina \email{Slobodan.culina@pasteur.fr} (affiliation:
+    Institut Pasteur, scBiomarkers UTechS)
+    \item Francois Le Guerroue \email{francois.le-guerroue@pasteur.fr}
+    (affiliation: Institut Pasteur, scBiomarkers UTechS)
+    \item Esma Karkeni \email{esma.karkeni@pasteur.fr} (affiliation: Institut
+    Pasteur, scBiomarkers UTechS)
+    \item Milena Hasan \email{milena.hasan@pasteur.fr} (affiliation: Institut
+    Pasteur, scBiomarkers UTechS)
 }
 
 }

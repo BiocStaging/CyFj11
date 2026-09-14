@@ -5,12 +5,12 @@
 \title{Generate Group Node Subpopulations XML}
 \usage{
 generate_group_subpopulations_xml(
-  populations,
-  gates,
-  parent_path = "root",
-  indent = "        ",
-  visited_paths = NULL,
-  gh = NULL
+    populations,
+    gates,
+    parent_path = "root",
+    indent = "        ",
+    visited_paths = NULL,
+    gh = NULL
 )
 }
 \arguments{
@@ -22,7 +22,8 @@ generate_group_subpopulations_xml(
 
 \item{indent}{Current indentation level for XML formatting}
 
-\item{visited_paths}{Character vector to track visited paths (for cycle detection)}
+\item{visited_paths}{Character vector to track visited paths (for cycle
+detection)}
 
 \item{gh}{Optional GatingHierarchy object (for boolean gate processing)}
 }

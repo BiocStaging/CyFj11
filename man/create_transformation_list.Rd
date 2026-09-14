@@ -10,7 +10,8 @@ create_transformation_list(trans_spec)
 Create Transformation List
 }
 \details{
-Creates a list of flowCore transformation objects from transformation specifications.
+Creates a list of flowCore transformation objects from transformation
+specifications.
 Supports biexponential transformations which are mapped to logicle transforms.
 }
 \keyword{internal}

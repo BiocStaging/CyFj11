@@ -39,13 +39,13 @@ NULL
 #' @return Named list of gates for each population-sample combination
 #' @keywords internal
 extract_all_gates <- function(
-  populationDefinitions,
-  sample_uuids,
-  channel.ignore.case = FALSE,
-  extend_val = 0,
-  extend_to = -4000,
-  correct_faulty_gate = 0,
-  use_transformed_coords = FALSE
+    populationDefinitions,
+    sample_uuids,
+    channel.ignore.case = FALSE,
+    extend_val = 0,
+    extend_to = -4000,
+    correct_faulty_gate = 0,
+    use_transformed_coords = FALSE
 ) {
     gates_list <- list()
 
@@ -113,14 +113,14 @@ extract_all_gates <- function(
 #'
 #' @keywords internal
 convert_flowjo_gate <- function(
-  gate,
-  pop_name,
-  pop_type,
-  channel.ignore.case = FALSE,
-  extend_val = 0,
-  extend_to = -4000,
-  correct_faulty_gate = 0,
-  use_transformed_coords = FALSE
+    gate,
+    pop_name,
+    pop_type,
+    channel.ignore.case = FALSE,
+    extend_val = 0,
+    extend_to = -4000,
+    correct_faulty_gate = 0,
+    use_transformed_coords = FALSE
 ) {
     gate_type <- gate$type %||% pop_type
 
@@ -208,9 +208,9 @@ convert_flowjo_gate <- function(
 #' @return Numeric vector of coordinates in raw data space
 #' @keywords internal
 display_to_raw <- function(
-  display_coords, transform_spec,
-  gate_resolution = NULL, correct_faulty_gate = 0,
-  use_transformed_coords = FALSE
+    display_coords, transform_spec,
+    gate_resolution = NULL, correct_faulty_gate = 0,
+    use_transformed_coords = FALSE
 ) {
     # Handle NULL or empty input
     if (is.null(display_coords) || length(display_coords) == 0) {
@@ -335,8 +335,8 @@ apply_extension <- function(coords, extend_val = 0, extend_to = -4000) {
 #' @keywords internal
 #' @importFrom flowCore rectangleGate
 convert_rectangle_gate <- function(
-  gate, pop_name, extend_val, extend_to,
-  correct_faulty_gate = 0, use_transformed_coords = FALSE
+    gate, pop_name, extend_val, extend_to,
+    correct_faulty_gate = 0, use_transformed_coords = FALSE
 ) {
     # browser() # nocov
     # Extract parameters
@@ -398,8 +398,8 @@ convert_rectangle_gate <- function(
 #' @keywords internal
 #' @importFrom flowCore polygonGate
 convert_polygon_gate <- function(
-  gate, pop_name, extend_val, extend_to,
-  correct_faulty_gate = 0, use_transformed_coords = FALSE
+    gate, pop_name, extend_val, extend_to,
+    correct_faulty_gate = 0, use_transformed_coords = FALSE
 ) {
     # Extract parameters
     x_param <- gate$xParameter %||%
@@ -472,8 +472,8 @@ convert_polygon_gate <- function(
 #' @keywords internal
 #' @importFrom flowCore ellipsoidGate
 convert_ellipse_gate <- function(
-  gate, pop_name, extend_val, extend_to,
-  correct_faulty_gate = 0, use_transformed_coords = FALSE
+    gate, pop_name, extend_val, extend_to,
+    correct_faulty_gate = 0, use_transformed_coords = FALSE
 ) {
     # Extract parameters
     x_param <- gate$xAxis$parameterSpec$name %||% gate$xParameter
@@ -586,8 +586,8 @@ convert_ellipse_gate <- function(
 #' @keywords internal
 #' @importFrom flowCore rectangleGate
 convert_range_gate <- function(
-  gate, pop_name, extend_val, extend_to,
-  correct_faulty_gate = 0, use_transformed_coords = FALSE
+    gate, pop_name, extend_val, extend_to,
+    correct_faulty_gate = 0, use_transformed_coords = FALSE
 ) {
     # Extract parameter
     param <- gate$parameter %||%
@@ -657,8 +657,8 @@ convert_range_gate <- function(
 #' @keywords internal
 #' @importFrom flowCore quadGate
 convert_quadrant_gate <- function(
-  gate, pop_name, extend_val, extend_to,
-  correct_faulty_gate = 0, use_transformed_coords = FALSE
+    gate, pop_name, extend_val, extend_to,
+    correct_faulty_gate = 0, use_transformed_coords = FALSE
 ) {
     # Extract parameters
     x_param <- gate$xAxis$parameterSpec$name %||% gate$xParameter %||%

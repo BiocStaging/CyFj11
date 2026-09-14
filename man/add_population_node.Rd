@@ -5,14 +5,14 @@
 \title{Add Population Node Recursively to a GatingHierarchy}
 \usage{
 add_population_node(
-  gh,
-  node,
-  gates,
-  sample_uuid,
-  parent = "root",
-  strip_comp_prefix = TRUE,
-  verbose = FALSE,
-  deferred = NULL
+    gh,
+    node,
+    gates,
+    sample_uuid,
+    parent = "root",
+    strip_comp_prefix = TRUE,
+    verbose = FALSE,
+    deferred = NULL
 )
 }
 \arguments{

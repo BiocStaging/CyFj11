@@ -9,7 +9,8 @@ verify_gate_marker_names(gate_obj, flowframe_params, gate_source = "")
 \arguments{
 \item{gate_obj}{A flowCore gate object (rectangleGate, polygonGate, etc.)}
 
-\item{flowframe_params}{Named character vector of parameter names from the flowFrame.
+\item{flowframe_params}{Named character vector of parameter names from the
+flowFrame.
 Typically the output of \code{markernames(gh)}, where names are detector/channel
 names and values are descriptive marker names.}
 
@@ -25,7 +26,8 @@ List with components:
 }
 \description{
 This function checks that marker names in gates match the parameter names
-in the GatingSet/flowFrame after compensation and transformations have been applied.
+in the GatingSet/flowFrame after compensation and transformations have been
+applied.
 It helps detect issues where automated routines may have changed marker names.
 }
 \keyword{internal}

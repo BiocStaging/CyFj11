@@ -5,10 +5,10 @@
 \title{Create Sample Names}
 \usage{
 create_sample_names(
-  sample_uuids,
-  dataSources,
-  additional.keys,
-  additional.sampleID
+    sample_uuids,
+    dataSources,
+    additional.keys,
+    additional.sampleID
 )
 }
 \description{

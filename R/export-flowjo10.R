@@ -50,10 +50,10 @@ NULL
 #' export_flowjo10_workspace(gs, out_file)
 #' file.exists(out_file)
 export_flowjo10_workspace <- function(
-  gating_set, output_path,
-  workspace_name = NULL,
-  fcs_root = NULL,
-  overwrite = FALSE
+    gating_set, output_path,
+    workspace_name = NULL,
+    fcs_root = NULL,
+    overwrite = FALSE
 ) {
     # Validate inputs
     if (missing(gating_set) || missing(output_path)) {
@@ -158,8 +158,8 @@ export_flowjo10_workspace <- function(
 #' @return List of sample data
 #' @keywords internal
 extract_samples_from_gatingset_v10 <- function(
-  gating_set,
-  target_fcs_dir = NULL
+    gating_set,
+    target_fcs_dir = NULL
 ) {
     samples <- list()
     sample_names <- flowWorkspace::sampleNames(gating_set)
@@ -464,8 +464,8 @@ build_sample_keywords <- function(fcs_keywords, gs_keywords, final_filename) {
 #' @return Character vector of XML lines.
 #' @keywords internal
 build_spillover_matrix_xml <- function(
-  spill_matrix, matrix_id,
-  indent = "     "
+    spill_matrix, matrix_id,
+    indent = "     "
 ) {
     if (is.null(spill_matrix)) {
         return(character(0))
@@ -701,8 +701,8 @@ extract_gates_from_gatingset_v10 <- function(gating_set) {
 #' @return List of population data in FlowJo v10 format
 #' @keywords internal
 extract_populations_from_gatingset_v10 <- function(
-  gating_set, samples_data,
-  gates_data
+    gating_set, samples_data,
+    gates_data
 ) {
     # Initialize populations list
     populations <- list()
@@ -1579,7 +1579,7 @@ convert_boolean_to_flowjo10 <- function(gate, pop_name, gh = NULL) {
 #' @return Character vector of XML lines
 #' @keywords internal
 generate_logical_node_xml <- function(gate, pop_name,
-                                      child_path, indent, gh, gates = NULL) {
+                                        child_path, indent, gh, gates = NULL) {
     xml_lines <- character(0)
     def <- gate$definition
 
@@ -2095,7 +2095,7 @@ fj10_cytometer_xml <- function(cyt_attrs, transform_store_lines) {
 #'   id, or NULL)
 #' @keywords internal
 fj10_workspace_cytometers_section <- function(gating_set, samples,
-                                              force_XSC_linear) {
+                                                force_XSC_linear) {
     lines <- character(0)
 
     # Add workspace-level compensation matrix if available
@@ -2359,7 +2359,7 @@ heat_map_param_for_sample <- function(sample) {
 #' @return Character vector of XML lines for the Transformations block
 #' @keywords internal
 fj10_sample_transforms_section <- function(sample_gh, sample, gates,
-                                           force_XSC_linear) {
+                                            force_XSC_linear) {
     lines <- character(0)
 
     all_transforms <- flowWorkspace::gh_get_transformations(sample_gh)
@@ -2862,10 +2862,10 @@ fj10_report_sections <- function() {
 #' @return Character string containing XML content
 #' @keywords internal
 generate_flowjo10_xml <- function(gating_set, samples, gates,
-                                  populations, groups, workspace_name,
-                                      output_path,
-                                  force_XSC_linear = FALSE,
-                                      minimal_fj11 = FALSE) {
+                                    populations, groups, workspace_name,
+                                        output_path,
+                                    force_XSC_linear = FALSE,
+                                        minimal_fj11 = FALSE) {
     if (minimal_fj11) {
         # Minimal FJ11 format - very simple structure
         xml_lines <- c(
@@ -2940,7 +2940,7 @@ generate_flowjo10_xml <- function(gating_set, samples, gates,
 #' @return Character vector of XML lines for the Graph block
 #' @keywords internal
 fj10_subpop_graph_xml <- function(gating_hierarchy, child_path,
-                                  heat_map_param) {
+                                    heat_map_param) {
     grandchild_path <- tryCatch(
         flowWorkspace::gs_pop_get_children(gating_hierarchy, child_path,
             path = "auto"
@@ -3339,10 +3339,10 @@ fj10_subpop_ellip_gate_xml <- function(gate_def, indent) {
 #' @return Character vector of XML lines
 #' @keywords internal
 generate_sample_subpopulations_xml <- function(
-  gating_hierarchy, gates, populations,
-  parent_path = "root",
-  indent = "        ",
-  heat_map_param = ""
+    gating_hierarchy, gates, populations,
+    parent_path = "root",
+    indent = "        ",
+    heat_map_param = ""
 ) {
     xml_lines <- character(0)
 
@@ -3804,7 +3804,7 @@ fj10_group_children_of <- function(populations, parent_path) {
 #' @return Character vector of XML lines, or NULL when nothing is emitted
 #' @keywords internal
 fj10_group_child_xml <- function(population, gates, parent_path, indent,
-                                 visited_paths, gh) {
+                                visited_paths, gh) {
     if (population$name == "Ungated") {
         return(NULL)
     }
@@ -3869,7 +3869,7 @@ fj10_group_boolean_gate_xml <- function(population, gates, indent, gh) {
 #' @return Character vector of XML lines
 #' @keywords internal
 fj10_group_population_xml <- function(population, gates, parent_path, indent,
-                                      visited_paths, gh) {
+                                        visited_paths, gh) {
     # Add population element with correct attributes
     lines <- c(
         sprintf(
@@ -3971,10 +3971,10 @@ fj10_group_subpop_recursion_xml <- function(population, gates, parent_path,
 #' @keywords internal
 #' @importFrom magrittr %>%
 generate_group_subpopulations_xml <- function(populations,
-                                              gates, parent_path = "root",
-                                              indent = "        ",
+                                                gates, parent_path = "root",
+                                                indent = "        ",
                                         visited_paths = NULL,
-                                              gh = NULL) {
+                                                gh = NULL) {
     # Safety check to prevent infinite recursion
     if (is.null(visited_paths)) {
         visited_paths <- character(0)
@@ -4135,7 +4135,7 @@ get_display_range <- function(gh, param_name) {
 #' @return Character vector of XML lines.
 #' @keywords internal
 emit_transform_xml <- function(type, channel, transform_obj, atr_tr,
-                               data_range, indent = "        ") {
+                                data_range, indent = "        ") {
     # Normalize FlowJo transform type names
     type <- tolower(type)
     if (type %in% c("biexp", "biexponential")) type <- "biex"
@@ -4287,7 +4287,7 @@ derive_cytometer_attrs <- function(fcs_keywords) {
 #' @return Invisible character vector of file paths written successfully.
 #' @keywords internal
 write_fcs_files_to_dir <- function(gating_set, target_dir,
-                                   overwrite = FALSE) {
+                                    overwrite = FALSE) {
     sample_names <- flowWorkspace::sampleNames(gating_set)
 
     fcs_info <- lapply(sample_names, function(sn) {

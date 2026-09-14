@@ -19,7 +19,8 @@ Transformation names from FlowJo may not match flowFrame parameter names:
 \itemize{
 \item They may have "Comp-" prefix (e.g., "Comp-APC-Ax700-A" vs "APC-Ax700-A")
 \item They may use different sanitization (e.g., "/" vs "_")
-This function creates a mapping between transformation names and flowFrame parameters.
+This function creates a mapping between transformation names and flowFrame
+parameters.
 }
 }
 \keyword{internal}

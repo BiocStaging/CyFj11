@@ -5,24 +5,26 @@
 \title{Unified Parameter Name Mapping Function}
 \usage{
 map_param_names(
-  source_names,
-  target_names,
-  target_descriptions = NULL,
-  strip_comp_prefix = FALSE,
-  case_insensitive = FALSE,
-  sanitize_slashes = TRUE
+    source_names,
+    target_names,
+    target_descriptions = NULL,
+    strip_comp_prefix = FALSE,
+    case_insensitive = FALSE,
+    sanitize_slashes = TRUE
 )
 }
 \arguments{
 \item{source_names}{Character vector of source parameter names}
 
-\item{target_names}{Character vector of target parameter names (e.g. flowFrame colnames)}
+\item{target_names}{Character vector of target parameter names (e.g. flowFrame
+colnames)}
 
 \item{target_descriptions}{Optional named character vector of descriptions for
 each target name (e.g. the marker names returned by \code{markernames()}).
 When supplied, source names are also matched against these descriptions.}
 
-\item{strip_comp_prefix}{Logical. Strip "Comp-" prefix from source names? Default FALSE.}
+\item{strip_comp_prefix}{Logical. Strip "Comp-" prefix from source names?
+Default FALSE.}
 
 \item{case_insensitive}{Logical. Case-insensitive matching? Default FALSE.}
 
@@ -31,10 +33,12 @@ Default TRUE (matches flowCore behavior). Set to FALSE if you want to preserve
 "/" in marker names (e.g., "CD3/CD4" stays as-is).}
 }
 \value{
-Named list mapping source names to target names. Unmapped names have NULL values.
+Named list mapping source names to target names. Unmapped names have NULL
+values.
 }
 \description{
-Creates a mapping between source parameter names (e.g., from compensation, gates, transformations)
+Creates a mapping between source parameter names (e.g., from compensation,
+gates, transformations)
 and target parameter names (e.g., cytoframe flowFrame column names).
 }
 \details{
@@ -43,7 +47,8 @@ This function handles common naming discrepancies:
 \item "Comp-" prefix (e.g., "Comp-APC-Ax700-A" vs "APC-Ax700-A")
 \item "/" vs "\emph{" sanitization (flowCore converts "/" to "}")
 \item Case sensitivity (optional)
-\item Detector-to-marker description matching (optional, via \code{target_descriptions})
+\item Detector-to-marker description matching (optional, via
+\code{target_descriptions})
 }
 }
 \keyword{internal}

@@ -7,7 +7,8 @@
 sanitize_path_with_separator(path)
 }
 \arguments{
-\item{path}{Character vector of path strings (e.g. "Ungated/Lymphocytes/CD45, l/d subset").}
+\item{path}{Character vector of path strings (e.g. "Ungated/Lymphocytes/CD45,
+l/d subset").}
 }
 \value{
 Path strings with name-level '/' replaced by ':'.

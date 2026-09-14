@@ -11,7 +11,8 @@ Parse Transformation Info
 }
 \details{
 Parses transformation information from FlowJo v11 transformation specifications.
-Supports normalization of various transformation type names including biexponential (Biex)
+Supports normalization of various transformation type names including
+biexponential (Biex)
 which maps to the biexponential type for proper handling.
 }
 \keyword{internal}

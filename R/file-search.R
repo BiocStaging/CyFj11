@@ -238,14 +238,14 @@ resolve_all_fcs_paths <- function(dataSources,
     # Handle errors based on settings
                 if (stop_on_missing && n_missing > 0) {
         stop(
-                 "Missing FCS files detected. Set stop_on_missing=FALSE to",
-                 " continue anyway.")
+                "Missing FCS files detected. Set stop_on_missing=FALSE to",
+                " continue anyway.")
         }
 
                 if (stop_on_multiple && n_multiple > 0) {
         stop(
-                 "Multiple FCS file matches detected. Set",
-                 " stop_on_multiple=FALSE to continue anyway.")
+                "Multiple FCS file matches detected. Set",
+                " stop_on_multiple=FALSE to continue anyway.")
         }
 
                 return(resolution_results)

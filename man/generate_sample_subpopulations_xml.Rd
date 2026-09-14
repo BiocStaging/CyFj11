@@ -5,12 +5,12 @@
 \title{Generate Sample Subpopulations XML}
 \usage{
 generate_sample_subpopulations_xml(
-  gating_hierarchy,
-  gates,
-  populations,
-  parent_path = "root",
-  indent = "        ",
-  heat_map_param = ""
+    gating_hierarchy,
+    gates,
+    populations,
+    parent_path = "root",
+    indent = "        ",
+    heat_map_param = ""
 )
 }
 \arguments{

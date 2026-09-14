@@ -7,7 +7,8 @@
 get_referenced_channels(gates)
 }
 \arguments{
-\item{gates}{Gate data list as returned by \code{extract_gates_from_gatingset_v10}}
+\item{gates}{Gate data list as returned by
+\code{extract_gates_from_gatingset_v10}}
 }
 \value{
 Character vector of unique channel names referenced by gates.

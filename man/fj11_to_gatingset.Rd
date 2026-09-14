@@ -5,41 +5,43 @@
 \title{Convert FlowJo v11 Workspace to GatingSet}
 \usage{
 fj11_to_gatingset(
-  fj11_workspace,
-  group_name = NULL,
-  subset = list(),
-  execute = TRUE,
-  path = NULL,
-  cytoset = NULL,
-  backend_dir = tempdir(),
-  backend = c("h5", "tile"),
-  include_gates = TRUE,
-  compensation = NULL,
-  additional.keys = "$TOT",
-  additional.sampleID = FALSE,
-  keywords = character(),
-  keyword.ignore.case = FALSE,
-  channel.ignore.case = FALSE,
-  extend_val = 0,
-  extend_to = -4000,
-  leaf.bool = TRUE,
-  include_empty_tree = FALSE,
-  correct_faulty_gate = 0,
-  transform = TRUE,
-  use_transformed_coords = transform,
-  max_search_depth = 5,
-  stop_on_multiple = TRUE,
-  mc.cores = 1,
-  strip_comp_prefix = TRUE,
-  sanitize_slashes = TRUE,
-  ...
+    fj11_workspace,
+    group_name = NULL,
+    subset = list(),
+    execute = TRUE,
+    path = NULL,
+    cytoset = NULL,
+    backend_dir = tempdir(),
+    backend = c("h5", "tile"),
+    include_gates = TRUE,
+    compensation = NULL,
+    additional.keys = "$TOT",
+    additional.sampleID = FALSE,
+    keywords = character(),
+    keyword.ignore.case = FALSE,
+    channel.ignore.case = FALSE,
+    extend_val = 0,
+    extend_to = -4000,
+    leaf.bool = TRUE,
+    include_empty_tree = FALSE,
+    correct_faulty_gate = 0,
+    transform = TRUE,
+    use_transformed_coords = transform,
+    max_search_depth = 5,
+    stop_on_multiple = TRUE,
+    mc.cores = 1,
+    strip_comp_prefix = TRUE,
+    sanitize_slashes = TRUE,
+    ...
 )
 }
 \arguments{
-\item{fj11_workspace}{List returned by \code{read_flowjo11_workspace()} containing
+\item{fj11_workspace}{List returned by \code{read_flowjo11_workspace()}
+containing
 the complete workspace structure}
 
-\item{group_name}{Character or numeric. Name or index of the sample group to import.
+\item{group_name}{Character or numeric. Name or index of the sample group to
+import.
 If NULL, will list available groups interactively.}
 
 \item{subset}{Numeric vector, character vector of FCS filenames, or expression
@@ -51,7 +53,8 @@ If FALSE, creates GatingSet structure without computing cell counts.}
 \item{path}{Character. Root directory to search for FCS files. Required if
 FCS files are not in workspace location.}
 
-\item{cytoset}{A cytoset object providing alternative data source (instead of FCS files).
+\item{cytoset}{A cytoset object providing alternative data source (instead of
+FCS files).
 Useful for preprocessed data.}
 
 \item{backend_dir}{Directory for storing h5 backend data. Default is tempdir().}
@@ -60,19 +63,24 @@ Useful for preprocessed data.}
 
 \item{include_gates}{Logical. Should gates be imported? Default TRUE.}
 
-\item{compensation}{Compensation object, matrix, data.frame, or named list of these.
+\item{compensation}{Compensation object, matrix, data.frame, or named list of
+these.
 Overrides workspace compensation. Names should match sample GUIDs.}
 
-\item{additional.keys}{Character vector of FCS keywords to include in sample GUID
+\item{additional.keys}{Character vector of FCS keywords to include in sample
+GUID
 (concatenated with filename). Default is "$TOT".}
 
-\item{additional.sampleID}{Logical. Include FlowJo sample ID in GUID? Default FALSE.}
+\item{additional.sampleID}{Logical. Include FlowJo sample ID in GUID? Default
+FALSE.}
 
 \item{keywords}{Character vector of keywords to extract as pData.}
 
-\item{keyword.ignore.case}{Logical. Case-insensitive keyword matching? Default FALSE.}
+\item{keyword.ignore.case}{Logical. Case-insensitive keyword matching? Default
+FALSE.}
 
-\item{channel.ignore.case}{Logical. Case-insensitive channel matching? Default FALSE.}
+\item{channel.ignore.case}{Logical. Case-insensitive channel matching? Default
+FALSE.}
 
 \item{extend_val}{Numeric. Threshold for extending gate coordinates. Default 0.}
 
@@ -80,17 +88,22 @@ Overrides workspace compensation. Names should match sample GUIDs.}
 
 \item{leaf.bool}{Logical. Compute leaf boolean gates? Default TRUE.}
 
-\item{include_empty_tree}{Logical. Include samples without gates? Default FALSE.}
+\item{include_empty_tree}{Logical. Include samples without gates? Default
+FALSE.}
 
-\item{correct_faulty_gate}{Numerical, zero = don't correct, otherwise use this value as transformation max value and Try to correct faulty gates instead of erroring? Default TRUE.}
+\item{correct_faulty_gate}{Numerical, zero = don't correct, otherwise use this
+value as transformation max value and Try to correct faulty gates instead of
+erroring? Default TRUE.}
 
 \item{transform}{Logical. Apply transformations? Default TRUE.}
 
 \item{use_transformed_coords}{Logical. Keep gate coordinates in FlowJo display
-(transformed) space rather than raw space? Default is the value of \code{transform}.
+(transformed) space rather than raw space? Default is the value of
+\code{transform}.
 Only relevant when \code{transform = TRUE}.}
 
-\item{max_search_depth}{Integer. Maximum directory depth when searching for FCS files.
+\item{max_search_depth}{Integer. Maximum directory depth when searching for FCS
+files.
 Default 5.}
 
 \item{stop_on_multiple}{Logical. Stop if multiple FCS files match a sample?
@@ -117,7 +130,8 @@ that sample. To obtain a single merged \code{GatingSet} for downstream analysis,
 call \code{flowWorkspace::merge_list_to_gs(gsList)} on the returned list.
 }
 \description{
-Parses a FlowJo v11 workspace and creates a GatingSet object with gating hierarchy,
+Parses a FlowJo v11 workspace and creates a GatingSet object with gating
+hierarchy,
 compensation, and transformations. Supports biexponential (Biex) transformations
 which are mapped to logicle transforms.
 }
@@ -126,7 +140,8 @@ The \code{subset} argument can be:
 \describe{
 \item{Numeric vector: }{Sample indices to import}
 \item{Character vector: }{FCS filenames to import}
-\item{Expression: }{Logical expression to filter pData (requires \code{keywords} argument)}
+\item{Expression: }{Logical expression to filter pData (requires \code{keywords}
+argument)}
 }
 
 FlowJo v11 stores data differently than v10:

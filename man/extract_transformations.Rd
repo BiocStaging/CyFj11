@@ -19,7 +19,8 @@ Extracts transformation functions for each channel and sample
 }
 \details{
 Extracts transformations from parameter specifications in gate definitions.
-Supports biexponential (Biex) transformations which are mapped to logicle transforms.
+Supports biexponential (Biex) transformations which are mapped to logicle
+transforms.
 Transformations are extracted per channel/marker, not per gate.
 }
 \keyword{internal}

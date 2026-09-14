@@ -5,12 +5,12 @@
 \title{Add Populations to GatingSet}
 \usage{
 add_populations_to_gatingset(
-  gs,
-  gating_trees,
-  gates,
-  sample_uuids,
-  strip_comp_prefix = TRUE,
-  verbose = FALSE
+    gs,
+    gating_trees,
+    gates,
+    sample_uuids,
+    strip_comp_prefix = TRUE,
+    verbose = FALSE
 )
 }
 \arguments{

@@ -5,11 +5,11 @@
 \title{Transform coordinates from FlowJo display space to raw data space}
 \usage{
 display_to_raw(
-  display_coords,
-  transform_spec,
-  gate_resolution = NULL,
-  correct_faulty_gate = 0,
-  use_transformed_coords = FALSE
+    display_coords,
+    transform_spec,
+    gate_resolution = NULL,
+    correct_faulty_gate = 0,
+    use_transformed_coords = FALSE
 )
 }
 \arguments{
@@ -25,7 +25,8 @@ display_to_raw(
 Numeric vector of coordinates in raw data space
 }
 \description{
-FlowJo stores gate coordinates in display space \(0 to gateResolution/vectorLength\).
+FlowJo stores gate coordinates in display space \(0 to
+gateResolution/vectorLength\).
 This function converts them to raw data space for use with flowCore gates.
 
 Transformation logic:

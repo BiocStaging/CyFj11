@@ -5,12 +5,12 @@
 \title{Emit a Single Channel Transform as XML}
 \usage{
 emit_transform_xml(
-  type,
-  channel,
-  transform_obj,
-  atr_tr,
-  data_range,
-  indent = "        "
+    type,
+    channel,
+    transform_obj,
+    atr_tr,
+    data_range,
+    indent = "        "
 )
 }
 \arguments{

@@ -13,7 +13,8 @@ pretty_print_flowjo(flowjo_file)
 Path to the created pretty printed JSON file
 }
 \description{
-This function takes a FlowJo v11 workspace file (.flowjo) and extracts the JSON content,
+This function takes a FlowJo v11 workspace file (.flowjo) and extracts the JSON
+content,
 then pretty prints it to a text file with "_pretty.json" suffix.
 }
 \examples{

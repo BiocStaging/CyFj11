@@ -13,7 +13,8 @@ set_verbose(v)
 Invisible NULL. Called for side effects.
 }
 \description{
-Enable or disable verbose output for debugging and monitoring package operations.
+Enable or disable verbose output for debugging and monitoring package
+operations.
 When enabled, the package will print detailed information about its operations,
 including file processing, gate conversion, and data extraction steps.
 }

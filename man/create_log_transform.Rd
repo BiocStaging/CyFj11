@@ -10,8 +10,10 @@ create_log_transform(spec)
 Builds a scales::trans_new object that mirrors FlowJo's Log transform.
 Accepts two parameterisations:
 \itemize{
-\item flowWorkspace / FlowJo v10 style: decade, offset, scale (plus optional shift)
-\item FlowJo v11 parsed style: numberDecades, decadesOffset, vectorLength (plus optional shift)
+\item flowWorkspace / FlowJo v10 style: decade, offset, scale (plus optional
+shift)
+\item FlowJo v11 parsed style: numberDecades, decadesOffset, vectorLength (plus
+optional shift)
 }
 }
 \details{

@@ -5,12 +5,12 @@
 \title{Extract Statistics from FlowJo Workspace (.wsp) XML Files}
 \usage{
 extract_flowjo_stats(
-  wsp_files,
-  csv_file = NULL,
-  output_csv = "wsp_stat_mapping.csv",
-  write_csv = TRUE,
-  value_as_numeric = TRUE,
-  preserve_slashes = FALSE
+    wsp_files,
+    csv_file = NULL,
+    output_csv = "wsp_stat_mapping.csv",
+    write_csv = TRUE,
+    value_as_numeric = TRUE,
+    preserve_slashes = FALSE
 )
 }
 \arguments{
@@ -74,8 +74,8 @@ result <- extract_flowjo_stats(wsp_files = c("panel1.wsp", "panel2.wsp"))
 
 # Step 2: edit wsp_stat_mapping.csv, then:
 wide <- extract_flowjo_stats(
-  wsp_files = c("panel1.wsp", "panel2.wsp"),
-  csv_file = "wsp_stat_mapping.csv"
+    wsp_files = c("panel1.wsp", "panel2.wsp"),
+    csv_file = "wsp_stat_mapping.csv"
 )
 }
 

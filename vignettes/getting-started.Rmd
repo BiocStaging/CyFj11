@@ -1,11 +1,11 @@
 ---
 title: "Getting Started with CyFj11"
 output: BiocStyle::html_document
-vignette: >
-  %\VignetteIndexEntry{Getting Started with CyFj11}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
-  %\VignettePackage{CyFj11}
+vignette: '
+    %\VignetteIndexEntry{Getting Started with CyFj11}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+    %\VignettePackage{CyFj11}'
 ---
 
 ```{r setup-opts, include = FALSE}
@@ -30,9 +30,9 @@ and the R flowWorkspace ecosystem. It provides **asymmetric format conversion**
 capabilities:
 
 *  **Import**: Full support for parsing FlowJo v11 workspaces (.flowjo files)
-  into R GatingSet objects
+    into R GatingSet objects
 *  **Export**: Generation of FlowJo v10 workspace files (.wsp) from GatingSet
-  objects with broad compatibility
+    objects with broad compatibility
 
 This asymmetric design reflects the technical realities of developing against
 proprietary formats without vendor documentation. While FlowJo v11 uses a
@@ -55,18 +55,18 @@ compares:
 **Key advantages of CyFj11:**
 
 1.  **Native FlowJo v11 support**: CyFj11 is the only Bioconductor package that
-   directly parses FlowJo v11's `.flowjo` format (ZIP archive with JSON)
+    directly parses FlowJo v11's `.flowjo` format (ZIP archive with JSON)
 2.  **No intermediate conversion needed**: Unlike CytoML which requires FlowJo
-   v10 XML, CyFj11 reads v11 workspaces directly
+    v10 XML, CyFj11 reads v11 workspaces directly
 3.  **Preserves v11-specific features**: Handles compensation matrices,
-   transformations, and population definitions from v11
+    transformations, and population definitions from v11
 4.  **Export capability**: Can export `GatingSet` objects back to FlowJo v10
-   `.wsp` format for round-trip workflows
+    `.wsp` format for round-trip workflows
 
 **When to use CyFj11:**
 - You have FlowJo v11 workspace files (`.flowjo` extension)
 - You want to import workspaces without manually exporting
-  to v10 format in FlowJo
+    to v10 format in FlowJo
 - You need to preserve v11-specific compensation and transformation information
 
 **When to use CytoML:**

@@ -90,8 +90,8 @@ sanitize_path_with_separator <- function(path) {
 #' @keywords internal
 #' @importFrom flowWorkspace gs_pop_add
 add_populations_to_gatingset <- function(
-  gs, gating_trees, gates, sample_uuids,
-  strip_comp_prefix = TRUE, verbose = FALSE
+    gs, gating_trees, gates, sample_uuids,
+    strip_comp_prefix = TRUE, verbose = FALSE
 ) {
     for (i in seq_along(sample_uuids)) {
         sample_uuid <- sample_uuids[i]
@@ -217,8 +217,8 @@ add_populations_to_gatingset <- function(
 #'
 #' @keywords internal
 adjust_gate_transformations <- function(
-  gh, gate_obj,
-  strip_comp_prefix = TRUE
+    gh, gate_obj,
+    strip_comp_prefix = TRUE
 ) {
     # Get transformations from gating hierarchy
     gh_trans <- flowWorkspace::gh_get_transformations(gh)
@@ -343,8 +343,8 @@ adjust_gate_transformations <- function(
 #' @return Named list mapping gate params to GatingSet params
 #' @keywords internal
 map_gate_params_to_gh <- function(
-  gate_params, gh_param_names,
-  strip_comp_prefix = TRUE, sanitize_slashes = TRUE
+    gate_params, gh_param_names,
+    strip_comp_prefix = TRUE, sanitize_slashes = TRUE
 ) {
     # Use unified parameter name mapping
     # Gate params may have "Comp-" prefix from flowCore compensation
@@ -640,8 +640,8 @@ pop_node_name <- function(node) {
 #' @return NULL invisibly; recurses as a side effect
 #' @keywords internal
 pop_recurse_children <- function(children, gh, gates, sample_uuid, parent,
-                                 node_name, strip_comp_prefix, verbose,
-                                 deferred) {
+                                node_name, strip_comp_prefix, verbose,
+                                deferred) {
     if (is.null(children)) {
         return()
     }
@@ -687,8 +687,8 @@ pop_recurse_children <- function(children, gh, gates, sample_uuid, parent,
 #'   otherwise
 #' @keywords internal
 pop_handle_root_skip <- function(node, node_name, parent_sanitized, gh,
-                                 gates, sample_uuid, strip_comp_prefix,
-                                 verbose, deferred) {
+                                gates, sample_uuid, strip_comp_prefix,
+                                verbose, deferred) {
     if (!(parent_sanitized[1] == "root" &&
         (node_name[1] == "root" || node_name[1] == "Ungated"))) {
         return(FALSE)
@@ -737,7 +737,7 @@ pop_definition_uuid <- function(node) {
 #' @return NULL invisibly
 #' @keywords internal
 pop_warn_missing_gate <- function(node_name, sample_uuid, parent,
-                                  definition_uuid, gh) {
+                                    definition_uuid, gh) {
     # Get available population paths for debugging
     all_pop_paths <- tryCatch(flowWorkspace::gs_get_pop_paths(gh),
         error = function(e) NULL
@@ -777,7 +777,7 @@ pop_warn_missing_gate <- function(node_name, sample_uuid, parent,
 #' @return The gate object, or NULL when unresolved
 #' @keywords internal
 pop_resolve_gate <- function(node, node_name, sample_uuid, parent, gates,
-                             gh) {
+                            gh) {
     # Get gate for this population-sample combination
     definition_uuid <- pop_definition_uuid(node)
     if (is.null(definition_uuid)) {
@@ -878,7 +878,7 @@ pop_defer_unresolved_components <- function(component_names,
 #'   components could not all be resolved (deferred or warned)
 #' @keywords internal
 pop_resolve_component_refs <- function(component_names, node, node_name,
-                                       parent, gh, verbose, deferred) {
+                                        parent, gh, verbose, deferred) {
     # Get all existing populations in the gating hierarchy
     all_paths <- flowWorkspace::gs_get_pop_paths(gh)
     if (.pkgenv$verbose) {
@@ -943,7 +943,7 @@ pop_build_bool_expr <- function(operator, clean_refs, node_name) {
 #' @return NULL invisibly; modifies gh as a side effect
 #' @keywords internal
 pop_add_boolean_filter <- function(bool_expr, node_name, parent, gh,
-                                   component_refs, verbose) {
+                                    component_refs, verbose) {
     if (verbose) message("  Boolean expression: ", bool_expr)
     tryCatch(
         {
@@ -1012,8 +1012,8 @@ pop_add_boolean_filter <- function(bool_expr, node_name, parent, gh,
 #' @return NULL invisibly; modifies gh and deferred as side effects
 #' @keywords internal
 pop_add_logical_gate <- function(node, node_name, gh, gates, parent,
-                                 sample_uuid, strip_comp_prefix, verbose,
-                                 deferred) {
+                                sample_uuid, strip_comp_prefix, verbose,
+                                deferred) {
     operator <- node$logical_gate_info$operator
     component_names <- node$logical_gate_info$combined_populations
 
@@ -1252,8 +1252,8 @@ pop_insert_gate <- function(node_name, gate_obj_adjusted, parent, gh,
 #' @return NULL invisibly; recurses as a side effect
 #' @keywords internal
 pop_recurse_regular_children <- function(node, gh, gates, sample_uuid,
-                                         strip_comp_prefix, verbose,
-                                         deferred) {
+                                        strip_comp_prefix, verbose,
+                                        deferred) {
     if (is.null(node$children)) {
         return()
     }
@@ -1298,8 +1298,8 @@ pop_recurse_regular_children <- function(node, gh, gates, sample_uuid,
 #' @return NULL invisibly; modifies gh as a side effect
 #' @keywords internal
 pop_add_regular_gate <- function(node, node_name, gate_obj, gh, gates,
-                                 parent, sample_uuid, strip_comp_prefix,
-                                 verbose, deferred) {
+                                parent, sample_uuid, strip_comp_prefix,
+                                verbose, deferred) {
     # And gate:
     # those are the populations where this definition should be applied to
     node$pop_def$children$populations
@@ -1375,7 +1375,7 @@ pop_report_parent <- function(parent_sanitized) {
 #' @return TRUE when the node was handled (added or skipped)
 #' @keywords internal
 pop_dispatch_gate <- function(node, node_name, sample_uuid, parent, gates,
-                              gh, strip_comp_prefix, verbose, deferred) {
+                                gh, strip_comp_prefix, verbose, deferred) {
     gate_obj <- pop_resolve_gate(
         node, node_name, sample_uuid, parent, gates, gh
     )
@@ -1497,9 +1497,9 @@ pop_dispatch_gate <- function(node, node_name, sample_uuid, parent, gates,
 #' @importFrom flowCore parameters
 #' @importFrom magrittr %>%
 add_population_node <- function(
-  gh, node, gates, sample_uuid, parent = "root",
-  strip_comp_prefix = TRUE, verbose = FALSE,
-  deferred = NULL
+    gh, node, gates, sample_uuid, parent = "root",
+    strip_comp_prefix = TRUE, verbose = FALSE,
+    deferred = NULL
 ) {
     if (.pkgenv$verbose) {
         message(

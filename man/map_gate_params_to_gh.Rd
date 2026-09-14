@@ -5,10 +5,10 @@
 \title{Map gate parameter names to GatingSet parameter names}
 \usage{
 map_gate_params_to_gh(
-  gate_params,
-  gh_param_names,
-  strip_comp_prefix = TRUE,
-  sanitize_slashes = TRUE
+    gate_params,
+    gh_param_names,
+    strip_comp_prefix = TRUE,
+    sanitize_slashes = TRUE
 )
 }
 \arguments{
@@ -16,7 +16,8 @@ map_gate_params_to_gh(
 
 \item{gh_param_names}{Character vector of GatingSet parameter names}
 
-\item{strip_comp_prefix}{Logical. Strip "Comp-" prefix from gate parameter names?
+\item{strip_comp_prefix}{Logical. Strip "Comp-" prefix from gate parameter
+names?
 Default TRUE. Set to FALSE if compensation has already been applied with
 matching parameter names.}
 

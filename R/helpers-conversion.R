@@ -121,8 +121,8 @@ extract_keywords_for_samples <- function(sample_uuids, dataSources, keywords) {
 #' Find Root Population
 #' @keywords internal
 find_root_population <- function(
-  populations, populationDefinitions,
-  sample_uuid
+    populations, populationDefinitions,
+    sample_uuid
 ) {
     # Find root population definition (type = "root")
     root_popdefs <- Filter(function(pd) {
@@ -358,7 +358,7 @@ tree_resolve_population <- function(pop_uuid, visited, populations,
 #' @return The constructed node list
 #' @keywords internal
 tree_make_node <- function(pop_uuid, pop_parents, pop_def,
-                           pop_def_uuid, parent_path) {
+                            pop_def_uuid, parent_path) {
     # Extract definition details safely
     node_name <- if (!is.null(pop_def$definition$name)) {
         pop_def$definition$name
@@ -394,7 +394,7 @@ tree_make_node <- function(pop_uuid, pop_parents, pop_def,
 #' @return The updated node
 #' @keywords internal
 tree_attach_logical_gate <- function(node, pop_uuid,
-                                     logical_gates_info) {
+                                    logical_gates_info) {
     # Add logical gate information if this is a logical gate
     gate_info <- find_gate_info(pop_uuid, logical_gates_info)
     if (!is.null(gate_info)) {
@@ -540,9 +540,9 @@ tree_build_children <- function(node, child_populations,
 #' @return The \code{build_node} function
 #' @keywords internal
 tree_make_builder <- function(populations, populationDefinitions,
-                              visited, logical_gates_info) {
+                                visited, logical_gates_info) {
     build_node <- function(pop_uuid, parent_path = NULL,
-                           parent_pop_uuid = NULL) {
+                            parent_pop_uuid = NULL) {
         resolved <- tree_resolve_population(
             pop_uuid, visited, populations, populationDefinitions
         )
@@ -585,8 +585,8 @@ tree_make_builder <- function(populations, populationDefinitions,
 #' Build Gating Tree for given Sample
 #' @keywords internal
 build_gating_tree <- function(
-  sample_uuid, populations,
-  populationDefinitions, root_uuid
+    sample_uuid, populations,
+    populationDefinitions, root_uuid
 ) {
     # First, identify all logical gates before building the tree
     if (.pkgenv$verbose) message("Identifying logical gates...") # nocov
@@ -1148,18 +1148,18 @@ get_uuids <- function(tree, uuids = c()) {
 #  already
 #'   been applied and gate names should match the compensated parameter names.
 create_gatingset_from_cytoset <- function(
-  cytoset,
-  gating_trees,
-  gates,
-  compensations,
-  transformations,
-  sample_uuids,
-  dataSources,
-  keywords,
-  additional.keys,
-  additional.sampleID,
-  keyword.ignore.case,
-  strip_comp_prefix = TRUE
+    cytoset,
+    gating_trees,
+    gates,
+    compensations,
+    transformations,
+    sample_uuids,
+    dataSources,
+    keywords,
+    additional.keys,
+    additional.sampleID,
+    keyword.ignore.case,
+    strip_comp_prefix = TRUE
 ) {
     actual_sample_count <- length(cytoset)
     # browser() # nocov
@@ -1362,8 +1362,8 @@ create_gatingset_from_cytoset <- function(
 #' Create Sample Names
 #' @keywords internal
 create_sample_names <- function(
-  sample_uuids, dataSources, additional.keys,
-  additional.sampleID
+    sample_uuids, dataSources, additional.keys,
+    additional.sampleID
 ) {
     vapply(sample_uuids, function(uuid) {
         ds <- dataSources[[uuid]]

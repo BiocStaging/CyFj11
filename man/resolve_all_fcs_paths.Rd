@@ -5,10 +5,10 @@
 \title{Resolve All FCS File Paths from FlowJo Workspace}
 \usage{
 resolve_all_fcs_paths(
-  dataSources,
-  root_dir,
-  stop_on_multiple = FALSE,
-  stop_on_missing = TRUE
+    dataSources,
+    root_dir,
+    stop_on_multiple = FALSE,
+    stop_on_missing = TRUE
 )
 }
 \arguments{

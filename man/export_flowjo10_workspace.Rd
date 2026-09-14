@@ -5,11 +5,11 @@
 \title{Export GatingSet to FlowJo v10 Workspace}
 \usage{
 export_flowjo10_workspace(
-  gating_set,
-  output_path,
-  workspace_name = NULL,
-  fcs_root = NULL,
-  overwrite = FALSE
+    gating_set,
+    output_path,
+    workspace_name = NULL,
+    fcs_root = NULL,
+    overwrite = FALSE
 )
 }
 \arguments{

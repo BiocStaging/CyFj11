@@ -5,9 +5,9 @@
 \title{Extract Compensation from Platforms Section}
 \usage{
 extract_compensation_from_platforms(
-  spillover_matrices,
-  dataSources = NULL,
-  sample_uuids = NULL
+    spillover_matrices,
+    dataSources = NULL,
+    sample_uuids = NULL
 )
 }
 \arguments{

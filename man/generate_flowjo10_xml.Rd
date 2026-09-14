@@ -5,15 +5,15 @@
 \title{Generate FlowJo v10 XML Content}
 \usage{
 generate_flowjo10_xml(
-  gating_set,
-  samples,
-  gates,
-  populations,
-  groups,
-  workspace_name,
-  output_path,
-  force_XSC_linear = FALSE,
-  minimal_fj11 = FALSE
+    gating_set,
+    samples,
+    gates,
+    populations,
+    groups,
+    workspace_name,
+    output_path,
+    force_XSC_linear = FALSE,
+    minimal_fj11 = FALSE
 )
 }
 \arguments{
