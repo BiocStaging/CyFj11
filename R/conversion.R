@@ -174,7 +174,7 @@ fj11_to_gatingset <- function(
     backend <- match.arg(backend)
 
     prep <- fj11_prepare_data(fj11_workspace, group_name, subset, path,
-        cytoset, stop_on_multiple, backend_dir, backend, ...)
+        cytoset, stop_on_multiple, backend_dir, backend, keywords, ...)
     sample_uuids <- prep$sample_uuids
     cytoset <- prep$cytoset
 
@@ -212,7 +212,7 @@ fj11_to_gatingset <- function(
 #' @keywords internal
 fj11_prepare_data <- function(fj11_workspace, group_name, subset, path,
                                 cytoset, stop_on_multiple, backend_dir,
-                                backend, ...) {
+                                backend, keywords, ...) {
     groups <- fj11_workspace$groups
     dataSources <- fj11_workspace$dataSources
 
@@ -266,6 +266,8 @@ fj11_prepare_data <- function(fj11_workspace, group_name, subset, path,
 #' @param stop_on_multiple Whether to stop on multiple path matches
 #' @param backend_dir Backend directory for the cytoset
 #' @param backend Backend type
+#' @param keywords Character vector of keywords used by expression-based
+#'   subset filters (passed to filter_samples)
 #' @param ... Extra arguments passed to load_cytoset_from_fcs
 #' @return List with \code{sample_uuids} and \code{cytoset}
 

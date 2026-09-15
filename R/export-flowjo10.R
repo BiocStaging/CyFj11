@@ -4570,6 +4570,8 @@ fj10_group_children_of <- function(populations, parent_path) {
 #' placeholder so the caller skips it.
 #'
 #' @param population Population record
+#' @param populations List of all population records (passed down the
+#'   recursion)
 #' @param gates List of gate data
 #' @param parent_path Parent population path
 #' @param indent Current indentation string
@@ -4577,8 +4579,8 @@ fj10_group_children_of <- function(populations, parent_path) {
 #' @param gh GatingHierarchy object (for boolean gate processing)
 #' @return Character vector of XML lines, or NULL when nothing is emitted
 #' @keywords internal
-fj10_group_child_xml <- function(population, gates, parent_path, indent,
-                                visited_paths, gh) {
+fj10_group_child_xml <- function(population, populations, gates, parent_path,
+                                indent, visited_paths, gh) {
     if (population$name == "Ungated") {
         return(NULL)
     }
@@ -4589,7 +4591,7 @@ fj10_group_child_xml <- function(population, gates, parent_path, indent,
     }
 
     fj10_group_population_xml(
-        population, gates, parent_path, indent, visited_paths, gh
+        population, populations, gates, parent_path, indent, visited_paths, gh
     )
 }
 
@@ -4635,6 +4637,8 @@ fj10_group_boolean_gate_xml <- function(population, gates, indent, gh) {
 #' block, and the closing tag.
 #'
 #' @param population Population record
+#' @param populations List of all population records (passed down the
+#'   recursion)
 #' @param gates List of gate data
 #' @param parent_path Parent population path
 #' @param indent Current indentation string
@@ -4642,7 +4646,8 @@ fj10_group_boolean_gate_xml <- function(population, gates, indent, gh) {
 #' @param gh GatingHierarchy object (for boolean gate processing)
 #' @return Character vector of XML lines
 #' @keywords internal
-fj10_group_population_xml <- function(population, gates, parent_path, indent,
+fj10_group_population_xml <- function(population, populations, gates,
+                                        parent_path, indent,
                                         visited_paths, gh) {
     # Add population element with correct attributes
     lines <- c(
@@ -4667,7 +4672,8 @@ fj10_group_population_xml <- function(population, gates, parent_path, indent,
     lines <- c(
         lines,
         fj10_group_subpop_recursion_xml(
-            population, gates, parent_path, indent, visited_paths, gh
+            population, populations, gates, parent_path, indent,
+            visited_paths, gh
         ),
         # Close population element
         sprintf("%s</Population>", indent)
@@ -4684,6 +4690,8 @@ fj10_group_population_xml <- function(population, gates, parent_path, indent,
 #' the block.
 #'
 #' @param population Population record
+#' @param populations List of all population records (passed down the
+#'   recursion)
 #' @param gates List of gate data
 #' @param parent_path Parent population path
 #' @param indent Current indentation string
@@ -4691,8 +4699,9 @@ fj10_group_population_xml <- function(population, gates, parent_path, indent,
 #' @param gh GatingHierarchy object (for boolean gate processing)
 #' @return Character vector of XML lines
 #' @keywords internal
-fj10_group_subpop_recursion_xml <- function(population, gates, parent_path,
-                                            indent, visited_paths, gh) {
+fj10_group_subpop_recursion_xml <- function(population, populations, gates,
+                                            parent_path, indent,
+                                            visited_paths, gh) {
     lines <- sprintf("%s  <Subpopulations>", indent)
 
     # Prevent a population from being its own parent (cycle detection)
@@ -4776,7 +4785,8 @@ generate_group_subpopulations_xml <- function(populations,
         xml_lines <- c(
             xml_lines,
             fj10_group_child_xml(
-                population, gates, parent_path, indent, visited_paths, gh
+                population, populations, gates, parent_path, indent,
+                visited_paths, gh
             )
         )
     }
